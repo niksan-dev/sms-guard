@@ -1,6 +1,6 @@
 import streamlit as st
 
-from database.connection import Base, engine
+#from database.connection import Base, engine
 from utils.auth import create_default_super_admin
 from utils.permissions import get_allowed_pages
 
@@ -33,7 +33,7 @@ st.set_page_config(
 # ==================================================
 
 # Create all database tables if they do not exist
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 # Create the default Super Admin if one does not exist
 create_default_super_admin()

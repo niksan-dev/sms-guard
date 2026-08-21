@@ -6,8 +6,11 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
-    Text
+    Text,
+    Boolean
 )
+
+from datetime import datetime
 
 from sqlalchemy.orm import relationship
 
@@ -45,7 +48,29 @@ class User(Base):
         nullable=False,
         index=True
     )
+    email = Column(
+            String,
+            unique=True,
+            nullable=True
+        )
+    
+    phone = Column(
+        String,
+        nullable=True
+    )
+    is_active = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
 
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    
 
 # ==================================================
 # GUARDS

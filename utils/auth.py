@@ -42,9 +42,15 @@ def authenticate_user(
             .first()
         )
 
+        # User does not exist
         if not user:
             return None
 
+        # User is inactive
+        if not user.is_active:
+            return None
+
+        # Wrong password
         if not verify_password(
             password,
             user.password_hash
