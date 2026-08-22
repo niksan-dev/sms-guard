@@ -22,7 +22,7 @@ def show_login_page():
         # Branding
         # ------------------------------------------
 
-        st.markdown("# 🛡️ SecureGuard")
+        st.markdown("# 🛡️ Pravin Mokal Enterprises")
 
         st.caption(
             "Security Guard Management System"

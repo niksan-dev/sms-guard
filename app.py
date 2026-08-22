@@ -38,7 +38,7 @@ from components.sidebar import render_sidebar
 # ==================================================
 
 st.set_page_config(
-    page_title="SecureGuard",
+    page_title="Pravin Mokal Enterprises",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"

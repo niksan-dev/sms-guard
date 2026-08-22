@@ -59,8 +59,8 @@ def render_sidebar(username, role, allowed_pages):
             st.markdown("## 🛡️")
 
         with col2:
-            st.markdown("### SECUREGUARD")
-            st.caption("MANAGEMENT SYSTEM")
+            st.markdown("### Pravin Mokal Enterprises")
+            st.caption("SECURITY GUARD MANAGEMENT SYSTEM")
 
 
         st.divider()
