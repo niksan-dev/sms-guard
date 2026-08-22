@@ -286,3 +286,48 @@ def update_user_profile(
     finally:
 
         db.close()
+
+# ==================================================
+# RESET USER PASSWORD
+# ==================================================
+
+def reset_user_password(
+    user_id: int,
+    new_password: str
+):
+
+    db = SessionLocal()
+
+    try:
+
+        user = (
+            db.query(User)
+            .filter(User.id == user_id)
+            .first()
+        )
+
+        if not user:
+
+            return False, "User not found."
+
+        if not new_password or len(new_password) < 6:
+
+            return False, "Password must contain at least 6 characters."
+
+        user.password_hash = hash_password(
+            new_password
+        )
+
+        db.commit()
+
+        return True, "Password reset successfully."
+
+    except Exception as e:
+
+        db.rollback()
+
+        return False, str(e)
+
+    finally:
+
+        db.close()
