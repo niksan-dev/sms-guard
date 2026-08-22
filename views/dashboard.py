@@ -1,22 +1,32 @@
 import streamlit as st
 from datetime import date
 
-from database.connection import SessionLocal
+import plotly.express as px
+import pandas as pd
 
+from sqlalchemy import or_
+
+from database.connection import SessionLocal
 from database.models import User
 from database.models import Guard
 from database.models import Site
 
-# Import these only if the models already exist
+
+# ==================================================
+# OPTIONAL MODELS
+# ==================================================
+
 try:
     from database.models import Shift
 except ImportError:
     Shift = None
 
+
 try:
     from database.models import Incident
 except ImportError:
     Incident = None
+
 
 try:
     from database.models import Attendance
@@ -24,7 +34,9 @@ except ImportError:
     Attendance = None
 
 
-
+# ==================================================
+# DASHBOARD CARD
+# ==================================================
 
 def dashboard_card(
     title,
@@ -37,34 +49,35 @@ def dashboard_card(
 
     st.html(
         f"""
-        <div class="dashboard-card">
+<div class="dashboard-card">
 
-            <div class="dashboard-card-top">
+    <div class="dashboard-card-top">
 
-                <div class="dashboard-card-title">
-                    {title}
-                </div>
-
-                <div class="dashboard-card-icon {icon_class}">
-                    {icon}
-                </div>
-
-            </div>
-
-            <div class="dashboard-card-value">
-                {value}
-            </div>
-
-            <div class="dashboard-card-footer {footer_class}">
-                {footer}
-            </div>
-
+        <div class="dashboard-card-title">
+            {title}
         </div>
-        """
+
+        <div class="dashboard-card-icon {icon_class}">
+            {icon}
+        </div>
+
+    </div>
+
+    <div class="dashboard-card-value">
+        {value}
+    </div>
+
+    <div class="dashboard-card-footer {footer_class}">
+        {footer}
+    </div>
+
+</div>
+"""
     )
 
+
 # ==================================================
-# HELPER FUNCTIONS
+# GET DASHBOARD DATA
 # ==================================================
 
 def get_dashboard_data():
@@ -73,9 +86,9 @@ def get_dashboard_data():
 
     try:
 
-        # ------------------------------------------
+        # ==========================================
         # GUARDS
-        # ------------------------------------------
+        # ==========================================
 
         total_guards = db.query(Guard).count()
 
@@ -86,9 +99,9 @@ def get_dashboard_data():
         )
 
 
-        # ------------------------------------------
+        # ==========================================
         # SITES
-        # ------------------------------------------
+        # ==========================================
 
         total_sites = db.query(Site).count()
 
@@ -99,16 +112,16 @@ def get_dashboard_data():
         )
 
 
-        # ------------------------------------------
+        # ==========================================
         # USERS
-        # ------------------------------------------
+        # ==========================================
 
         total_users = db.query(User).count()
 
 
-        # ------------------------------------------
+        # ==========================================
         # SHIFTS TODAY
-        # ------------------------------------------
+        # ==========================================
 
         shifts_today = 0
 
@@ -135,9 +148,9 @@ def get_dashboard_data():
                 )
 
 
-        # ------------------------------------------
+        # ==========================================
         # OPEN INCIDENTS
-        # ------------------------------------------
+        # ==========================================
 
         open_incidents = 0
 
@@ -146,18 +159,20 @@ def get_dashboard_data():
             open_incidents = (
                 db.query(Incident)
                 .filter(
-                    Incident.status.in_([
-                        "Open",
-                        "In Progress"
-                    ])
+                    Incident.status.in_(
+                        [
+                            "Open",
+                            "In Progress"
+                        ]
+                    )
                 )
                 .count()
             )
 
 
-        # ------------------------------------------
+        # ==========================================
         # ATTENDANCE TODAY
-        # ------------------------------------------
+        # ==========================================
 
         attendance_today = 0
 
@@ -173,6 +188,10 @@ def get_dashboard_data():
                     .count()
                 )
 
+
+        # ==========================================
+        # RETURN DATA
+        # ==========================================
 
         return {
 
@@ -198,7 +217,197 @@ def get_dashboard_data():
 
 
 # ==================================================
-# DASHBOARD
+# GET ANALYTICS CHART DATA
+# ==================================================
+
+def get_status_chart_data():
+
+    db = SessionLocal()
+
+    try:
+
+        # ==========================================
+        # GUARD STATUS
+        # ==========================================
+
+        active_guards = (
+            db.query(Guard)
+            .filter(Guard.status == "Active")
+            .count()
+        )
+
+
+        inactive_guards = (
+            db.query(Guard)
+            .filter(
+                or_(
+                    Guard.status != "Active",
+                    Guard.status.is_(None)
+                )
+            )
+            .count()
+        )
+
+
+        guard_data = pd.DataFrame(
+            {
+                "Status": [
+                    "Active",
+                    "Inactive"
+                ],
+
+                "Count": [
+                    active_guards,
+                    inactive_guards
+                ]
+            }
+        )
+
+
+        # ==========================================
+        # SITE STATUS
+        # ==========================================
+
+        active_sites = (
+            db.query(Site)
+            .filter(Site.status == "Active")
+            .count()
+        )
+
+
+        inactive_sites = (
+            db.query(Site)
+            .filter(
+                or_(
+                    Site.status != "Active",
+                    Site.status.is_(None)
+                )
+            )
+            .count()
+        )
+
+
+        site_data = pd.DataFrame(
+            {
+                "Status": [
+                    "Active",
+                    "Inactive"
+                ],
+
+                "Count": [
+                    active_sites,
+                    inactive_sites
+                ]
+            }
+        )
+
+
+        return guard_data, site_data
+
+
+    finally:
+
+        db.close()
+
+
+# ==================================================
+# CREATE DONUT CHART
+# ==================================================
+
+def create_status_chart(
+    chart_data,
+    title
+):
+
+    total = chart_data["Count"].sum()
+
+
+    # ==============================================
+    # NO DATA AVAILABLE
+    # ==============================================
+
+    if total == 0:
+
+        fig = px.pie(
+            names=["No Data"],
+            values=[1],
+            hole=0.68
+        )
+
+        fig.update_traces(
+            textinfo="label",
+            hoverinfo="skip"
+        )
+
+
+    # ==============================================
+    # NORMAL DATA
+    # ==============================================
+
+    else:
+
+        fig = px.pie(
+            chart_data,
+            names="Status",
+            values="Count",
+            hole=0.68
+        )
+
+        fig.update_traces(
+            textposition="inside",
+            textinfo="percent+label"
+        )
+
+
+    # ==============================================
+    # LAYOUT
+    # ==============================================
+
+    fig.update_layout(
+
+        title=dict(
+            text=title,
+            font=dict(
+                size=18
+            ),
+            x=0.5,
+            xanchor="center"
+        ),
+
+        showlegend=True,
+
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.15,
+            xanchor="center",
+            x=0.5
+        ),
+
+        height=360,
+
+        margin=dict(
+            l=20,
+            r=20,
+            t=60,
+            b=40
+        ),
+
+        paper_bgcolor="rgba(0,0,0,0)",
+
+        plot_bgcolor="rgba(0,0,0,0)",
+
+        font=dict(
+            color="#e5e7eb"
+        )
+    )
+
+
+    return fig
+
+
+# ==================================================
+# DASHBOARD PAGE
 # ==================================================
 
 def show_dashboard():
@@ -211,7 +420,7 @@ def show_dashboard():
 
 
     # ==============================================
-    # HEADER
+    # CURRENT USER
     # ==============================================
 
     user = st.session_state.get(
@@ -224,8 +433,15 @@ def show_dashboard():
         "User"
     )
 
+
+    # ==============================================
+    # HEADER
+    # ==============================================
+
     st.markdown(
-        f"# Welcome back, {username} 👋"
+        f"""
+# Welcome back, {username} 👋
+"""
     )
 
     st.caption(
@@ -296,12 +512,13 @@ def show_dashboard():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
-
     inactive_guards = (
         data["total_guards"]
         - data["active_guards"]
     )
+
+
+    col1, col2, col3 = st.columns(3)
 
 
     with col1:
@@ -341,54 +558,96 @@ def show_dashboard():
 
 
     # ==============================================
-    # OPERATIONAL OVERVIEW
+    # ANALYTICS
     # ==============================================
 
-    st.subheader("📊 Operational Overview")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    st.html(
+        """
+<div class="dashboard-section-title">
+    📊 Security Analytics
+</div>
+"""
+    )
 
 
-    with col1:
+    # Get analytics data
 
-        st.info(
-            f"""
-            **Guard Status**
+    guard_chart_data, site_chart_data = (
+        get_status_chart_data()
+    )
 
-            Total Guards: {data["total_guards"]}
 
-            Active Guards: {data["active_guards"]}
+    chart_col1, chart_col2 = st.columns(2)
 
-            Inactive Guards:
-            {data["total_guards"] - data["active_guards"]}
+
+    # ==============================================
+    # GUARD STATUS CHART
+    # ==============================================
+
+    with chart_col1:
+
+        st.html(
             """
+<div class="chart-title">
+    👮 Guard Status Overview
+</div>
+"""
+        )
+
+        fig_guards = create_status_chart(
+            guard_chart_data,
+            ""
+        )
+
+        st.plotly_chart(
+            fig_guards,
+            use_container_width=True,
+            key="guard_status_chart"
         )
 
 
-    with col2:
+    # ==============================================
+    # SITE STATUS CHART
+    # ==============================================
 
-        st.info(
-            f"""
-            **Site Status**
+    with chart_col2:
 
-            Total Sites: {data["total_sites"]}
-
-            Active Sites: {data["active_sites"]}
-
-            Inactive Sites:
-            {data["total_sites"] - data["active_sites"]}
+        st.html(
             """
+<div class="chart-title">
+    🏢 Site Status Overview
+</div>
+"""
         )
 
+        fig_sites = create_status_chart(
+            site_chart_data,
+            ""
+        )
 
-    st.divider()
+        st.plotly_chart(
+            fig_sites,
+            use_container_width=True,
+            key="site_status_chart"
+        )
 
 
     # ==============================================
     # QUICK ACTIONS
     # ==============================================
 
-    st.subheader("⚡ Quick Actions")
+    st.divider()
+
+    st.html(
+        """
+<div class="dashboard-section-title">
+    ⚡ Quick Actions
+</div>
+"""
+    )
+
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -397,6 +656,7 @@ def show_dashboard():
 
         if st.button(
             "➕ Add Guard",
+            key="quick_add_guard",
             use_container_width=True
         ):
 
@@ -409,6 +669,7 @@ def show_dashboard():
 
         if st.button(
             "🏢 Add Site",
+            key="quick_add_site",
             use_container_width=True
         ):
 
@@ -421,6 +682,7 @@ def show_dashboard():
 
         if st.button(
             "📅 Manage Shifts",
+            key="quick_manage_shifts",
             use_container_width=True
         ):
 
@@ -433,6 +695,7 @@ def show_dashboard():
 
         if st.button(
             "🚨 Report Incident",
+            key="quick_report_incident",
             use_container_width=True
         ):
 

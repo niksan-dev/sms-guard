@@ -3,3 +3,4 @@ pandas
 sqlalchemy
 bcrypt
 alembic
+plotly

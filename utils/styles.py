@@ -569,6 +569,55 @@ def load_custom_css():
             font-weight: 700;
         }
 
+
+        /* ==================================================
+        DASHBOARD ANALYTICS
+        ================================================== */
+
+        .dashboard-section-title {
+            color: #f8fafc;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+            margin-bottom: 18px;
+        }
+
+        .chart-card {
+            background: linear-gradient(
+                145deg,
+                #1e293b,
+                #111827
+            );
+
+            border: 1px solid #334155;
+
+            border-radius: 18px;
+
+            padding: 20px;
+
+            min-height: 390px;
+
+            box-shadow:
+                0 8px 24px rgba(
+                    0,
+                    0,
+                    0,
+                    0.18
+                );
+        }
+
+        .chart-card:hover {
+            border-color: #7c3aed;
+
+            box-shadow:
+                0 12px 30px rgba(
+                    124,
+                    58,
+                    237,
+                    0.15
+                );
+        }
+
     </style>
     """, unsafe_allow_html=True)
 
