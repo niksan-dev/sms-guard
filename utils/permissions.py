@@ -12,7 +12,8 @@ ROLE_PERMISSIONS = {
         "Incidents",
         "Users",
         "Reports",
-        "Settings"
+        "Settings",
+        "Company Settings"
     ],
 
     UserRole.ADMIN_MANAGER.value: [

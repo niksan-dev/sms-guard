@@ -4,3 +4,5 @@ sqlalchemy
 bcrypt
 alembic
 plotly
+
+#python -m database.init_db

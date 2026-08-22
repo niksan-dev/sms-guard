@@ -25,12 +25,16 @@ sys.path.insert(
 
 
 # ==================================================
-# IMPORT DATABASE MODELS
+# IMPORT DATABASE BASE
 # ==================================================
 
 from database.connection import Base
 
-# Import models so Alembic can detect all tables
+
+# ==================================================
+# IMPORT MAIN DATABASE MODELS
+# ==================================================
+
 from database.models import (
     User,
     Guard,
@@ -39,6 +43,15 @@ from database.models import (
     Attendance,
     Incident
 )
+
+
+# ==================================================
+# IMPORT COMPANY SETTINGS MODEL
+# IMPORTANT:
+# This registers company_settings with Base.metadata
+# ==================================================
+
+from database.company_settings import CompanySettings
 
 
 # ==================================================

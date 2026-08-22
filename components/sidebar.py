@@ -15,6 +15,7 @@ PAGE_ICONS = {
     "Users": "👥",
     "Reports": "📊",
     "Settings": "⚙️",
+    "Company Settings": "🏢",
     "My Shift": "📅",
     "Check In / Out": "📍",
 }

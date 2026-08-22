@@ -23,6 +23,8 @@ from views.users import show_users
 from views.reports import show_reports
 from views.settings import show_settings
 
+from views.company_settings import show_company_settings
+
 
 # ==================================================
 # UI COMPONENTS
@@ -155,6 +157,10 @@ elif selected_page == "Reports":
 elif selected_page == "Settings":
 
     show_settings()
+
+elif selected_page == "Company Settings":
+
+    show_company_settings()
 
 
 # ==================================================

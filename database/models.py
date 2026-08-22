@@ -478,3 +478,9 @@ class Incident(Base):
         "User",
         foreign_keys=[reported_by]
     )
+
+# ==================================================
+# PAYMENT / COMPANY SETTINGS MODELS
+# ==================================================
+
+from database.company_settings import CompanySettings
