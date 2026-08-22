@@ -22,6 +22,7 @@ from views.incidents import show_incidents
 from views.users import show_users
 from views.reports import show_reports
 from views.settings import show_settings
+from views.payments import show_payments
 
 from views.company_settings import show_company_settings
 
@@ -161,6 +162,10 @@ elif selected_page == "Settings":
 elif selected_page == "Company Settings":
 
     show_company_settings()
+
+elif selected_page == "Payments":
+
+    show_payments()
 
 
 # ==================================================

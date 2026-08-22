@@ -7,6 +7,7 @@ ROLE_PERMISSIONS = {
         "Dashboard",
         "Guards",
         "Sites",
+        "Payments",
         "Shifts",
         "Attendance",
         "Incidents",

@@ -41,7 +41,10 @@ from database.models import (
     Site,
     Shift,
     Attendance,
-    Incident
+    Incident,
+    CompanySettings,
+    Payment,
+    SiteGuardAssignment
 )
 
 
@@ -53,7 +56,7 @@ from database.models import (
 
 from database.company_settings import CompanySettings
 
-
+from database.site_guard_assignment import SiteGuardAssignment
 # ==================================================
 # ALEMBIC CONFIG
 # ==================================================

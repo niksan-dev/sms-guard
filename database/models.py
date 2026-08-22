@@ -191,6 +191,12 @@ class Guard(Base):
         back_populates="guard"
     )
 
+    site_assignments = relationship(
+        "SiteGuardAssignment",
+        back_populates="guard",
+        cascade="all, delete-orphan"
+    )
+
 
 # ==================================================
 # SITE MODEL
@@ -332,6 +338,16 @@ class Site(Base):
     incidents = relationship(
         "Incident",
         back_populates="site"
+    )
+
+    payments = relationship(
+        "Payment",
+        back_populates="site"
+    )
+    guard_assignments = relationship(
+        "SiteGuardAssignment",
+        back_populates="site",
+        cascade="all, delete-orphan"
     )
 
 
@@ -480,7 +496,17 @@ class Incident(Base):
     )
 
 # ==================================================
-# PAYMENT / COMPANY SETTINGS MODELS
+# COMPANY SETTINGS MODELS & PAYMENT DETAILS
 # ==================================================
 
 from database.company_settings import CompanySettings
+
+#===================================================
+# PAYMENT MODEL
+#===================================================
+from database.payment import Payment
+
+#=================================================
+# SITE GUARD ASSIGNMENT MODEL
+#=================================================
+from database.site_guard_assignment import SiteGuardAssignment

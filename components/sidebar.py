@@ -10,6 +10,7 @@ PAGE_ICONS = {
     "Guards": "👮",
     "Sites": "🏢",
     "Shifts": "📅",
+    "Payments": "💳",
     "Attendance": "🟢",
     "Incidents": "🚨",
     "Users": "👥",

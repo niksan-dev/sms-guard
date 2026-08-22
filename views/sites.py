@@ -12,6 +12,15 @@ from services.site_service import (
 )
 
 
+from services.site_guard_assignment_service import (
+    assign_guard_to_site,
+    get_site_guards,
+    unassign_guard_from_site
+)
+
+from services.guard_service import get_all_guards
+
+
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -522,6 +531,9 @@ def show_sites():
 
                 st.divider()
 
+                # NEW
+                show_site_guard_assignment(site)
+
                 # --------------------------------------
                 # SITE DETAILS
                 # --------------------------------------
@@ -850,3 +862,151 @@ def show_sites():
                             else:
 
                                 st.error(message)
+
+
+def show_site_guard_assignment(site):
+
+    st.divider()
+
+    st.subheader("👮 Assigned Guards")
+
+    assignments = get_site_guards(site.id)
+
+    assigned_count = len(assignments)
+
+    st.caption(
+        f"Assigned: {assigned_count} / {site.guards_required}"
+    )
+
+
+    # ==============================================
+    # ASSIGN GUARD
+    # ==============================================
+
+    if assigned_count < site.guards_required:
+
+        guards = get_all_guards()
+
+        # Active guards only
+        active_guards = [
+            guard
+            for guard in guards
+            if guard.status == "Active"
+        ]
+
+
+        if active_guards:
+
+            guard_options = {
+                f"{guard.employee_id} - {guard.name}": guard.id
+                for guard in active_guards
+            }
+
+
+            selected_guard_label = st.selectbox(
+                "Select Guard",
+                list(guard_options.keys()),
+                key=f"assign_guard_{site.id}"
+            )
+
+
+            if st.button(
+                "➕ Assign Guard",
+                key=f"assign_guard_button_{site.id}"
+            ):
+
+                try:
+
+                    assign_guard_to_site(
+                        guard_id=guard_options[
+                            selected_guard_label
+                        ],
+                        site_id=site.id
+                    )
+
+                    st.success(
+                        "Guard assigned successfully."
+                    )
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(str(e))
+
+        else:
+
+            st.info("No active guards available.")
+
+
+    else:
+
+        st.warning(
+            "Required number of guards has been assigned."
+        )
+
+
+    # ==============================================
+    # DISPLAY ASSIGNED GUARDS
+    # ==============================================
+
+    if not assignments:
+
+        st.info("No guards assigned to this site yet.")
+
+        return
+
+
+    for assignment in assignments:
+
+        guard = assignment.guard
+
+        col1, col2, col3 = st.columns(
+            [3, 2, 1]
+        )
+
+        with col1:
+
+            st.markdown(
+                f"**👮 {guard.name}**"
+            )
+
+            st.caption(
+                f"Employee ID: {guard.employee_id}"
+            )
+
+
+        with col2:
+
+            st.write(
+                f"📞 {guard.phone or 'N/A'}"
+            )
+
+            st.caption(
+                f"Assigned: "
+                f"{assignment.assigned_date}"
+            )
+
+
+        with col3:
+
+            if st.button(
+                "❌ Unassign",
+                key=f"unassign_{assignment.id}"
+            ):
+
+                try:
+
+                    unassign_guard_from_site(
+                        assignment.id
+                    )
+
+                    st.success(
+                        "Guard unassigned successfully."
+                    )
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(str(e))

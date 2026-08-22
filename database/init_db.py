@@ -7,7 +7,9 @@ from database.models import (
     Site,
     Shift,
     Attendance,
-    Incident
+    Incident,
+    CompanySettings,
+    Payment
 )
 
 

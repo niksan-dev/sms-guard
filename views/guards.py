@@ -12,6 +12,14 @@ from services.guard_service import (
     update_guard,
 )
 
+from services.site_guard_assignment_service import (
+    assign_guard_to_site,
+    get_guard_sites,
+    unassign_guard_from_site
+)
+
+from services.site_service import get_all_sites
+
 
 # ==================================================
 # MASK AADHAAR
@@ -473,6 +481,7 @@ def show_guards():
 
             if guard:
 
+               
                 # ==========================================
                 # PROFILE HEADER
                 # ==========================================
@@ -538,7 +547,7 @@ def show_guards():
                 # ==========================================
                 # EDIT GUARD FORM
                 # ==========================================
-
+                show_guard_site_assignment(guard)
                 st.markdown(
                     "### ✏️ Edit Guard Profile"
                 )
@@ -635,6 +644,8 @@ def show_guards():
                             value=guard.joining_date
                         )
 
+                    
+
                     with col2:
 
                         status_index = 0
@@ -685,6 +696,8 @@ def show_guards():
                         "💾 Update Guard",
                         use_container_width=True
                     )
+
+               
 
                 # ==========================================
                 # PROCESS UPDATE FORM
@@ -760,3 +773,134 @@ def show_guards():
                                 else:
 
                                     st.error(message)
+
+
+def show_guard_site_assignment(guard):
+
+    st.divider()
+
+    st.subheader("🏢 Assigned Sites")
+
+    assignments = get_guard_sites(guard.id)
+
+
+    # ==============================================
+    # GET ACTIVE SITES
+    # ==============================================
+
+    sites = get_all_sites()
+
+    active_sites = [
+        site
+        for site in sites
+        if site.status == "Active"
+    ]
+
+
+    if active_sites:
+
+        site_options = {
+            f"{site.site_code} - {site.name}": site.id
+            for site in active_sites
+        }
+
+
+        selected_site_label = st.selectbox(
+            "Select Site",
+            list(site_options.keys()),
+            key=f"assign_site_{guard.id}"
+        )
+
+
+        if st.button(
+            "➕ Assign Site",
+            key=f"assign_site_button_{guard.id}"
+        ):
+
+            try:
+
+                assign_guard_to_site(
+                    guard_id=guard.id,
+                    site_id=site_options[
+                        selected_site_label
+                    ]
+                )
+
+                st.success(
+                    "Site assigned successfully."
+                )
+
+                st.rerun()
+
+            except Exception as e:
+
+                st.error(str(e))
+
+
+    # ==============================================
+    # DISPLAY ASSIGNED SITES
+    # ==============================================
+
+    if not assignments:
+
+        st.info(
+            "This guard is not assigned to any site."
+        )
+
+        return
+
+
+    for assignment in assignments:
+
+        site = assignment.site
+
+        col1, col2, col3 = st.columns(
+            [3, 2, 1]
+        )
+
+
+        with col1:
+
+            st.markdown(
+                f"**🏢 {site.name}**"
+            )
+
+            st.caption(
+                f"Site Code: {site.site_code}"
+            )
+
+
+        with col2:
+
+            st.write(
+                f"📍 {site.city or 'N/A'}"
+            )
+
+            st.caption(
+                f"Assigned: "
+                f"{assignment.assigned_date}"
+            )
+
+
+        with col3:
+
+            if st.button(
+                "❌ Unassign",
+                key=f"guard_unassign_{assignment.id}"
+            ):
+
+                try:
+
+                    unassign_guard_from_site(
+                        assignment.id
+                    )
+
+                    st.success(
+                        "Site unassigned successfully."
+                    )
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(str(e))
