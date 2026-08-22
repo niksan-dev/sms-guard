@@ -1,8 +1,16 @@
 import streamlit as st
 
-#from database.connection import Base, engine
+# ==================================================
+# AUTH / PERMISSIONS
+# ==================================================
+
 from utils.auth import create_default_super_admin
 from utils.permissions import get_allowed_pages
+
+
+# ==================================================
+# VIEWS
+# ==================================================
 
 from views.login import show_login_page
 from views.dashboard import show_dashboard
@@ -17,7 +25,16 @@ from views.settings import show_settings
 
 
 # ==================================================
+# UI COMPONENTS
+# ==================================================
+
+from utils.styles import load_custom_css
+from components.sidebar import render_sidebar
+
+
+# ==================================================
 # PAGE CONFIGURATION
+# IMPORTANT: MUST BE THE FIRST STREAMLIT COMMAND
 # ==================================================
 
 st.set_page_config(
@@ -29,13 +46,17 @@ st.set_page_config(
 
 
 # ==================================================
+# LOAD GLOBAL STYLES
+# ==================================================
+
+load_custom_css()
+
+
+# ==================================================
 # DATABASE INITIALIZATION
 # ==================================================
 
-# Create all database tables if they do not exist
-#Base.metadata.create_all(bind=engine)
-
-# Create the default Super Admin if one does not exist
+# Create default Super Admin if it does not exist
 create_default_super_admin()
 
 
@@ -55,8 +76,7 @@ if not st.session_state["user"]:
 
     show_login_page()
 
-    # Stop here so the rest of the application
-    # is not shown before login
+    # Do not show sidebar or application pages
     st.stop()
 
 
@@ -66,71 +86,26 @@ if not st.session_state["user"]:
 
 user = st.session_state["user"]
 
-username = user["username"]
-role = user["role"]
+username = user.get("username", "User")
+role = user.get("role", "User")
 
 
 # ==================================================
-# GET ALLOWED PAGES FOR ROLE
+# ROLE-BASED PAGE ACCESS
 # ==================================================
 
 allowed_pages = get_allowed_pages(role)
 
 
 # ==================================================
-# SIDEBAR
+# SIDEBAR NAVIGATION
 # ==================================================
 
-with st.sidebar:
-
-    st.markdown("# 🛡️ SecureGuard")
-
-    st.caption(
-        "Security Guard Management System"
-    )
-
-    st.divider()
-
-
-    # ----------------------------------------------
-    # USER INFORMATION
-    # ----------------------------------------------
-
-    st.markdown(
-        f"### 👤 {username}"
-    )
-
-    st.caption(
-        f"Role: {role}"
-    )
-
-    st.divider()
-
-
-    # ----------------------------------------------
-    # NAVIGATION
-    # ----------------------------------------------
-
-    selected_page = st.radio(
-        "Navigation",
-        allowed_pages
-    )
-
-
-    # ----------------------------------------------
-    # LOGOUT
-    # ----------------------------------------------
-
-    st.divider()
-
-    if st.button(
-        "🚪 Logout",
-        use_container_width=True
-    ):
-
-        st.session_state["user"] = None
-
-        st.rerun()
+selected_page = render_sidebar(
+    username=username,
+    role=role,
+    allowed_pages=allowed_pages
+)
 
 
 # ==================================================
@@ -149,9 +124,7 @@ elif selected_page == "Guards":
 
 elif selected_page == "Sites":
 
-   # show_sites()
-   show_sites()
-   print("Sites page is under development.")
+    show_sites()
 
 
 elif selected_page == "Shifts":
@@ -203,4 +176,15 @@ elif selected_page == "Check In / Out":
 
     st.info(
         "Guard attendance check-in and check-out will appear here."
+    )
+
+
+# ==================================================
+# FALLBACK
+# ==================================================
+
+else:
+
+    st.warning(
+        "You do not have permission to access this page."
     )

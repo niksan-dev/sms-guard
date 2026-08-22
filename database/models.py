@@ -76,6 +76,12 @@ class User(Base):
         uselist=False
     )
 
+    sites = relationship(
+        "Site",
+        back_populates="client",
+        foreign_keys="Site.client_id"
+    )
+
     
 
 # ==================================================
@@ -187,12 +193,16 @@ class Guard(Base):
 
 
 # ==================================================
-# SITES
+# SITE MODEL
 # ==================================================
 
 class Site(Base):
 
     __tablename__ = "sites"
+
+    # ----------------------------------------------
+    # PRIMARY KEY
+    # ----------------------------------------------
 
     id = Column(
         Integer,
@@ -200,20 +210,30 @@ class Site(Base):
         index=True
     )
 
+    # ----------------------------------------------
+    # AUTO GENERATED SITE CODE
+    # Example: SITE-0001
+    # ----------------------------------------------
+
+    site_code = Column(
+        String,
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    # ----------------------------------------------
+    # SITE INFORMATION
+    # ----------------------------------------------
+
     name = Column(
         String,
         nullable=False
     )
 
-    address = Column(
-        String,
-        nullable=False
-    )
-
-    pincode = Column(
-        String(6),
-        nullable=False
-    )
+    # ----------------------------------------------
+    # CLIENT
+    # ----------------------------------------------
 
     client_id = Column(
         Integer,
@@ -223,8 +243,86 @@ class Site(Base):
 
     client = relationship(
         "User",
+        back_populates="sites",
         foreign_keys=[client_id]
     )
+
+    # ----------------------------------------------
+    # CONTACT INFORMATION
+    # ----------------------------------------------
+
+    contact_person = Column(
+        String,
+        nullable=True
+    )
+
+    contact_phone = Column(
+        String(10),
+        nullable=True
+    )
+
+    email = Column(
+        String,
+        nullable=True
+    )
+
+    # ----------------------------------------------
+    # ADDRESS
+    # ----------------------------------------------
+
+    address = Column(
+        Text,
+        nullable=True
+    )
+
+    city = Column(
+        String,
+        nullable=True
+    )
+
+    state = Column(
+        String,
+        nullable=True
+    )
+
+    pincode = Column(
+        String(6),
+        nullable=True
+    )
+
+    # ----------------------------------------------
+    # SECURITY REQUIREMENTS
+    # ----------------------------------------------
+
+    guards_required = Column(
+        Integer,
+        default=1,
+        nullable=False
+    )
+
+    # ----------------------------------------------
+    # STATUS
+    # ----------------------------------------------
+
+    status = Column(
+        String,
+        default="Active",
+        nullable=False
+    )
+
+    # ----------------------------------------------
+    # CREATED DATE
+    # ----------------------------------------------
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    # ----------------------------------------------
+    # RELATIONSHIPS
+    # ----------------------------------------------
 
     shifts = relationship(
         "Shift",
