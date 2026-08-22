@@ -471,6 +471,104 @@ def load_custom_css():
             font-weight: 700;
         }
 
+
+        /* ==================================================
+        PREMIUM DASHBOARD CARDS
+        ================================================== */
+
+        .dashboard-card {
+            background: linear-gradient(145deg, #1e293b, #111827);
+            border: 1px solid #334155;
+            border-radius: 18px;
+            padding: 22px;
+            min-height: 150px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            transition: all 0.25s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            border-color: #7c3aed;
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.22);
+        }
+
+        .dashboard-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-card-title {
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .dashboard-card-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+        }
+
+        .icon-purple {
+            background: rgba(124, 58, 237, 0.18);
+        }
+
+        .icon-green {
+            background: rgba(34, 197, 94, 0.18);
+        }
+
+        .icon-blue {
+            background: rgba(59, 130, 246, 0.18);
+        }
+
+        .icon-red {
+            background: rgba(239, 68, 68, 0.18);
+        }
+
+        .icon-orange {
+            background: rgba(249, 115, 22, 0.18);
+        }
+
+        .icon-cyan {
+            background: rgba(6, 182, 212, 0.18);
+        }
+
+        .dashboard-card-value {
+            color: #f8fafc;
+            font-size: 36px;
+            font-weight: 800;
+            margin-top: 20px;
+            line-height: 1;
+        }
+
+        .dashboard-card-footer {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .status-positive {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        .status-warning {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .status-danger {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
     </style>
     """, unsafe_allow_html=True)
 

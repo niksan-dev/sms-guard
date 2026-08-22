@@ -24,6 +24,45 @@ except ImportError:
     Attendance = None
 
 
+
+
+def dashboard_card(
+    title,
+    value,
+    icon,
+    icon_class,
+    footer,
+    footer_class=""
+):
+
+    st.html(
+        f"""
+        <div class="dashboard-card">
+
+            <div class="dashboard-card-top">
+
+                <div class="dashboard-card-title">
+                    {title}
+                </div>
+
+                <div class="dashboard-card-icon {icon_class}">
+                    {icon}
+                </div>
+
+            </div>
+
+            <div class="dashboard-card-value">
+                {value}
+            </div>
+
+            <div class="dashboard-card-footer {footer_class}">
+                {footer}
+            </div>
+
+        </div>
+        """
+    )
+
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -205,78 +244,100 @@ def show_dashboard():
 
     with col1:
 
-        st.metric(
-            label="👮 Total Guards",
+        dashboard_card(
+            title="Total Guards",
             value=data["total_guards"],
-            delta=f'{data["active_guards"]} Active'
+            icon="👮",
+            icon_class="icon-purple",
+            footer=f'{data["active_guards"]} Active',
+            footer_class="status-positive"
         )
 
 
     with col2:
 
-        st.metric(
-            label="🏢 Total Sites",
+        dashboard_card(
+            title="Total Sites",
             value=data["total_sites"],
-            delta=f'{data["active_sites"]} Active'
+            icon="🏢",
+            icon_class="icon-blue",
+            footer=f'{data["active_sites"]} Active',
+            footer_class="status-positive"
         )
 
 
     with col3:
 
-        st.metric(
-            label="📅 Shifts Today",
-            value=data["shifts_today"]
+        dashboard_card(
+            title="Shifts Today",
+            value=data["shifts_today"],
+            icon="📅",
+            icon_class="icon-orange",
+            footer="Scheduled for today",
+            footer_class="status-warning"
         )
 
 
     with col4:
 
-        st.metric(
-            label="🚨 Open Incidents",
-            value=data["open_incidents"]
+        dashboard_card(
+            title="Open Incidents",
+            value=data["open_incidents"],
+            icon="🚨",
+            icon_class="icon-red",
+            footer="Requires attention",
+            footer_class="status-danger"
         )
-
-
-    st.markdown("<br>", unsafe_allow_html=True)
 
 
     # ==============================================
     # SECONDARY STATISTICS
     # ==============================================
 
+    st.markdown("<br>", unsafe_allow_html=True)
+
     col1, col2, col3 = st.columns(3)
+
+    inactive_guards = (
+        data["total_guards"]
+        - data["active_guards"]
+    )
 
 
     with col1:
 
-        st.metric(
-            label="📍 Check-ins Today",
-            value=data["attendance_today"]
+        dashboard_card(
+            title="Check-ins Today",
+            value=data["attendance_today"],
+            icon="📍",
+            icon_class="icon-cyan",
+            footer="Today's attendance",
+            footer_class="status-positive"
         )
 
 
     with col2:
 
-        st.metric(
-            label="👥 System Users",
-            value=data["total_users"]
+        dashboard_card(
+            title="System Users",
+            value=data["total_users"],
+            icon="👥",
+            icon_class="icon-purple",
+            footer="Registered users",
+            footer_class=""
         )
 
 
     with col3:
 
-        inactive_guards = (
-            data["total_guards"]
-            - data["active_guards"]
+        dashboard_card(
+            title="Inactive Guards",
+            value=inactive_guards,
+            icon="⚠️",
+            icon_class="icon-orange",
+            footer="Not currently active",
+            footer_class="status-warning"
         )
-
-        st.metric(
-            label="⚠️ Inactive Guards",
-            value=inactive_guards
-        )
-
-
-    st.divider()
 
 
     # ==============================================
