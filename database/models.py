@@ -25,17 +25,25 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True
-    )
+    id = Column(Integer, primary_key=True, index=True)
 
     username = Column(
         String,
         unique=True,
         nullable=False,
         index=True
+    )
+
+    email = Column(
+        String,
+        unique=True,
+        nullable=True,
+        index=True
+    )
+
+    phone = Column(
+        String,
+        nullable=True
     )
 
     password_hash = Column(
@@ -48,16 +56,7 @@ class User(Base):
         nullable=False,
         index=True
     )
-    email = Column(
-            String,
-            unique=True,
-            nullable=True
-        )
-    
-    phone = Column(
-        String,
-        nullable=True
-    )
+
     is_active = Column(
         Boolean,
         default=True,
@@ -68,6 +67,13 @@ class User(Base):
         DateTime,
         default=datetime.utcnow,
         nullable=False
+    )
+
+    # One user -> one guard profile
+    guard_profile = relationship(
+        "Guard",
+        back_populates="user",
+        uselist=False
     )
 
     
@@ -89,6 +95,7 @@ class Guard(Base):
     user_id = Column(
         Integer,
         ForeignKey("users.id"),
+        unique=True,
         nullable=True
     )
 
@@ -97,15 +104,42 @@ class Guard(Base):
         nullable=False
     )
 
-    phone = Column(
-        String,
-        nullable=False
-    )
-
     employee_id = Column(
         String,
         unique=True,
-        nullable=False
+        nullable=False,
+        index=True
+    )
+
+    phone = Column(String, nullable=True)
+
+    email = Column(String, nullable=True)
+
+    aadhaar_number = Column(
+        String,
+        unique=True,
+        nullable=True
+    )
+
+    address = Column(
+        Text,
+        nullable=True
+    )
+
+    # ADD THIS
+    pincode = Column(
+        String(6),
+        nullable=True
+    )
+
+    emergency_contact = Column(
+        String,
+        nullable=True
+    )
+
+    photo_path = Column(
+        String,
+        nullable=True
     )
 
     joining_date = Column(
@@ -115,13 +149,30 @@ class Guard(Base):
 
     status = Column(
         String,
-        default="Active"
+        default="Active",
+        nullable=False
     )
 
-    # Relationships
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+    # ==============================================
+    # RELATIONSHIPS
+    # ==============================================
+
     user = relationship(
         "User",
-        backref="guard"
+        back_populates="guard_profile"
     )
 
     shifts = relationship(
@@ -156,6 +207,11 @@ class Site(Base):
 
     address = Column(
         String,
+        nullable=False
+    )
+
+    pincode = Column(
+        String(6),
         nullable=False
     )
 
@@ -222,13 +278,13 @@ class Shift(Base):
         nullable=False
     )
 
-    site = relationship(
-        "Site",
+    guard = relationship(
+        "Guard",
         back_populates="shifts"
     )
 
-    guard = relationship(
-        "Guard",
+    site = relationship(
+        "Site",
         back_populates="shifts"
     )
 
