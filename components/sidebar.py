@@ -59,6 +59,31 @@ logo_path = os.path.join(
 
 def render_sidebar(username, role, allowed_pages):
 
+    st.markdown(
+            """
+            <style>
+    
+            .login-brand-title {
+                font-size: 42px;
+                font-weight: 900;
+                color: #f1f5f9;
+                line-height: 1.1;
+                letter-spacing: 0.5px;
+            }
+    
+            .login-brand-description {
+                margin-top: 12px;
+                margin-bottom: 20px;
+                color: #94a3b8;
+                font-size: 15px;
+                font-weight: 500;
+            }
+    
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
     with st.sidebar:
 
         # ==========================================

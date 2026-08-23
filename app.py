@@ -55,7 +55,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-
+load_custom_css()
+apply_global_styles()
 def restore_login_session():
 
     # User already restored
@@ -83,8 +84,7 @@ restore_login_session()
 # LOAD GLOBAL STYLES
 # ==================================================
 
-load_custom_css()
-apply_global_styles()
+
 
 
 # ==================================================
