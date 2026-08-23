@@ -82,6 +82,12 @@ class User(Base):
         foreign_keys="Site.client_id"
     )
 
+    auth_sessions = relationship(
+        "AuthSession",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
     
 
 # ==================================================

@@ -21,3 +21,7 @@ class IncidentStatus(str, Enum):
     INVESTIGATING = "Investigating"
     RESOLVED = "Resolved"
     CLOSED = "Closed"
+
+COMPANY_NAME = "AADHAR SECURITY SERVICES"
+DESCRIPTION = "A comprehensive security management system designed to streamline operations, enhance guard accountability, and provide real-time insights for security companies."
+LOGO_PATH = "uploads/company/company_logo.png"

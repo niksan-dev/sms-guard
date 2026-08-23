@@ -171,7 +171,7 @@ def show_guards():
 
             st.dataframe(
                 df,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True
             )
 
@@ -368,7 +368,7 @@ def show_guards():
 
             submitted = st.form_submit_button(
                 "➕ Create Guard",
-                use_container_width=True
+                width="stretch"
             )
 
         # ==============================================
@@ -694,7 +694,7 @@ def show_guards():
 
                     update_submitted = st.form_submit_button(
                         "💾 Update Guard",
-                        use_container_width=True
+                        width="stretch"
                     )
 
                

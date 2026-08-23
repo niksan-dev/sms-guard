@@ -44,8 +44,10 @@ from database.models import (
     Incident,
     CompanySettings,
     Payment,
-    SiteGuardAssignment
+    SiteGuardAssignment,
 )
+
+from database.auth_session import AuthSession
 
 
 # ==================================================

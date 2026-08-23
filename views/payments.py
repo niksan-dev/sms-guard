@@ -262,7 +262,7 @@ def show_create_bill():
 
         submitted = st.form_submit_button(
             "➕ Generate Bill",
-            use_container_width=True,
+            width="stretch",
             type="primary"
         )
 
@@ -572,7 +572,7 @@ def show_record_payment():
 
         submitted = st.form_submit_button(
             "💾 Record Payment",
-            use_container_width=True
+            width="stretch"
         )
 
 

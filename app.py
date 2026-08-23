@@ -7,6 +7,10 @@ import streamlit as st
 from utils.auth import create_default_super_admin
 from utils.permissions import get_allowed_pages
 
+from utils.cookies import get_cookie_manager
+from services.auth_session_service import (
+    get_user_from_session
+)
 
 # ==================================================
 # VIEWS
@@ -26,7 +30,7 @@ from views.payments import show_payments
 
 from views.company_settings import show_company_settings
 
-
+from utils import constants
 # ==================================================
 # UI COMPONENTS
 # ==================================================
@@ -34,25 +38,53 @@ from views.company_settings import show_company_settings
 from utils.styles import load_custom_css
 from components.sidebar import render_sidebar
 
+#=================================================
+# Global styles and configurations
+#=================================================
 
+from utils.global_style import apply_global_styles
 # ==================================================
 # PAGE CONFIGURATION
 # IMPORTANT: MUST BE THE FIRST STREAMLIT COMMAND
 # ==================================================
 
 st.set_page_config(
-    page_title="Pravin Mokal Enterprises",
-    page_icon="🛡️",
+    page_title=constants.COMPANY_NAME,
+    page_icon=constants.LOGO_PATH,
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 
+def restore_login_session():
+
+    # User already restored
+    if "user" in st.session_state:
+        return
+
+    cookie_manager = get_cookie_manager()
+
+    token = cookie_manager.get(
+        cookie="security_session"
+    )
+
+    if not token:
+        return
+
+    user_data = get_user_from_session(token)
+
+    if user_data:
+
+        st.session_state["user"] = user_data
+
+
+restore_login_session()
 # ==================================================
 # LOAD GLOBAL STYLES
 # ==================================================
 
 load_custom_css()
+apply_global_styles()
 
 
 # ==================================================
@@ -67,20 +99,39 @@ create_default_super_admin()
 # SESSION INITIALIZATION
 # ==================================================
 
-if "user" not in st.session_state:
-    st.session_state["user"] = None
+# if "user" not in st.session_state:
+#     st.session_state["user"] = None
 
 
 # ==================================================
 # AUTHENTICATION CHECK
 # ==================================================
+#print(f"User '{st.session_state['user']}'")
 
-if not st.session_state["user"]:
+# if not st.session_state["user"]:
+
+#     show_login_page()
+
+#     # Do not show sidebar or application pages
+#     st.stop()
+
+# else:
+#     print(
+#         f"User '{st.session_state['user']['username']}' is logged in."
+#     )
+
+
+if "user" not in st.session_state:
 
     show_login_page()
 
-    # Do not show sidebar or application pages
     st.stop()
+else:
+    
+    print(
+        f"User '{st.session_state['user']['username']}' is logged in."
+    )
+    
 
 
 # ==================================================
@@ -199,3 +250,5 @@ else:
     st.warning(
         "You do not have permission to access this page."
     )
+
+

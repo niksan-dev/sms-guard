@@ -603,7 +603,7 @@ def show_dashboard():
 
         st.plotly_chart(
             fig_guards,
-            use_container_width=True,
+            width="stretch",
             key="guard_status_chart"
         )
 
@@ -629,7 +629,7 @@ def show_dashboard():
 
         st.plotly_chart(
             fig_sites,
-            use_container_width=True,
+            width="stretch",
             key="site_status_chart"
         )
 
@@ -657,7 +657,7 @@ def show_dashboard():
         if st.button(
             "➕ Add Guard",
             key="quick_add_guard",
-            use_container_width=True
+            width="stretch"
         ):
 
             st.session_state["selected_page"] = "Guards"
@@ -670,7 +670,7 @@ def show_dashboard():
         if st.button(
             "🏢 Add Site",
             key="quick_add_site",
-            use_container_width=True
+            width="stretch"
         ):
 
             st.session_state["selected_page"] = "Sites"
@@ -683,7 +683,7 @@ def show_dashboard():
         if st.button(
             "📅 Manage Shifts",
             key="quick_manage_shifts",
-            use_container_width=True
+            width="stretch"
         ):
 
             st.session_state["selected_page"] = "Shifts"
@@ -696,7 +696,7 @@ def show_dashboard():
         if st.button(
             "🚨 Report Incident",
             key="quick_report_incident",
-            use_container_width=True
+            width="stretch"
         ):
 
             st.session_state["selected_page"] = "Incidents"

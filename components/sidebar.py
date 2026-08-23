@@ -1,5 +1,8 @@
 import streamlit as st
-
+import os
+from services.auth_session_service import delete_login_session
+from utils.cookies import get_cookie_manager
+from utils import constants
 
 # ==================================================
 # PAGE ICONS
@@ -38,8 +41,18 @@ def get_display_role(role):
     }
 
     return role_names.get(role, role)
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
 
-
+logo_path = os.path.join(
+    BASE_DIR,
+    "uploads",
+    "company",
+    "company_logo.png"
+)
 # ==================================================
 # SIDEBAR
 # ==================================================
@@ -53,17 +66,22 @@ def render_sidebar(username, role, allowed_pages):
         # ==========================================
 
         col1, col2 = st.columns(
-            [1, 4],
+            [4, 4],
             vertical_alignment="center"
         )
 
         with col1:
-            st.markdown("## 🛡️")
+             if os.path.exists(logo_path):
+
+                st.image(
+                    logo_path,
+                    width=120
+                )
 
         with col2:
-            st.markdown("### Pravin Mokal Enterprises")
-            st.caption("SECURITY GUARD MANAGEMENT SYSTEM")
-
+            st.markdown(f"### {constants.COMPANY_NAME}")
+            
+        st.caption(f"{constants.DESCRIPTION}")
 
         st.divider()
 
@@ -201,20 +219,31 @@ def render_sidebar(username, role, allowed_pages):
         if st.button(
             "🚪 Logout",
             key="logout_button",
-            use_container_width=True
+            width="stretch"
         ):
 
-            st.session_state["user"] = None
+            cookie_manager = get_cookie_manager()
 
-            st.session_state.pop(
-                "selected_page",
-                None
+            token = cookie_manager.get(
+                cookie="security_session"
             )
 
-            st.session_state.pop(
-                "sidebar_navigation",
-                None
+
+            # Remove database session
+            if token:
+
+                delete_login_session(token)
+
+
+            # Remove browser cookie
+            cookie_manager.delete(
+                "security_session"
             )
+
+
+            # Remove Streamlit session
+            st.session_state.clear()
+
 
             st.rerun()
 

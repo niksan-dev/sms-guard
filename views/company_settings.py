@@ -1,4 +1,5 @@
 import os
+import uuid
 import streamlit as st
 
 from services.company_settings_service import (
@@ -434,7 +435,7 @@ def show_company_settings():
 
         submitted = st.form_submit_button(
             "💾 Save Company Settings",
-            use_container_width=True
+            width="stretch"
         )
 
 

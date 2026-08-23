@@ -67,7 +67,7 @@ def show_users():
 
             st.dataframe(
                 df,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True
             )
 
@@ -135,7 +135,7 @@ def show_users():
 
             submitted = st.form_submit_button(
                 "Create User",
-                use_container_width=True
+                width="stretch"
             )
 
         if submitted:
@@ -251,7 +251,7 @@ def show_users():
 
                 update_profile_clicked = st.form_submit_button(
                     "💾 Save Profile Changes",
-                    use_container_width=True
+                    width="stretch"
                 )
  
             if update_profile_clicked:
@@ -312,7 +312,7 @@ def show_users():
 
                 reset_password_clicked = st.form_submit_button(
                     "🔑 Reset Password",
-                    use_container_width=True
+                    width="stretch"
                 )
 
 
@@ -405,7 +405,7 @@ def show_users():
 
                     if st.button(
                         "Update Role",
-                        use_container_width=True,
+                        width="stretch",
                         key=f"update_role_{selected_user.id}"
                     ):
 
@@ -452,7 +452,7 @@ def show_users():
 
                     if st.button(
                         "🔴 Deactivate User",
-                        use_container_width=True,
+                        width="stretch",
                         key=f"deactivate_{selected_user.id}"
                     ):
 
@@ -474,7 +474,7 @@ def show_users():
 
                     if st.button(
                         "🟢 Activate User",
-                        use_container_width=True,
+                        width="stretch",
                         key=f"activate_{selected_user.id}"
                     ):
 

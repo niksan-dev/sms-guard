@@ -124,6 +124,11 @@ class CompanySettings(Base):
         nullable=False
     )
 
+    logo_path = Column(
+        String,
+        nullable=True
+    )
+
     # ==============================================
     # CREATED / UPDATED
     # ==============================================
