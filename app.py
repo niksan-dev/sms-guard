@@ -41,7 +41,7 @@ from components.sidebar import render_sidebar
 # Global styles and configurations
 #=================================================
 
-from utils.global_style import apply_global_styles
+#from utils.global_style import apply_global_styles
 # ==================================================
 # PAGE CONFIGURATION
 # IMPORTANT: MUST BE THE FIRST STREAMLIT COMMAND
@@ -55,7 +55,7 @@ st.set_page_config(
 )
 
 load_custom_css()
-apply_global_styles()
+#apply_global_styles()
 def restore_login_session():
 
     # User already restored
