@@ -314,12 +314,12 @@ def apply_global_styles():
            FORM CONTAINER
         ========================================================= */
 
-        [data-testid="stForm"] {
+      /*  [data-testid="stForm"] {
             background-color: #111a29;
             border: 1px solid #202d40;
             border-radius: 14px;
             padding: 20px;
-        }
+        }*/
 
 
         /* =========================================================

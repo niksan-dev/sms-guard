@@ -34,7 +34,6 @@ from utils import constants
 # ==================================================
 # UI COMPONENTS
 # ==================================================
-
 from utils.styles import load_custom_css
 from components.sidebar import render_sidebar
 
