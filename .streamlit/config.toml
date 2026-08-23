@@ -1,6 +1,10 @@
-[server]
-runOnSave = true
-fileWatcherType = "auto"
+[theme]
+base = "dark"
+primaryColor = "#6D42D8"
+backgroundColor = "#0F1724"
+secondaryBackgroundColor = "#1C293B"
+textColor = "#F3F6FB"
+font = "sans serif"
 
-[runner]
-fastReruns = true
+[client]
+toolbarMode = "minimal"

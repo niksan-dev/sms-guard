@@ -6,4 +6,3 @@ alembic
 plotly
 extra-streamlit-components
 
-#python -m database.init_db

@@ -2,980 +2,355 @@ import streamlit as st
 
 
 def load_custom_css():
-
     st.markdown("""
     <style>
 
-    /* =====================================================
-       IMPORT FONT
-    ===================================================== */
+    /* =========================================================
+       GLOBAL VARIABLES
+    ========================================================= */
 
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    :root {
+        --primary: #6D42D8;
+        --primary-light: #8B6CF0;
+        --primary-dark: #5130B5;
 
+        --bg-main: #0F1724;
+        --bg-sidebar: #131E2E;
+        --bg-card: #1C293B;
+        --bg-input: #202C3D;
 
-    /* =====================================================
-       GLOBAL
-    ===================================================== */
+        --border: #314158;
+        --border-light: #40516A;
 
-    html,
-    body,
-    [class*="css"] {
+        --text-main: #F3F6FB;
+        --text-secondary: #A9B7CA;
+        --text-muted: #78879A;
 
-        font-family: 'Inter', sans-serif;
+        --success: #41C987;
+        --warning: #F5A524;
+        --danger: #FF5C63;
     }
 
 
-    /* =====================================================
-       MAIN APP BACKGROUND
-    ===================================================== */
+    /* =========================================================
+       APP BACKGROUND
+    ========================================================= */
 
     .stApp {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+    }
 
-        background:
-            radial-gradient(
-                circle at top right,
-                rgba(80, 70, 160, 0.12),
-                transparent 30%
-            ),
-            #0B101A;
+    [data-testid="stAppViewContainer"] {
+        background-color: var(--bg-main);
+    }
 
-        color: #E8EDF7;
+    [data-testid="stMain"] {
+        background-color: var(--bg-main);
+    }
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1600px;
     }
 
 
-    /* =====================================================
-       MAIN CONTENT
-    ===================================================== */
+    /* =========================================================
+       TEXT
+    ========================================================= */
 
-    .main .block-container {
-
-        padding-top: 2.5rem;
-        padding-left: 3rem;
-        padding-right: 3rem;
-        max-width: 1500px;
-    }
-
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
-
-    section[data-testid="stSidebar"] {
-
-        background:
-            linear-gradient(
-                180deg,
-                #111A2B 0%,
-                #0B1220 100%
-            );
-
-        border-right:
-            1px solid #263247;
-
-        min-width: 300px;
-    }
-
-
-    section[data-testid="stSidebar"] > div {
-
-        padding-top: 1rem;
-    }
-
-
-    /* =====================================================
-       HEADINGS
-    ===================================================== */
-
-    h1 {
-
-        color: #F4F6FB !important;
-
-        font-weight: 800 !important;
-
-        letter-spacing: -1px;
-
-        font-size: 2.6rem !important;
-    }
-
-
-    h2 {
-
-        color: #E8EDF7 !important;
-
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-main) !important;
         font-weight: 700 !important;
     }
 
+    p, span, label {
+        color: inherit;
+    }
 
-    h3 {
+    .stMarkdown {
+        color: var(--text-main);
+    }
 
-        color: #E8EDF7 !important;
 
+    /* =========================================================
+       DIVIDERS
+    ========================================================= */
+
+    hr {
+        border-color: var(--border) !important;
+    }
+
+
+    /* =========================================================
+       FORM INPUTS
+    ========================================================= */
+
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input,
+    [data-testid="stTimeInput"] input,
+    [data-testid="stTextArea"] textarea {
+        background-color: var(--bg-input) !important;
+        color: var(--text-main) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
+        min-height: 42px;
+    }
+
+    [data-testid="stTextArea"] textarea {
+        min-height: 110px;
+    }
+
+    [data-testid="stTextInput"] input:focus,
+    [data-testid="stNumberInput"] input:focus,
+    [data-testid="stDateInput"] input:focus,
+    [data-testid="stTextArea"] textarea:focus {
+        border-color: var(--primary-light) !important;
+        box-shadow: 0 0 0 2px rgba(109, 66, 216, 0.18) !important;
+    }
+
+    [data-testid="stTextInput"] label,
+    [data-testid="stNumberInput"] label,
+    [data-testid="stDateInput"] label,
+    [data-testid="stSelectbox"] label,
+    [data-testid="stTextArea"] label {
+        color: var(--text-secondary) !important;
         font-weight: 600 !important;
     }
 
 
-    p,
-    label {
+    /* =========================================================
+       SELECT BOX
+    ========================================================= */
 
-        color: #B8C1D1 !important;
+    [data-testid="stSelectbox"] > div > div {
+        background-color: var(--bg-input) !important;
+        border-color: var(--border) !important;
+        border-radius: 10px !important;
+        color: var(--text-main) !important;
+    }
+
+    [data-testid="stSelectbox"] [data-baseweb="select"] {
+        background-color: var(--bg-input) !important;
+    }
+
+    [data-baseweb="select"] * {
+        color: var(--text-main);
     }
 
 
-    /* =====================================================
-       DIVIDER
-    ===================================================== */
+    /* =========================================================
+       DATE INPUT
+    ========================================================= */
 
-    hr {
-
-        border-color: #273247 !important;
+    [data-testid="stDateInput"] > div {
+        background-color: var(--bg-input) !important;
+        border-radius: 10px !important;
     }
 
 
-    /* =====================================================
+    /* =========================================================
+       CHECKBOX
+    ========================================================= */
+
+    [data-testid="stCheckbox"] {
+        color: var(--text-secondary) !important;
+    }
+
+
+    /* =========================================================
        BUTTONS
-    ===================================================== */
+    ========================================================= */
 
     .stButton > button {
-
-        width: 100%;
-
-        background:
-            linear-gradient(
-                135deg,
-                #6941C6,
-                #8B5CF6
-            );
-
-        color: white;
-
-        border: none;
-
+        min-height: 42px;
         border-radius: 10px;
-
+        border: 1px solid var(--border);
+        background-color: var(--bg-card);
+        color: var(--text-main);
         font-weight: 600;
-
-        min-height: 44px;
-
-        transition:
-            all 0.2s ease;
+        transition: all 0.2s ease;
     }
-
 
     .stButton > button:hover {
+        border-color: var(--primary-light);
+        color: white;
+        transform: translateY(-1px);
+    }
 
-        transform:
-            translateY(-2px);
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-light)
+        ) !important;
 
-        box-shadow:
-            0 8px 25px
-            rgba(124, 58, 237, 0.35);
+        border-color: var(--primary-light) !important;
+        color: white !important;
+    }
+
+    .stButton > button[kind="primary"]:hover {
+        box-shadow: 0 8px 20px rgba(109, 66, 216, 0.30);
     }
 
 
-    /* =====================================================
-       INPUTS
-    ===================================================== */
+    /* =========================================================
+       FORMS
+    ========================================================= */
 
-    .stTextInput input,
-    .stTextArea textarea,
-    .stNumberInput input {
-
-        background-color: #161F2E !important;
-
-        color: #F4F6FB !important;
-
-        border:
-            1px solid #2B374C !important;
-
-        border-radius: 10px !important;
+    [data-testid="stForm"] {
+        background-color: transparent !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        padding: 1.25rem !important;
     }
 
 
-    .stTextInput input:focus,
-    .stTextArea textarea:focus,
-    .stNumberInput input:focus {
+    /* =========================================================
+       EXPANDER
+    ========================================================= */
 
-        border:
-            1px solid #7C5CFC !important;
-
-        box-shadow:
-            0 0 0 2px
-            rgba(124, 92, 252, 0.15) !important;
-    }
-
-
-    /* =====================================================
-       SELECT BOX
-    ===================================================== */
-
-    div[data-baseweb="select"] > div {
-
-        background-color: #161F2E !important;
-
-        border:
-            1px solid #2B374C !important;
-
-        border-radius: 10px !important;
-    }
-
-
-    /* =====================================================
-       METRIC CARDS
-    ===================================================== */
-
-    div[data-testid="stMetric"] {
-
-        background:
-            linear-gradient(
-                145deg,
-                #161F2E,
-                #111827
-            );
-
-        padding: 22px;
-
-        border-radius: 16px;
-
-        border:
-            1px solid #273247;
-
-        box-shadow:
-            0 10px 30px
-            rgba(0, 0, 0, 0.15);
-    }
-
-
-    div[data-testid="stMetricLabel"] {
-
-        color: #98A2B3 !important;
-    }
-
-
-    div[data-testid="stMetricValue"] {
-
-        color: #F4F6FB !important;
-
-        font-weight: 700;
-    }
-
-
-    /* =====================================================
-       DATAFRAME
-    ===================================================== */
-
-    div[data-testid="stDataFrame"] {
-
+    [data-testid="stExpander"] {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: 12px;
-
         overflow: hidden;
-
-        border:
-            1px solid #273247;
     }
 
 
-    /* =====================================================
+    /* =========================================================
+       DATAFRAMES
+    ========================================================= */
+
+    [data-testid="stDataFrame"] {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: var(--bg-card);
+    }
+
+
+    /* =========================================================
+       TABLES
+    ========================================================= */
+
+    .stTable {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .stTable table {
+        color: var(--text-main);
+        background-color: var(--bg-card);
+    }
+
+
+    /* =========================================================
+       METRIC CARDS
+    ========================================================= */
+
+    [data-testid="stMetric"] {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.25rem;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: var(--text-main) !important;
+        font-weight: 700 !important;
+    }
+
+
+    /* =========================================================
+       ALERTS
+    ========================================================= */
+
+    [data-testid="stAlert"] {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+
+
+    /* =========================================================
+       FILE UPLOADER
+    ========================================================= */
+
+    [data-testid="stFileUploader"] {
+        background-color: var(--bg-card);
+        border-radius: 12px;
+    }
+
+
+    /* =========================================================
        TABS
-    ===================================================== */
+    ========================================================= */
 
-    button[data-baseweb="tab"] {
-
-        color: #98A2B3;
-
+    [data-testid="stTabs"] button {
+        color: var(--text-secondary) !important;
         font-weight: 600;
     }
 
-
-    button[data-baseweb="tab"][aria-selected="true"] {
-
-        color: #A78BFA;
-
-        border-bottom:
-            2px solid #8B5CF6 !important;
+    [data-testid="stTabs"] button[aria-selected="true"] {
+        color: var(--text-main) !important;
     }
 
 
-    /* =====================================================
-       EXPANDER
-    ===================================================== */
+    /* =========================================================
+       SIDEBAR BASE
+    ========================================================= */
 
-    div[data-testid="stExpander"] {
+    [data-testid="stSidebar"] {
+        background-color: var(--bg-sidebar) !important;
+        border-right: 1px solid var(--border) !important;
+    }
 
-        background: #111827;
-
-        border:
-            1px solid #273247;
-
-        border-radius: 12px;
+    [data-testid="stSidebar"] > div:first-child {
+        background-color: var(--bg-sidebar) !important;
     }
 
 
-    /* =====================================================
-       ALERTS
-    ===================================================== */
+    /* =========================================================
+       SCROLLBAR
+    ========================================================= */
 
-    div[data-testid="stAlert"] {
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
 
-        border-radius: 12px;
+    ::-webkit-scrollbar-thumb {
+        background-color: #334155;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background-color: transparent;
     }
 
 
-    /* =====================================================
+    /* =========================================================
        HIDE STREAMLIT DEFAULT ELEMENTS
-    ===================================================== */
+    ========================================================= */
 
     #MainMenu {
-
         visibility: hidden;
     }
-
 
     footer {
-
         visibility: hidden;
     }
 
-
-    header {
-
-        background: transparent !important;
+    [data-testid="stToolbar"] {
+        visibility: hidden;
     }
-
-
-    /* =====================================================
-    SIDEBAR RADIO NAVIGATION
-    ===================================================== */
-
-    section[data-testid="stSidebar"]
-    div[role="radiogroup"] {
-
-        gap: 10px;
-    }
-
-
-    section[data-testid="stSidebar"]
-    label[data-baseweb="radio"] {
-
-        background: #172235;
-
-        border: 1px solid #263247;
-
-        border-radius: 14px;
-
-        padding: 15px;
-
-        min-height: 58px;
-
-        transition:
-            all 0.2s ease;
-    }
-
-
-    section[data-testid="stSidebar"]
-    label[data-baseweb="radio"]:hover {
-
-        background: #202C40;
-
-        transform:
-            translateX(3px);
-    }
-
-
-
-    /* ==========================================
-        SIDEBAR NAVIGATION
-        ========================================== */
-
-        section[data-testid="stSidebar"] div[role="radiogroup"] {
-            gap: 10px;
-        }
-
-
-        /* Navigation item */
-
-        section[data-testid="stSidebar"] div[role="radiogroup"] label {
-            background: #1E293B;
-            border: 1px solid #2D3748;
-
-            border-radius: 14px;
-
-            padding: 14px 16px;
-
-            min-height: 58px;
-
-            transition:
-                all 0.25s ease;
-
-            cursor: pointer;
-        }
-
-
-        /* Hide default radio circle */
-
-        section[data-testid="stSidebar"] div[role="radiogroup"] label input {
-            display: none;
-        }
-
-
-        /* Text */
-
-        section[data-testid="stSidebar"] div[role="radiogroup"] label p {
-            font-size: 16px;
-            font-weight: 600;
-
-            color: #CBD5E1;
-        }
-
-
-        /* Hover */
-
-        section[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
-            background: #273449;
-
-            border-color: #4F46E5;
-
-            transform: translateX(4px);
-        }
-
-
-        /* ==========================================
-        ACTIVE NAVIGATION TAB
-        ========================================== */
-
-        section[data-testid="stSidebar"]
-        div[role="radiogroup"]
-        label:has(input:checked) {
-
-            background: linear-gradient(
-                135deg,
-                #4F46E5,
-                #7C3AED
-            );
-
-            border-color: #8B5CF6;
-
-            box-shadow:
-                0 6px 20px
-                rgba(124, 58, 237, 0.35);
-        }
-
-
-        /* Active text */
-
-        section[data-testid="stSidebar"]
-        div[role="radiogroup"]
-        label:has(input:checked) p {
-
-            color: white;
-
-            font-weight: 700;
-        }
-
-
-        /* ==================================================
-        PREMIUM DASHBOARD CARDS
-        ================================================== */
-
-        .dashboard-card {
-            background: linear-gradient(145deg, #1e293b, #111827);
-            border: 1px solid #334155;
-            border-radius: 18px;
-            padding: 22px;
-            min-height: 150px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-            transition: all 0.25s ease;
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            border-color: #7c3aed;
-            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.22);
-        }
-
-        .dashboard-card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dashboard-card-title {
-            color: #94a3b8;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }
-
-        .dashboard-card-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 23px;
-        }
-
-        .icon-purple {
-            background: rgba(124, 58, 237, 0.18);
-        }
-
-        .icon-green {
-            background: rgba(34, 197, 94, 0.18);
-        }
-
-        .icon-blue {
-            background: rgba(59, 130, 246, 0.18);
-        }
-
-        .icon-red {
-            background: rgba(239, 68, 68, 0.18);
-        }
-
-        .icon-orange {
-            background: rgba(249, 115, 22, 0.18);
-        }
-
-        .icon-cyan {
-            background: rgba(6, 182, 212, 0.18);
-        }
-
-        .dashboard-card-value {
-            color: #f8fafc;
-            font-size: 36px;
-            font-weight: 800;
-            margin-top: 20px;
-            line-height: 1;
-        }
-
-        .dashboard-card-footer {
-            color: #94a3b8;
-            font-size: 13px;
-            margin-top: 12px;
-        }
-
-        .status-positive {
-            color: #22c55e;
-            font-weight: 700;
-        }
-
-        .status-warning {
-            color: #f59e0b;
-            font-weight: 700;
-        }
-
-        .status-danger {
-            color: #ef4444;
-            font-weight: 700;
-        }
-
-
-        /* ==================================================
-        DASHBOARD ANALYTICS
-        ================================================== */
-
-        .dashboard-section-title {
-            color: #f8fafc;
-            font-size: 24px;
-            font-weight: 700;
-            margin-top: 20px;
-            margin-bottom: 18px;
-        }
-
-        .chart-card {
-            background: linear-gradient(
-                145deg,
-                #1e293b,
-                #111827
-            );
-
-            border: 1px solid #334155;
-
-            border-radius: 18px;
-
-            padding: 20px;
-
-            min-height: 390px;
-
-            box-shadow:
-                0 8px 24px rgba(
-                    0,
-                    0,
-                    0,
-                    0.18
-                );
-        }
-
-        .chart-card:hover {
-            border-color: #7c3aed;
-
-            box-shadow:
-                0 12px 30px rgba(
-                    124,
-                    58,
-                    237,
-                    0.15
-                );
-        }
-
-
-        /* =====================================================
-        UNIFORM FORM SYSTEM
-        ===================================================== */
-
-        :root {
-            --form-bg: #1E293B;
-            --form-bg-hover: #253247;
-            --form-border: #334155;
-            --form-border-focus: #7C3AED;
-            --form-text: #F1F5F9;
-            --form-label: #AEBBCD;
-        }
-
-
-        /* =====================================================
-        FORM LABELS
-        ===================================================== */
-
-        .stTextInput label,
-        .stTextArea label,
-        .stNumberInput label,
-        .stSelectbox label,
-        .stDateInput label,
-        .stTimeInput label,
-        .stFileUploader label,
-        .stMultiSelect label {
-
-            color: var(--form-label) !important;
-            font-size: 0.88rem !important;
-            font-weight: 600 !important;
-        }
-
-
-        /* =====================================================
-        TEXT / NUMBER / PASSWORD INPUTS
-        ===================================================== */
-
-        .stTextInput input,
-        .stNumberInput input {
-
-            background: var(--form-bg) !important;
-            color: var(--form-text) !important;
-
-            border: 1px solid var(--form-border) !important;
-
-            border-radius: 10px !important;
-
-            min-height: 44px !important;
-
-            box-shadow: none !important;
-        }
-
-
-        /* =====================================================
-        TEXT AREA
-        ===================================================== */
-
-        .stTextArea textarea {
-
-            background: var(--form-bg) !important;
-            color: var(--form-text) !important;
-
-            border: 1px solid var(--form-border) !important;
-
-            border-radius: 10px !important;
-
-            box-shadow: none !important;
-        }
-
-
-        /* =====================================================
-        FOCUS STATE
-        ===================================================== */
-
-        .stTextInput input:focus,
-        .stTextArea textarea:focus,
-        .stNumberInput input:focus {
-
-            border-color: var(--form-border-focus) !important;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(124, 58, 237, 0.15) !important;
-        }
-
-
-        /* =====================================================
-        SELECT BOX
-        ===================================================== */
-
-        .stSelectbox div[data-baseweb="select"] > div,
-        .stMultiSelect div[data-baseweb="select"] > div {
-
-            background: var(--form-bg) !important;
-
-            color: var(--form-text) !important;
-
-            border: 1px solid var(--form-border) !important;
-
-            border-radius: 10px !important;
-
-            min-height: 44px !important;
-
-            box-shadow: none !important;
-        }
-
-
-        /* Selected value */
-
-        .stSelectbox div[data-baseweb="select"] span,
-        .stMultiSelect div[data-baseweb="select"] span {
-
-            color: var(--form-text) !important;
-        }
-
-
-        /* =====================================================
-        DATE / TIME INPUT
-        ===================================================== */
-
-        .stDateInput input,
-        .stTimeInput input {
-
-            background: var(--form-bg) !important;
-
-            color: var(--form-text) !important;
-
-            border: 1px solid var(--form-border) !important;
-
-            border-radius: 10px !important;
-
-            min-height: 44px !important;
-        }
-
-
-        /* Date input wrapper */
-
-        .stDateInput div[data-baseweb="input"],
-        .stTimeInput div[data-baseweb="input"] {
-
-            background: var(--form-bg) !important;
-
-            border-radius: 10px !important;
-
-            border: 1px solid var(--form-border) !important;
-        }
-
-
-        /* =====================================================
-        NUMBER INPUT BUTTONS
-        ===================================================== */
-
-        .stNumberInput button {
-
-            background: #273449 !important;
-
-            color: #CBD5E1 !important;
-
-            border-color: var(--form-border) !important;
-        }
-
-
-        .stNumberInput button:hover {
-
-            background: #334155 !important;
-
-            color: #FFFFFF !important;
-        }
-
-
-        /* =====================================================
-        CHECKBOX
-        ===================================================== */
-
-        .stCheckbox label {
-
-            color: #CBD5E1 !important;
-
-            font-size: 0.92rem !important;
-        }
-
-
-        .stCheckbox [data-baseweb="checkbox"] {
-
-            border-radius: 5px !important;
-        }
-
-
-        /* =====================================================
-        FILE UPLOADER
-        ===================================================== */
-
-        div[data-testid="stFileUploader"] {
-
-            background: var(--form-bg) !important;
-
-            border: 1px solid var(--form-border) !important;
-
-            border-radius: 12px !important;
-
-            padding: 10px !important;
-        }
-
-
-        div[data-testid="stFileUploaderDropzone"] {
-
-            background: transparent !important;
-
-            border: 1px dashed #475569 !important;
-
-            border-radius: 10px !important;
-        }
-
-
-        div[data-testid="stFileUploaderDropzone"]:hover {
-
-            border-color: #7C3AED !important;
-
-            background: rgba(124, 58, 237, 0.05) !important;
-        }
-
-
-        /* =====================================================
-        FORM CONTAINER
-        ===================================================== */
-
-        div[data-testid="stForm"] {
-
-            background:
-                linear-gradient(
-                    145deg,
-                    #151E2D,
-                    #111827
-                ) !important;
-
-            border: 1px solid #273247 !important;
-
-            border-radius: 18px !important;
-
-            padding: 24px !important;
-
-            box-shadow:
-                0 10px 30px
-                rgba(0, 0, 0, 0.15) !important;
-        }
-
-
-        /* =====================================================
-        DATAFRAME / RECORDS
-        ===================================================== */
-
-        div[data-testid="stDataFrame"] {
-
-            background: #151E2D !important;
-
-            border: 1px solid #334155 !important;
-
-            border-radius: 12px !important;
-
-            overflow: hidden !important;
-        }
-
-
-        /* Data editor / dataframe container */
-
-        div[data-testid="stDataFrame"] > div {
-
-            border-radius: 12px !important;
-        }
-
-
-        /* =====================================================
-        DATA EDITOR
-        ===================================================== */
-
-        div[data-testid="stDataEditor"] {
-
-            background: #151E2D !important;
-
-            border: 1px solid #334155 !important;
-
-            border-radius: 12px !important;
-
-            overflow: hidden !important;
-        }
-
-
-        /* =====================================================
-        TABLE
-        ===================================================== */
-
-        .stTable {
-
-            border: 1px solid #334155 !important;
-
-            border-radius: 12px !important;
-
-            overflow: hidden !important;
-        }
-
-
-        .stTable table {
-
-            background: #151E2D !important;
-
-            color: #E8EDF7 !important;
-
-            border-collapse: collapse !important;
-        }
-
-
-        .stTable th {
-
-            background: #1E293B !important;
-
-            color: #CBD5E1 !important;
-
-            font-weight: 700 !important;
-
-            border-bottom: 1px solid #334155 !important;
-        }
-
-
-        .stTable td {
-
-            background: #151E2D !important;
-
-            color: #E8EDF7 !important;
-
-            border-bottom: 1px solid #273247 !important;
-        }
-
-
-        /* =====================================================
-        RADIO BUTTONS
-        ===================================================== */
-
-        div[role="radiogroup"] label {
-
-            color: #CBD5E1 !important;
-        }
-
-
-        /* =====================================================
-        DIVIDER
-        ===================================================== */
-
-        hr {
-
-            margin-top: 1.5rem !important;
-
-            margin-bottom: 1.5rem !important;
-
-            border-color: #273247 !important;
-        }
 
     </style>
     """, unsafe_allow_html=True)
-
-

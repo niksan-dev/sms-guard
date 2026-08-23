@@ -1,4 +1,15 @@
 import streamlit as st
+from utils import constants
+
+
+
+
+st.set_page_config(
+    page_title=constants.COMPANY_NAME,
+    page_icon=constants.LOGO_PATH,
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # ==================================================
 # AUTH / PERMISSIONS
@@ -30,7 +41,7 @@ from views.payments import show_payments
 
 from views.company_settings import show_company_settings
 
-from utils import constants
+
 # ==================================================
 # UI COMPONENTS
 # ==================================================
@@ -47,12 +58,6 @@ from components.sidebar import render_sidebar
 # IMPORTANT: MUST BE THE FIRST STREAMLIT COMMAND
 # ==================================================
 
-st.set_page_config(
-    page_title=constants.COMPANY_NAME,
-    page_icon=constants.LOGO_PATH,
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 load_custom_css()
 #apply_global_styles()
