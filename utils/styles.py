@@ -618,6 +618,363 @@ def load_custom_css():
                 );
         }
 
+
+        /* =====================================================
+        UNIFORM FORM SYSTEM
+        ===================================================== */
+
+        :root {
+            --form-bg: #1E293B;
+            --form-bg-hover: #253247;
+            --form-border: #334155;
+            --form-border-focus: #7C3AED;
+            --form-text: #F1F5F9;
+            --form-label: #AEBBCD;
+        }
+
+
+        /* =====================================================
+        FORM LABELS
+        ===================================================== */
+
+        .stTextInput label,
+        .stTextArea label,
+        .stNumberInput label,
+        .stSelectbox label,
+        .stDateInput label,
+        .stTimeInput label,
+        .stFileUploader label,
+        .stMultiSelect label {
+
+            color: var(--form-label) !important;
+            font-size: 0.88rem !important;
+            font-weight: 600 !important;
+        }
+
+
+        /* =====================================================
+        TEXT / NUMBER / PASSWORD INPUTS
+        ===================================================== */
+
+        .stTextInput input,
+        .stNumberInput input {
+
+            background: var(--form-bg) !important;
+            color: var(--form-text) !important;
+
+            border: 1px solid var(--form-border) !important;
+
+            border-radius: 10px !important;
+
+            min-height: 44px !important;
+
+            box-shadow: none !important;
+        }
+
+
+        /* =====================================================
+        TEXT AREA
+        ===================================================== */
+
+        .stTextArea textarea {
+
+            background: var(--form-bg) !important;
+            color: var(--form-text) !important;
+
+            border: 1px solid var(--form-border) !important;
+
+            border-radius: 10px !important;
+
+            box-shadow: none !important;
+        }
+
+
+        /* =====================================================
+        FOCUS STATE
+        ===================================================== */
+
+        .stTextInput input:focus,
+        .stTextArea textarea:focus,
+        .stNumberInput input:focus {
+
+            border-color: var(--form-border-focus) !important;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(124, 58, 237, 0.15) !important;
+        }
+
+
+        /* =====================================================
+        SELECT BOX
+        ===================================================== */
+
+        .stSelectbox div[data-baseweb="select"] > div,
+        .stMultiSelect div[data-baseweb="select"] > div {
+
+            background: var(--form-bg) !important;
+
+            color: var(--form-text) !important;
+
+            border: 1px solid var(--form-border) !important;
+
+            border-radius: 10px !important;
+
+            min-height: 44px !important;
+
+            box-shadow: none !important;
+        }
+
+
+        /* Selected value */
+
+        .stSelectbox div[data-baseweb="select"] span,
+        .stMultiSelect div[data-baseweb="select"] span {
+
+            color: var(--form-text) !important;
+        }
+
+
+        /* =====================================================
+        DATE / TIME INPUT
+        ===================================================== */
+
+        .stDateInput input,
+        .stTimeInput input {
+
+            background: var(--form-bg) !important;
+
+            color: var(--form-text) !important;
+
+            border: 1px solid var(--form-border) !important;
+
+            border-radius: 10px !important;
+
+            min-height: 44px !important;
+        }
+
+
+        /* Date input wrapper */
+
+        .stDateInput div[data-baseweb="input"],
+        .stTimeInput div[data-baseweb="input"] {
+
+            background: var(--form-bg) !important;
+
+            border-radius: 10px !important;
+
+            border: 1px solid var(--form-border) !important;
+        }
+
+
+        /* =====================================================
+        NUMBER INPUT BUTTONS
+        ===================================================== */
+
+        .stNumberInput button {
+
+            background: #273449 !important;
+
+            color: #CBD5E1 !important;
+
+            border-color: var(--form-border) !important;
+        }
+
+
+        .stNumberInput button:hover {
+
+            background: #334155 !important;
+
+            color: #FFFFFF !important;
+        }
+
+
+        /* =====================================================
+        CHECKBOX
+        ===================================================== */
+
+        .stCheckbox label {
+
+            color: #CBD5E1 !important;
+
+            font-size: 0.92rem !important;
+        }
+
+
+        .stCheckbox [data-baseweb="checkbox"] {
+
+            border-radius: 5px !important;
+        }
+
+
+        /* =====================================================
+        FILE UPLOADER
+        ===================================================== */
+
+        div[data-testid="stFileUploader"] {
+
+            background: var(--form-bg) !important;
+
+            border: 1px solid var(--form-border) !important;
+
+            border-radius: 12px !important;
+
+            padding: 10px !important;
+        }
+
+
+        div[data-testid="stFileUploaderDropzone"] {
+
+            background: transparent !important;
+
+            border: 1px dashed #475569 !important;
+
+            border-radius: 10px !important;
+        }
+
+
+        div[data-testid="stFileUploaderDropzone"]:hover {
+
+            border-color: #7C3AED !important;
+
+            background: rgba(124, 58, 237, 0.05) !important;
+        }
+
+
+        /* =====================================================
+        FORM CONTAINER
+        ===================================================== */
+
+        div[data-testid="stForm"] {
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #151E2D,
+                    #111827
+                ) !important;
+
+            border: 1px solid #273247 !important;
+
+            border-radius: 18px !important;
+
+            padding: 24px !important;
+
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, 0.15) !important;
+        }
+
+
+        /* =====================================================
+        DATAFRAME / RECORDS
+        ===================================================== */
+
+        div[data-testid="stDataFrame"] {
+
+            background: #151E2D !important;
+
+            border: 1px solid #334155 !important;
+
+            border-radius: 12px !important;
+
+            overflow: hidden !important;
+        }
+
+
+        /* Data editor / dataframe container */
+
+        div[data-testid="stDataFrame"] > div {
+
+            border-radius: 12px !important;
+        }
+
+
+        /* =====================================================
+        DATA EDITOR
+        ===================================================== */
+
+        div[data-testid="stDataEditor"] {
+
+            background: #151E2D !important;
+
+            border: 1px solid #334155 !important;
+
+            border-radius: 12px !important;
+
+            overflow: hidden !important;
+        }
+
+
+        /* =====================================================
+        TABLE
+        ===================================================== */
+
+        .stTable {
+
+            border: 1px solid #334155 !important;
+
+            border-radius: 12px !important;
+
+            overflow: hidden !important;
+        }
+
+
+        .stTable table {
+
+            background: #151E2D !important;
+
+            color: #E8EDF7 !important;
+
+            border-collapse: collapse !important;
+        }
+
+
+        .stTable th {
+
+            background: #1E293B !important;
+
+            color: #CBD5E1 !important;
+
+            font-weight: 700 !important;
+
+            border-bottom: 1px solid #334155 !important;
+        }
+
+
+        .stTable td {
+
+            background: #151E2D !important;
+
+            color: #E8EDF7 !important;
+
+            border-bottom: 1px solid #273247 !important;
+        }
+
+
+        /* =====================================================
+        RADIO BUTTONS
+        ===================================================== */
+
+        div[role="radiogroup"] label {
+
+            color: #CBD5E1 !important;
+        }
+
+
+        /* =====================================================
+        DIVIDER
+        ===================================================== */
+
+        hr {
+
+            margin-top: 1.5rem !important;
+
+            margin-bottom: 1.5rem !important;
+
+            border-color: #273247 !important;
+        }
+
     </style>
     """, unsafe_allow_html=True)
 
