@@ -178,6 +178,7 @@ def create_site(
     state,
     pincode,
     guards_required,
+    guard_rate=0.0,
     status="Active"
 ):
 
@@ -232,6 +233,8 @@ def create_site(
             if pincode
             else None
         )
+
+        guard_rate = float(guard_rate) if guard_rate else 0.0
 
         # ------------------------------------------
         # VALIDATE SITE NAME
@@ -321,6 +324,8 @@ def create_site(
 
             guards_required=guards_required,
 
+            guard_rate=guard_rate,
+
             status=status
         )
 
@@ -362,6 +367,7 @@ def update_site(
     state,
     pincode,
     guards_required,
+    guard_rate,
     status
 ):
 
@@ -469,6 +475,9 @@ def update_site(
                 "Invalid number of guards required."
             )
 
+
+        site.guard_rate = guard_rate
+
         # ------------------------------------------
         # UPDATE SITE
         # ------------------------------------------
@@ -492,6 +501,8 @@ def update_site(
         site.pincode = pincode
 
         site.guards_required = guards_required
+
+        site.guard_rate = guard_rate
 
         site.status = status
 

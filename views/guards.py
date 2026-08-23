@@ -368,7 +368,8 @@ def show_guards():
 
             submitted = st.form_submit_button(
                 "➕ Create Guard",
-                width="stretch"
+                width="stretch",
+                type="primary"
             )
 
         # ==============================================
@@ -694,8 +695,10 @@ def show_guards():
 
                     update_submitted = st.form_submit_button(
                         "💾 Update Guard",
-                        width="stretch"
+                        width="stretch",
+                        type="primary"
                     )
+
 
                
 
@@ -814,7 +817,9 @@ def show_guard_site_assignment(guard):
 
         if st.button(
             "➕ Assign Site",
-            key=f"assign_site_button_{guard.id}"
+            key=f"assign_site_button_{guard.id}",
+            type="primary",
+            width="stretch"
         ):
 
             try:
@@ -886,7 +891,9 @@ def show_guard_site_assignment(guard):
 
             if st.button(
                 "❌ Unassign",
-                key=f"guard_unassign_{assignment.id}"
+                key=f"guard_unassign_{assignment.id}",
+                type="primary",
+                width="stretch"
             ):
 
                 try:

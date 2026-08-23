@@ -11,7 +11,6 @@ from services.site_service import (
     get_next_site_code
 )
 
-
 from services.site_guard_assignment_service import (
     assign_guard_to_site,
     get_site_guards,
@@ -69,6 +68,14 @@ def validate_pincode_input(pincode):
     return True, ""
 
 
+def get_site_monthly_amount(site):
+
+    guards_required = int(site.guards_required or 0)
+    guard_rate = float(site.guard_rate or 0)
+
+    return guards_required * guard_rate
+
+
 # ==================================================
 # MAIN SITE MANAGEMENT PAGE
 # ==================================================
@@ -120,7 +127,7 @@ def show_sites():
 
             search = st.text_input(
                 "🔍 Search Site",
-                placeholder="Search by site code, name, city or status...",
+                placeholder="Search by site code, name, client, city or status...",
                 key="site_search"
             )
 
@@ -130,23 +137,34 @@ def show_sites():
 
             site_data = []
 
-            for site in sites:
+            for current_site in sites:
 
                 client_name = get_client_name(
-                    site.client_id,
+                    current_site.client_id,
                     clients
                 )
 
+                monthly_amount = get_site_monthly_amount(
+                    current_site
+                )
+
                 site_data.append({
-                    "Site Code": site.site_code or "",
-                    "Site Name": site.name or "",
+                    "Site ID": current_site.id,
+                    "Site Code": current_site.site_code or "",
+                    "Site Name": current_site.name or "",
                     "Client": client_name,
-                    "Contact Person": site.contact_person or "",
-                    "Phone": site.contact_phone or "",
-                    "City": site.city or "",
-                    "State": site.state or "",
-                    "Guards Required": site.guards_required,
-                    "Status": site.status or ""
+                    "Contact Person": current_site.contact_person or "",
+                    "Phone": current_site.contact_phone or "",
+                    "City": current_site.city or "",
+                    "State": current_site.state or "",
+                    "Guards Required": int(
+                        current_site.guards_required or 0
+                    ),
+                    "Guard Rate (₹)": float(
+                        current_site.guard_rate or 0
+                    ),
+                    "Estimated Monthly Amount (₹)": monthly_amount,
+                    "Status": current_site.status or ""
                 })
 
             df = pd.DataFrame(site_data)
@@ -155,88 +173,223 @@ def show_sites():
             # SEARCH FILTER
             # ------------------------------------------
 
+            filtered_df = df.copy()
+
             if search:
 
-                search = search.lower()
+                search_text = search.lower().strip()
 
                 mask = (
-                    df["Site Code"]
+                    filtered_df["Site Code"]
                     .astype(str)
                     .str.lower()
-                    .str.contains(search, na=False)
+                    .str.contains(search_text, na=False)
                     |
-                    df["Site Name"]
+                    filtered_df["Site Name"]
                     .astype(str)
                     .str.lower()
-                    .str.contains(search, na=False)
+                    .str.contains(search_text, na=False)
                     |
-                    df["Client"]
+                    filtered_df["Client"]
                     .astype(str)
                     .str.lower()
-                    .str.contains(search, na=False)
+                    .str.contains(search_text, na=False)
                     |
-                    df["City"]
+                    filtered_df["City"]
                     .astype(str)
                     .str.lower()
-                    .str.contains(search, na=False)
+                    .str.contains(search_text, na=False)
                     |
-                    df["Status"]
+                    filtered_df["Status"]
                     .astype(str)
                     .str.lower()
-                    .str.contains(search, na=False)
+                    .str.contains(search_text, na=False)
                 )
 
-                df = df[mask]
+                filtered_df = filtered_df[mask]
 
             # ------------------------------------------
-            # SUMMARY
+            # NO SEARCH RESULTS
             # ------------------------------------------
 
-            col1, col2, col3 = st.columns(3)
+            if filtered_df.empty:
 
-            with col1:
+                st.warning("No sites found matching your search.")
 
-                st.metric(
-                    "Total Sites",
-                    len(sites)
+            else:
+
+                # --------------------------------------
+                # AUTO SELECT SEARCH RESULT
+                # --------------------------------------
+
+                if len(filtered_df) == 1:
+
+                    only_site_id = int(
+                        filtered_df.iloc[0]["Site ID"]
+                    )
+
+                    st.session_state[
+                        "selected_site_metrics_id"
+                    ] = only_site_id
+
+                # --------------------------------------
+                # INITIAL SELECTED SITE
+                # --------------------------------------
+
+                available_site_ids = (
+                    filtered_df["Site ID"]
+                    .astype(int)
+                    .tolist()
                 )
 
-            with col2:
+                if (
+                    "selected_site_metrics_id"
+                    not in st.session_state
+                ):
+                    st.session_state[
+                        "selected_site_metrics_id"
+                    ] = available_site_ids[0]
 
-                active_sites = sum(
-                    1
-                    for site in sites
-                    if site.status == "Active"
+                # If selected site is not in filtered results
+                if (
+                    st.session_state[
+                        "selected_site_metrics_id"
+                    ]
+                    not in available_site_ids
+                ):
+                    st.session_state[
+                        "selected_site_metrics_id"
+                    ] = available_site_ids[0]
+
+                # --------------------------------------
+                # SITE METRIC SELECTOR
+                # --------------------------------------
+
+                site_labels = {}
+
+                for _, row in filtered_df.iterrows():
+
+                    label = (
+                        f"{row['Site Code']} - "
+                        f"{row['Site Name']}"
+                    )
+
+                    site_labels[label] = int(
+                        row["Site ID"]
+                    )
+
+                current_selected_id = (
+                    st.session_state[
+                        "selected_site_metrics_id"
+                    ]
                 )
 
-                st.metric(
-                    "Active Sites",
-                    active_sites
+                current_index = 0
+
+                label_list = list(site_labels.keys())
+
+                for index, label in enumerate(label_list):
+
+                    if site_labels[label] == current_selected_id:
+
+                        current_index = index
+                        break
+
+                selected_site_label = st.selectbox(
+                    "📊 View Site Metrics",
+                    options=label_list,
+                    index=current_index,
+                    key="site_metrics_selector"
                 )
 
-            with col3:
+                selected_site_id = site_labels[
+                    selected_site_label
+                ]
 
-                total_guards_required = sum(
-                    site.guards_required or 0
-                    for site in sites
+                st.session_state[
+                    "selected_site_metrics_id"
+                ] = selected_site_id
+
+                # --------------------------------------
+                # GET SELECTED SITE
+                # --------------------------------------
+
+                selected_site = get_site_by_id(
+                    selected_site_id
                 )
 
-                st.metric(
-                    "Guards Required",
-                    total_guards_required
+                # --------------------------------------
+                # SUMMARY METRICS
+                # --------------------------------------
+
+                if selected_site:
+
+                    st.markdown(
+                        f"### 📊 Metrics for "
+                        f"{selected_site.site_code} - "
+                        f"{selected_site.name}"
+                    )
+
+                    guards_required = int(
+                        selected_site.guards_required or 0
+                    )
+
+                    guard_rate = float(
+                        selected_site.guard_rate or 0
+                    )
+
+                    monthly_amount = (
+                        guards_required * guard_rate
+                    )
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+
+                        st.metric(
+                            "👮 Guards Required",
+                            guards_required
+                        )
+
+                    with col2:
+
+                        st.metric(
+                            "💰 Rate Per Guard",
+                            f"₹ {guard_rate:,.2f}"
+                        )
+
+                    with col3:
+
+                        st.metric(
+                            "📅 Estimated Monthly Amount",
+                            f"₹ {monthly_amount:,.2f}"
+                        )
+
+                st.divider()
+
+                # --------------------------------------
+                # DISPLAY TABLE
+                # --------------------------------------
+
+                display_df = filtered_df.drop(
+                    columns=["Site ID"]
                 )
 
-            st.divider()
-
-            # ------------------------------------------
-            # TABLE
-            # ------------------------------------------
-
-            st.dataframe(
-                df,
-                width="stretch",
-                hide_index=True
-            )
+                st.dataframe(
+                    display_df,
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Guard Rate (₹)": st.column_config.NumberColumn(
+                            format="₹ %.2f"
+                        ),
+                        "Estimated Monthly Amount (₹)": (
+                            st.column_config.NumberColumn(
+                                format="₹ %.2f"
+                            )
+                        )
+                    }
+                )
 
     # ==================================================
     # TAB 2 - ADD SITE
@@ -279,7 +432,7 @@ def show_sites():
         ):
 
             # ------------------------------------------
-            # BASIC INFORMATION
+            # SITE INFORMATION
             # ------------------------------------------
 
             st.markdown("### 🏢 Site Information")
@@ -345,15 +498,11 @@ def show_sites():
 
             with col1:
 
-                city = st.text_input(
-                    "City"
-                )
+                city = st.text_input("City")
 
             with col2:
 
-                state = st.text_input(
-                    "State"
-                )
+                state = st.text_input("State")
 
             with col3:
 
@@ -369,7 +518,7 @@ def show_sites():
 
             st.markdown("### 🛡️ Security Requirements")
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
             with col1:
 
@@ -382,12 +531,23 @@ def show_sites():
 
             with col2:
 
+                guard_rate = st.number_input(
+                    "Monthly Rate Per Guard (₹)",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1000.0,
+                    format="%.2f",
+                    help=(
+                        "Monthly amount charged "
+                        "for one guard at this site"
+                    )
+                )
+
+            with col3:
+
                 status = st.selectbox(
                     "Status",
-                    [
-                        "Active",
-                        "Inactive"
-                    ]
+                    ["Active", "Inactive"]
                 )
 
             st.divider()
@@ -403,17 +563,10 @@ def show_sites():
 
             if submitted:
 
-                # Validate name
-
                 if not name.strip():
 
-                    st.error(
-                        "Site name is required."
-                    )
-
+                    st.error("Site name is required.")
                     return
-
-                # Validate phone
 
                 valid, message = validate_phone_input(
                     contact_phone
@@ -422,10 +575,7 @@ def show_sites():
                 if not valid:
 
                     st.error(message)
-
                     return
-
-                # Validate PIN code
 
                 valid, message = validate_pincode_input(
                     pincode
@@ -434,16 +584,11 @@ def show_sites():
                 if not valid:
 
                     st.error(message)
-
                     return
-
-                # Get selected client ID
 
                 client_id = client_options.get(
                     selected_client
                 )
-
-                # Create site
 
                 success, message = create_site(
 
@@ -467,13 +612,14 @@ def show_sites():
 
                     guards_required=guards_required,
 
+                    guard_rate=guard_rate,
+
                     status=status
                 )
 
                 if success:
 
                     st.success(message)
-
                     st.rerun()
 
                 else:
@@ -531,14 +677,23 @@ def show_sites():
 
                 st.divider()
 
-                # NEW
-                show_site_guard_assignment(site)
-
                 # --------------------------------------
-                # SITE DETAILS
+                # SITE SUMMARY
                 # --------------------------------------
 
-                col1, col2, col3 = st.columns(3)
+                guards_required = int(
+                    site.guards_required or 0
+                )
+
+                guard_rate = float(
+                    site.guard_rate or 0
+                )
+
+                monthly_amount = (
+                    guards_required * guard_rate
+                )
+
+                col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
 
@@ -558,8 +713,21 @@ def show_sites():
 
                     st.metric(
                         "Guards Required",
-                        site.guards_required
+                        guards_required
                     )
+
+                with col4:
+
+                    st.metric(
+                        "Monthly Amount",
+                        f"₹ {monthly_amount:,.2f}"
+                    )
+
+                # --------------------------------------
+                # ASSIGNED GUARDS
+                # --------------------------------------
+
+                show_site_guard_assignment(site)
 
                 st.divider()
 
@@ -574,14 +742,13 @@ def show_sites():
                 for client in clients:
 
                     edit_client_options[
-                        f"{client.username} ({client.email or 'No Email'})"
+                        f"{client.username} "
+                        f"({client.email or 'No Email'})"
                     ] = client.id
 
                 client_labels = list(
                     edit_client_options.keys()
                 )
-
-                # Find current client index
 
                 current_client_index = 0
 
@@ -609,7 +776,7 @@ def show_sites():
                         "### ✏️ Edit Site Information"
                     )
 
-                    # Basic
+                    # Basic Information
 
                     col1, col2 = st.columns(2)
 
@@ -628,7 +795,7 @@ def show_sites():
                             index=current_client_index
                         )
 
-                    # Contact
+                    # Contact Information
 
                     st.markdown(
                         "#### 📞 Contact Information"
@@ -693,13 +860,13 @@ def show_sites():
                             max_chars=6
                         )
 
-                    # Requirements
+                    # Security Requirements
 
                     st.markdown(
                         "#### 🛡️ Security Requirements"
                     )
 
-                    col1, col2 = st.columns(2)
+                    col1, col2, col3 = st.columns(3)
 
                     with col1:
 
@@ -716,6 +883,18 @@ def show_sites():
                         )
 
                     with col2:
+
+                        edit_guard_rate = st.number_input(
+                            "Monthly Rate Per Guard (₹)",
+                            min_value=0.0,
+                            value=float(
+                                site.guard_rate or 0.0
+                            ),
+                            step=500.0,
+                            format="%.2f"
+                        )
+
+                    with col3:
 
                         status_options = [
                             "Active",
@@ -760,7 +939,6 @@ def show_sites():
                         if not valid:
 
                             st.error(message)
-
                             return
 
                         valid, message = validate_pincode_input(
@@ -770,7 +948,6 @@ def show_sites():
                         if not valid:
 
                             st.error(message)
-
                             return
 
                         edit_client_id = (
@@ -803,13 +980,14 @@ def show_sites():
 
                             guards_required=edit_guards_required,
 
+                            guard_rate=edit_guard_rate,
+
                             status=edit_status
                         )
 
                         if success:
 
                             st.success(message)
-
                             st.rerun()
 
                         else:
@@ -831,20 +1009,27 @@ def show_sites():
                     )
 
                     confirm_delete = st.checkbox(
-                        "I understand that this action cannot be undone.",
-                        key=f"confirm_delete_site_{site.id}"
+                        (
+                            "I understand that this action "
+                            "cannot be undone."
+                        ),
+                        key=(
+                            f"confirm_delete_site_{site.id}"
+                        )
                     )
 
                     if st.button(
                         "🗑️ Delete Site Permanently",
                         key=f"delete_site_{site.id}",
-                        type="primary"
+                        type="primary",
+                        width="stretch"
                     ):
 
                         if not confirm_delete:
 
                             st.error(
-                                "Please confirm before deleting the site."
+                                "Please confirm before "
+                                "deleting the site."
                             )
 
                         else:
@@ -856,13 +1041,16 @@ def show_sites():
                             if success:
 
                                 st.success(message)
-
                                 st.rerun()
 
                             else:
 
                                 st.error(message)
 
+
+# ==================================================
+# SITE GUARD ASSIGNMENT
+# ==================================================
 
 def show_site_guard_assignment(site):
 
@@ -873,35 +1061,51 @@ def show_site_guard_assignment(site):
     assignments = get_site_guards(site.id)
 
     assigned_count = len(assignments)
+    required_count = int(site.guards_required or 0)
 
     st.caption(
-        f"Assigned: {assigned_count} / {site.guards_required}"
+        f"Assigned: {assigned_count} / {required_count}"
     )
 
+    # ==============================================
+    # ASSIGNED GUARD IDs
+    # ==============================================
+
+    assigned_guard_ids = {
+        assignment.guard_id
+        for assignment in assignments
+    }
 
     # ==============================================
     # ASSIGN GUARD
     # ==============================================
 
-    if assigned_count < site.guards_required:
+    if assigned_count < required_count:
 
         guards = get_all_guards()
 
-        # Active guards only
-        active_guards = [
+        # Active and not already assigned
+        available_guards = [
+
             guard
+
             for guard in guards
-            if guard.status == "Active"
+
+            if (
+                guard.status == "Active"
+                and guard.id not in assigned_guard_ids
+            )
         ]
 
-
-        if active_guards:
+        if available_guards:
 
             guard_options = {
-                f"{guard.employee_id} - {guard.name}": guard.id
-                for guard in active_guards
-            }
 
+                f"{guard.employee_id} - {guard.name}":
+                guard.id
+
+                for guard in available_guards
+            }
 
             selected_guard_label = st.selectbox(
                 "Select Guard",
@@ -909,18 +1113,21 @@ def show_site_guard_assignment(site):
                 key=f"assign_guard_{site.id}"
             )
 
-
             if st.button(
                 "➕ Assign Guard",
-                key=f"assign_guard_button_{site.id}"
+                key=f"assign_guard_button_{site.id}",
+                type="primary",
+                width="stretch"
             ):
 
                 try:
 
                     assign_guard_to_site(
+
                         guard_id=guard_options[
                             selected_guard_label
                         ],
+
                         site_id=site.id
                     )
 
@@ -936,8 +1143,9 @@ def show_site_guard_assignment(site):
 
         else:
 
-            st.info("No active guards available.")
-
+            st.info(
+                "No available active guards found."
+            )
 
     else:
 
@@ -945,17 +1153,19 @@ def show_site_guard_assignment(site):
             "Required number of guards has been assigned."
         )
 
-
     # ==============================================
     # DISPLAY ASSIGNED GUARDS
     # ==============================================
 
     if not assignments:
 
-        st.info("No guards assigned to this site yet.")
+        st.info(
+            "No guards assigned to this site yet."
+        )
 
         return
 
+    st.markdown("#### Currently Assigned Guards")
 
     for assignment in assignments:
 
@@ -975,7 +1185,6 @@ def show_site_guard_assignment(site):
                 f"Employee ID: {guard.employee_id}"
             )
 
-
         with col2:
 
             st.write(
@@ -987,12 +1196,12 @@ def show_site_guard_assignment(site):
                 f"{assignment.assigned_date}"
             )
 
-
         with col3:
 
             if st.button(
                 "❌ Unassign",
-                key=f"unassign_{assignment.id}"
+                key=f"unassign_{assignment.id}",
+                width="stretch"
             ):
 
                 try:

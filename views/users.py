@@ -135,7 +135,8 @@ def show_users():
 
             submitted = st.form_submit_button(
                 "Create User",
-                width="stretch"
+                width="stretch",
+                type="secondary"
             )
 
         if submitted:
@@ -188,230 +189,88 @@ def show_users():
     # ==================================================
 
     # ==================================================
-# MANAGE USER
-# ==================================================
+    # MANAGE USER
+    # ==================================================
 
-    with tab3:
+        with tab3:
 
-        users = get_all_users()
+            users = get_all_users()
 
-        if not users:
+            if not users:
 
-            st.info("No users available.")
+                st.info("No users available.")
 
-        else:
+            else:
 
-            # ----------------------------------------------
-            # SELECT USER
-            # ----------------------------------------------
+                # ----------------------------------------------
+                # SELECT USER
+                # ----------------------------------------------
 
-            user_options = {
-                f"{user.id} - {user.username} ({user.role})": user
-                for user in users
-            }
+                user_options = {
+                    f"{user.id} - {user.username} ({user.role})": user
+                    for user in users
+                }
 
-            selected_label = st.selectbox(
-                "Select User",
-                list(user_options.keys()),
-                key="manage_user_select"
-            )
-
-            selected_user = user_options[selected_label]
-
-            is_super_admin = (
-                selected_user.role == UserRole.SUPER_ADMIN.value
-            )
-
-            st.divider()
-
-            # ==============================================
-            # EDIT PROFILE
-            # ==============================================
-
-            st.subheader("✏️ Edit Profile")
-
-            with st.form(
-                f"edit_user_form_{selected_user.id}"
-            ):
-
-                edit_username = st.text_input(
-                    "Username",
-                    value=selected_user.username
+                selected_label = st.selectbox(
+                    "Select User",
+                    list(user_options.keys()),
+                    key="manage_user_select"
                 )
 
-                edit_email = st.text_input(
-                    "Email",
-                    value=selected_user.email or ""
+                selected_user = user_options[selected_label]
+
+                is_super_admin = (
+                    selected_user.role == UserRole.SUPER_ADMIN.value
                 )
 
-                edit_phone = st.text_input(
-                    "Phone",
-                    value=selected_user.phone or ""
-                )
+                st.divider()
 
-                update_profile_clicked = st.form_submit_button(
-                    "💾 Save Profile Changes",
-                    width="stretch"
-                )
- 
-            if update_profile_clicked:
+                # ==============================================
+                # EDIT PROFILE
+                # ==============================================
 
-                if not edit_username.strip():
+                st.subheader("✏️ Edit Profile")
 
-                    st.warning(
-                        "Username is required."
+                with st.form(
+                    f"edit_user_form_{selected_user.id}"
+                ):
+
+                    edit_username = st.text_input(
+                        "Username",
+                        value=selected_user.username
                     )
 
-                else:
-
-                    success, message = update_user_profile(
-                        user_id=selected_user.id,
-                        username=edit_username,
-                        email=edit_email,
-                        phone=edit_phone
+                    edit_email = st.text_input(
+                        "Email",
+                        value=selected_user.email or ""
                     )
 
-                    if success:
-
-                        st.success(message)
-                        st.rerun()
-
-                        st.success(
-                                                    "Profile updated successfully."
-                                                )
-
-                    else:
-
-                        st.error(message)
-
-
-            st.divider()
-
-
-            st.divider()
-
-            # ==============================================
-            # RESET PASSWORD
-            # ==============================================
-
-            st.subheader("🔑 Reset Password")
-
-            with st.form(
-                f"reset_password_form_{selected_user.id}"
-            ):
-
-                new_password = st.text_input(
-                    "New Password",
-                    type="password"
-                )
-
-                confirm_new_password = st.text_input(
-                    "Confirm New Password",
-                    type="password"
-                )
-
-                reset_password_clicked = st.form_submit_button(
-                    "🔑 Reset Password",
-                    width="stretch"
-                )
-
-
-            if reset_password_clicked:
-
-                if not new_password:
-
-                    st.warning(
-                        "Please enter a new password."
+                    edit_phone = st.text_input(
+                        "Phone",
+                        value=selected_user.phone or ""
                     )
 
-                elif len(new_password) < 6:
-
-                    st.warning(
-                        "Password must contain at least 6 characters."
+                    update_profile_clicked = st.form_submit_button(
+                        "💾 Save Profile Changes",
+                        width="stretch",
+                        type="secondary"
                     )
+    
+                if update_profile_clicked:
 
-                elif new_password != confirm_new_password:
+                    if not edit_username.strip():
 
-                    st.error(
-                        "Passwords do not match."
-                    )
-
-                else:
-
-                    success, message = reset_user_password(
-                        user_id=selected_user.id,
-                        new_password=new_password
-                    )
-
-                    if success:
-
-                        st.success(
-                            "Password reset successfully."
+                        st.warning(
+                            "Username is required."
                         )
 
                     else:
 
-                        st.error(message)
-
-
-            # ==============================================
-            # ROLE AND STATUS
-            # ==============================================
-
-            col1, col2 = st.columns(2)
-
-
-            # ----------------------------------------------
-            # CHANGE ROLE
-            # ----------------------------------------------
-
-            with col1:
-
-                st.subheader("🔄 Change Role")
-
-                if is_super_admin:
-
-                    st.info(
-                        "🔒 Super Admin role is protected and cannot be changed."
-                    )
-
-                    st.selectbox(
-                        "User Role",
-                        [selected_user.role],
-                        disabled=True,
-                        key=f"user_role_{selected_user.id}"
-                    )
-
-                else:
-
-                    role_values = [
-                        role.value
-                        for role in UserRole
-                        if role.value != UserRole.SUPER_ADMIN.value
-                    ]
-
-                    current_role_index = (
-                        role_values.index(selected_user.role)
-                        if selected_user.role in role_values
-                        else 0
-                    )
-
-                    new_role = st.selectbox(
-                        "User Role",
-                        role_values,
-                        index=current_role_index,
-                        key=f"user_role_{selected_user.id}"
-                    )
-
-                    if st.button(
-                        "Update Role",
-                        width="stretch",
-                        key=f"update_role_{selected_user.id}"
-                    ):
-
-                        success, message = update_user_role(
-                            selected_user.id,
-                            new_role
+                        success, message = update_user_profile(
+                            user_id=selected_user.id,
+                            username=edit_username,
+                            email=edit_email,
+                            phone=edit_phone
                         )
 
                         if success:
@@ -419,75 +278,222 @@ def show_users():
                             st.success(message)
                             st.rerun()
 
+                            st.success(
+                                                        "Profile updated successfully."
+                                                    )
+
                         else:
 
                             st.error(message)
 
 
-            # ----------------------------------------------
-            # ACCOUNT STATUS
-            # ----------------------------------------------
+                st.divider()
 
-            with col2:
 
-                st.subheader("🔐 Account Status")
+                st.divider()
 
-                current_status = (
-                    "🟢 Active"
-                    if selected_user.is_active
-                    else "🔴 Inactive"
-                )
+                # ==============================================
+                # RESET PASSWORD
+                # ==============================================
 
-                st.write(
-                    f"Current status: **{current_status}**"
-                )
+                st.subheader("🔑 Reset Password")
 
-                if is_super_admin:
+                with st.form(
+                    f"reset_password_form_{selected_user.id}"
+                ):
 
-                    st.info(
-                        "🔒 Super Admin account cannot be deactivated."
+                    new_password = st.text_input(
+                        "New Password",
+                        type="password"
                     )
 
-                elif selected_user.is_active:
+                    confirm_new_password = st.text_input(
+                        "Confirm New Password",
+                        type="password"
+                    )
 
-                    if st.button(
-                        "🔴 Deactivate User",
+                    reset_password_clicked = st.form_submit_button(
+                        "🔑 Reset Password",
                         width="stretch",
-                        key=f"deactivate_{selected_user.id}"
-                    ):
+                        type="secondary"
+                    )
 
-                        success, message = update_user_status(
-                            selected_user.id,
-                            False
+
+                if reset_password_clicked:
+
+                    if not new_password:
+
+                        st.warning(
+                            "Please enter a new password."
+                        )
+
+                    elif len(new_password) < 6:
+
+                        st.warning(
+                            "Password must contain at least 6 characters."
+                        )
+
+                    elif new_password != confirm_new_password:
+
+                        st.error(
+                            "Passwords do not match."
+                        )
+
+                    else:
+
+                        success, message = reset_user_password(
+                            user_id=selected_user.id,
+                            new_password=new_password
                         )
 
                         if success:
 
-                            st.success(message)
-                            st.rerun()
+                            st.success(
+                                "Password reset successfully."
+                            )
 
                         else:
 
                             st.error(message)
 
-                else:
 
-                    if st.button(
-                        "🟢 Activate User",
-                        width="stretch",
-                        key=f"activate_{selected_user.id}"
-                    ):
+                # ==============================================
+                # ROLE AND STATUS
+                # ==============================================
 
-                        success, message = update_user_status(
-                            selected_user.id,
-                            True
+                col1, col2 = st.columns(2)
+
+
+                # ----------------------------------------------
+                # CHANGE ROLE
+                # ----------------------------------------------
+
+                with col1:
+
+                    st.subheader("🔄 Change Role")
+
+                    if is_super_admin:
+
+                        st.info(
+                            "🔒 Super Admin role is protected and cannot be changed."
                         )
 
-                        if success:
+                        st.selectbox(
+                            "User Role",
+                            [selected_user.role],
+                            disabled=True,
+                            key=f"user_role_{selected_user.id}"
+                        )
 
-                            st.success(message)
-                            st.rerun()
+                    else:
 
-                        else:
+                        role_values = [
+                            role.value
+                            for role in UserRole
+                            if role.value != UserRole.SUPER_ADMIN.value
+                        ]
 
-                            st.error(message)
+                        current_role_index = (
+                            role_values.index(selected_user.role)
+                            if selected_user.role in role_values
+                            else 0
+                        )
+
+                        new_role = st.selectbox(
+                            "User Role",
+                            role_values,
+                            index=current_role_index,
+                            key=f"user_role_{selected_user.id}"
+                        )
+
+                        if st.button(
+                            "Update Role",
+                            width="stretch",
+                            key=f"update_role_{selected_user.id}",
+                            type="primary"
+                        ):
+
+                            success, message = update_user_role(
+                                selected_user.id,
+                                new_role
+                            )
+
+                            if success:
+
+                                st.success(message)
+                                st.rerun()
+
+                            else:
+
+                                st.error(message)
+
+
+                # ----------------------------------------------
+                # ACCOUNT STATUS
+                # ----------------------------------------------
+
+                with col2:
+
+                    st.subheader("🔐 Account Status")
+
+                    current_status = (
+                        "🟢 Active"
+                        if selected_user.is_active
+                        else "🔴 Inactive"
+                    )
+
+                    st.write(
+                        f"Current status: **{current_status}**"
+                    )
+
+                    if is_super_admin:
+
+                        st.info(
+                            "🔒 Super Admin account cannot be deactivated."
+                        )
+
+                    elif selected_user.is_active:
+
+                        if st.button(
+                            "🔴 Deactivate User",
+                            width="stretch",
+                            key=f"deactivate_{selected_user.id}",
+                            type="secondary"
+                        ):
+
+                            success, message = update_user_status(
+                                selected_user.id,
+                                False
+                            )
+
+                            if success:
+
+                                st.success(message)
+                                st.rerun()
+
+                            else:
+
+                                st.error(message)
+
+                    else:
+
+                        if st.button(
+                            "🟢 Activate User",
+                            width="stretch",
+                            key=f"activate_{selected_user.id}",
+                            type="primary"
+                        ):
+
+                            success, message = update_user_status(
+                                selected_user.id,
+                                True
+                            )
+
+                            if success:
+
+                                st.success(message)
+                                st.rerun()
+
+                            else:
+
+                                st.error(message)

@@ -243,6 +243,7 @@ def render_sidebar(username, role, allowed_pages):
 
         if st.button(
             "🚪 Logout",
+            type="primary",
             key="logout_button",
             width="stretch"
         ):

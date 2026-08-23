@@ -312,6 +312,13 @@ class Site(Base):
         nullable=False
     )
 
+    # Monthly rate charged per guard for this site
+    guard_rate = Column(
+        Float,
+        default=0.0,
+        nullable=False
+    )
+
     # ----------------------------------------------
     # STATUS
     # ----------------------------------------------

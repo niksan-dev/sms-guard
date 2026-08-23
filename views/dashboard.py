@@ -657,7 +657,8 @@ def show_dashboard():
         if st.button(
             "➕ Add Guard",
             key="quick_add_guard",
-            width="stretch"
+            width="stretch",
+            type="primary"
         ):
 
             st.session_state["selected_page"] = "Guards"
@@ -670,7 +671,8 @@ def show_dashboard():
         if st.button(
             "🏢 Add Site",
             key="quick_add_site",
-            width="stretch"
+            width="stretch",
+            type="primary"
         ):
 
             st.session_state["selected_page"] = "Sites"
@@ -683,7 +685,8 @@ def show_dashboard():
         if st.button(
             "📅 Manage Shifts",
             key="quick_manage_shifts",
-            width="stretch"
+            width="stretch",
+            type="primary"
         ):
 
             st.session_state["selected_page"] = "Shifts"
@@ -696,7 +699,8 @@ def show_dashboard():
         if st.button(
             "🚨 Report Incident",
             key="quick_report_incident",
-            width="stretch"
+            width="stretch",
+            type="primary"
         ):
 
             st.session_state["selected_page"] = "Incidents"

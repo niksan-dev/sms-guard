@@ -1,5 +1,5 @@
 import streamlit as st
-
+color = "#5A1248"
 
 def load_custom_css():
 
@@ -132,44 +132,194 @@ def load_custom_css():
 
 
     /* =====================================================
-       BUTTONS
+   BUTTON SYSTEM
+   Primary = Gradient Purple
+   Secondary = Dark Outline
     ===================================================== */
 
-    .stButton > button {
+    /* -----------------------------------------------------
+    COMMON BUTTON STYLE
+    ----------------------------------------------------- */
 
-        width: 100%;
+    .stButton > button {
+        width: 100% !important;
+
+        min-height: 44px !important;
+
+        border-radius: 10px !important;
+
+        font-weight: 600 !important;
+
+        font-size: 14px !important;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease,
+            border-color 0.2s ease !important;
+    }
+
+
+    /* =====================================================
+    PRIMARY BUTTON
+    ===================================================== */
+
+    .stButton > button[kind="primary"],
+    .stFormSubmitButton > button[kind="primary"] {
 
         background:
             linear-gradient(
                 135deg,
                 #6941C6,
                 #8B5CF6
-            );
+            ) !important;
 
-        color: white;
+        color: #FFFFFF !important;
 
-        border: none;
+        border: 1px solid transparent !important;
 
-        border-radius: 10px;
-
-        font-weight: 600;
-
-        min-height: 44px;
-
-        transition:
-            all 0.2s ease;
+        box-shadow:
+            0 4px 14px
+            rgba(124, 58, 237, 0.22) !important;
     }
 
 
-    .stButton > button:hover {
+    /* Primary Hover */
 
-        transform:
-            translateY(-2px);
+    .stButton > button[kind="primary"]:hover,
+    .stFormSubmitButton > button[kind="primary"]:hover {
+
+        background:
+            linear-gradient(
+                135deg,
+                #5B32B8,
+                #7C4FE0
+            ) !important;
+
+        color: #FFFFFF !important;
+
+        transform: translateY(-2px) !important;
 
         box-shadow:
             0 8px 25px
-            rgba(124, 58, 237, 0.35);
+            rgba(124, 58, 237, 0.35) !important;
     }
+
+
+    /* Primary Active */
+
+    .stButton > button[kind="primary"]:active,
+    .stFormSubmitButton > button[kind="primary"]:active {
+
+        transform: translateY(0px) !important;
+
+        box-shadow:
+            0 3px 10px
+            rgba(124, 58, 237, 0.20) !important;
+    }
+
+
+    /* =====================================================
+        SECONDARY BUTTON - PREMIUM DARK STYLE
+        ===================================================== */
+
+        .stButton > button[kind="secondary"],
+        .stFormSubmitButton > button[kind="secondary"] {
+
+            /* Dark premium gradient */
+            background:
+                linear-gradient(
+                    135deg,
+                    #3F264D 0%,
+                    #5A1248 100%
+                ) !important;
+
+            color: #E9E4FF !important;
+
+            border:
+                1px solid
+                rgba(139, 92, 246, 0.45) !important;
+
+            border-radius: 10px !important;
+
+            font-weight: 600 !important;
+
+            min-height: 44px !important;
+
+            /* Premium depth */
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+
+            transition:
+                all 0.2s ease !important;
+        }
+
+
+        /* =====================================================
+        SECONDARY BUTTON HOVER
+        ===================================================== */
+
+        .stButton > button[kind="secondary"]:hover,
+        .stFormSubmitButton > button[kind="secondary"]:hover {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #34255F 0%,
+                    #26364D 100%
+                ) !important;
+
+            color: #FFFFFF !important;
+
+            border-color:
+                #8B5CF6 !important;
+
+            transform:
+                translateY(-2px) !important;
+
+            box-shadow:
+                0 8px 22px
+                rgba(109, 65, 198, 0.22),
+                inset 0 1px 0
+                rgba(255, 255, 255, 0.08) !important;
+        }
+
+
+        /* =====================================================
+        SECONDARY BUTTON ACTIVE
+        ===================================================== */
+
+        .stButton > button[kind="secondary"]:active,
+        .stFormSubmitButton > button[kind="secondary"]:active {
+
+            transform:
+                translateY(0px) !important;
+
+            background:
+                #202E42 !important;
+
+            box-shadow:
+                inset 0 2px 5px
+                rgba(0, 0, 0, 0.25) !important;
+        }
+
+
+        /* =====================================================
+        DISABLED BUTTON
+        ===================================================== */
+
+        .stButton > button:disabled,
+        .stFormSubmitButton > button:disabled {
+
+            opacity: 0.45 !important;
+
+            cursor: not-allowed !important;
+
+            transform: none !important;
+
+            box-shadow: none !important;
+        }
 
 
     /* =====================================================

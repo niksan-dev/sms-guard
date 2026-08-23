@@ -142,7 +142,8 @@ def show_login_page():
 
                 login_clicked = st.form_submit_button(
                     "🔐 Login",
-                    width="stretch"
+                    width="stretch",
+                    type="primary"
                 )
 
 
