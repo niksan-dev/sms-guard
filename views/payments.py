@@ -128,8 +128,8 @@ def show_create_bill():
             bill_type = st.selectbox(
                 "📄 Bill Type *",
                 [
-                    "GST",
-                    "Non-GST"
+                    "Non-GST",
+                    "GST"
                 ]
             )
 

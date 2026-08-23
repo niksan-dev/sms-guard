@@ -379,6 +379,7 @@ def create_guard(
     phone,
     email,
     aadhaar_number,
+    monthly_salary,
     address,
     pincode,
     emergency_contact,
@@ -419,6 +420,8 @@ def create_guard(
             else ""
         )
 
+        monthly_salary = float(monthly_salary or 0)
+
         pincode = (
             pincode.strip()
             if pincode
@@ -452,9 +455,7 @@ def create_guard(
         # VALIDATE PHONE
         # ----------------------------------------------
 
-        valid_phone, phone_message = validate_phone(
-            phone
-        )
+        valid_phone, phone_message = validate_phone(phone)
 
         if not valid_phone:
 
@@ -478,9 +479,10 @@ def create_guard(
                 aadhaar_message
             )
 
-        #----------------------------------------------
-        #Validate PIN CODE
-        #----------------------------------------------
+        # ----------------------------------------------
+        # VALIDATE PIN CODE
+        # ----------------------------------------------
+
         valid_pincode, pincode_message = validate_pincode(
             pincode
         )
@@ -492,6 +494,16 @@ def create_guard(
                 pincode_message
             )
 
+        # ----------------------------------------------
+        # VALIDATE MONTHLY SALARY
+        # ----------------------------------------------
+
+        if monthly_salary < 0:
+
+            return (
+                False,
+                "Monthly salary cannot be negative."
+            )
 
         # ----------------------------------------------
         # VALIDATE JOINING DATE
@@ -598,24 +610,32 @@ def create_guard(
         # ----------------------------------------------
 
         new_guard = Guard(
+
             user_id=user_id,
-            name=name.strip(),
+
+            name=name,
+
             employee_id=employee_id,
-            phone=phone.strip(),
-            email=email.strip() if email else None,
-            aadhaar_number=aadhaar_number.strip(),
-            address=address.strip() if address else None,
 
-            # IMPORTANT
-            pincode=pincode.strip(),
+            phone=phone,
 
-            emergency_contact=(
-                emergency_contact.strip()
-                if emergency_contact
-                else None
-            ),
+            email=email,
+
+            aadhaar_number=aadhaar_number,
+
+            # NEW
+            monthly_salary=monthly_salary,
+
+            address=address,
+
+            pincode=pincode,
+
+            emergency_contact=emergency_contact,
+
             joining_date=joining_date,
+
             status=status,
+
             photo_path=photo_path
         )
 
@@ -634,7 +654,6 @@ def create_guard(
 
         db.rollback()
 
-        # Remove uploaded photo if database save failed
         if photo_path:
 
             delete_guard_photo(
@@ -663,6 +682,7 @@ def update_guard(
     phone,
     email,
     aadhaar_number,
+    monthly_salary,
     address,
     pincode,
     emergency_contact,
@@ -678,6 +698,10 @@ def update_guard(
     old_photo_path = None
 
     try:
+
+        # ----------------------------------------------
+        # GET GUARD
+        # ----------------------------------------------
 
         guard = (
             db.query(Guard)
@@ -720,16 +744,20 @@ def update_guard(
             else ""
         )
 
+        monthly_salary = float(monthly_salary or 0)
+
         address = (
             address.strip()
             if address
             else None
         )
+
         pincode = (
             pincode.strip()
             if pincode
             else ""
         )
+
         emergency_contact = (
             emergency_contact.strip()
             if emergency_contact
@@ -751,9 +779,7 @@ def update_guard(
         # VALIDATE PHONE
         # ----------------------------------------------
 
-        valid_phone, phone_message = validate_phone(
-            phone
-        )
+        valid_phone, phone_message = validate_phone(phone)
 
         if not valid_phone:
 
@@ -777,9 +803,9 @@ def update_guard(
                 aadhaar_message
             )
 
-        #----------------------------------------------
-        #Validate PIN CODE  
-        #----------------------------------------------
+        # ----------------------------------------------
+        # VALIDATE PIN CODE
+        # ----------------------------------------------
 
         valid_pincode, pincode_message = validate_pincode(
             pincode
@@ -790,6 +816,17 @@ def update_guard(
             return (
                 False,
                 pincode_message
+            )
+
+        # ----------------------------------------------
+        # VALIDATE MONTHLY SALARY
+        # ----------------------------------------------
+
+        if monthly_salary < 0:
+
+            return (
+                False,
+                "Monthly salary cannot be negative."
             )
 
         # ----------------------------------------------
@@ -843,6 +880,13 @@ def update_guard(
                     "Only Security Guard users can be linked."
                 )
 
+            if not user.is_active:
+
+                return (
+                    False,
+                    "Inactive users cannot be linked."
+                )
+
             duplicate_link = (
                 db.query(Guard)
                 .filter(
@@ -886,10 +930,12 @@ def update_guard(
 
         guard.aadhaar_number = aadhaar_number
 
+        # NEW
+        guard.monthly_salary = monthly_salary
+
         guard.address = address
 
-        # IMPORTANT - THIS WAS MISSING
-        guard.pincode = pincode.strip()
+        guard.pincode = pincode
 
         guard.emergency_contact = emergency_contact
 
@@ -907,7 +953,6 @@ def update_guard(
 
         # ----------------------------------------------
         # DELETE OLD PHOTO
-        # Only after successful database update
         # ----------------------------------------------
 
         if (
@@ -928,7 +973,6 @@ def update_guard(
 
         db.rollback()
 
-        # Remove newly uploaded photo if save failed
         if new_photo_path:
 
             delete_guard_photo(

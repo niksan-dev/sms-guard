@@ -123,6 +123,13 @@ class Guard(Base):
         index=True
     )
 
+    monthly_salary = Column(
+        Float,
+        nullable=False,
+        default=0.0,
+        server_default="0"
+    )
+
     phone = Column(String, nullable=True)
 
     email = Column(String, nullable=True)

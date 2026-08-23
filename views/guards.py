@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+
 from datetime import date
 
 from services.guard_service import (
@@ -108,11 +109,21 @@ def validate_aadhaar(aadhaar_number):
 
 def show_guards():
 
+    # ==================================================
+    # PAGE HEADER
+    # ==================================================
+
     st.title("👮 Guard Management")
 
-    st.write(
-        "Manage security guards and their profiles."
+    st.caption(
+        "Manage security guards, salaries and their profiles."
     )
+
+    st.divider()
+
+    # ==================================================
+    # TABS
+    # ==================================================
 
     tab1, tab2, tab3 = st.tabs([
         "📋 All Guards",
@@ -139,23 +150,34 @@ def show_guards():
 
         else:
 
+            # ----------------------------------------------
+            # GUARD DATA
+            # ----------------------------------------------
+
             guard_data = []
 
             for guard in guards:
 
+                monthly_salary = float(
+                    getattr(guard, "monthly_salary", 0) or 0
+                )
+
                 guard_data.append({
 
                     "Employee ID":
-                        guard.employee_id,
+                        guard.employee_id or "",
 
                     "Name":
-                        guard.name,
+                        guard.name or "",
 
                     "Phone":
                         guard.phone or "",
 
                     "Email":
                         guard.email or "",
+
+                    "Monthly Salary (₹)":
+                        monthly_salary,
 
                     "PIN Code":
                         guard.pincode or "",
@@ -164,19 +186,132 @@ def show_guards():
                         guard.joining_date,
 
                     "Status":
-                        guard.status
+                        guard.status or ""
                 })
 
             df = pd.DataFrame(guard_data)
 
+            # ----------------------------------------------
+            # SEARCH
+            # ----------------------------------------------
+
+            search = st.text_input(
+                "🔍 Search Guard",
+                placeholder=(
+                    "Search by employee ID, name, "
+                    "phone or status..."
+                ),
+                key="guard_search"
+            )
+
+            if search:
+
+                search = search.lower()
+
+                mask = (
+
+                    df["Employee ID"]
+                    .astype(str)
+                    .str.lower()
+                    .str.contains(search, na=False)
+
+                    |
+
+                    df["Name"]
+                    .astype(str)
+                    .str.lower()
+                    .str.contains(search, na=False)
+
+                    |
+
+                    df["Phone"]
+                    .astype(str)
+                    .str.lower()
+                    .str.contains(search, na=False)
+
+                    |
+
+                    df["Email"]
+                    .astype(str)
+                    .str.lower()
+                    .str.contains(search, na=False)
+
+                    |
+
+                    df["Status"]
+                    .astype(str)
+                    .str.lower()
+                    .str.contains(search, na=False)
+                )
+
+                df = df[mask]
+
+            # ----------------------------------------------
+            # SUMMARY
+            # ----------------------------------------------
+
+            total_guards = len(df)
+
+            active_guards = len(
+                df[
+                    df["Status"]
+                    .astype(str)
+                    .str.lower() == "active"
+                ]
+            )
+
+            total_monthly_salary = (
+                df["Monthly Salary (₹)"].sum()
+                if not df.empty
+                else 0
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+
+                st.metric(
+                    "👮 Total Guards",
+                    total_guards
+                )
+
+            with col2:
+
+                st.metric(
+                    "🟢 Active Guards",
+                    active_guards
+                )
+
+            with col3:
+
+                st.metric(
+                    "💰 Monthly Salary Cost",
+                    f"₹ {total_monthly_salary:,.2f}"
+                )
+
+            # ----------------------------------------------
+            # TABLE
+            # ----------------------------------------------
+
             st.dataframe(
                 df,
                 width="stretch",
-                hide_index=True
+                hide_index=True,
+                column_config={
+
+                    "Monthly Salary (₹)": st.column_config.NumberColumn(
+                        "Monthly Salary (₹)",
+                        format="₹ %.2f"
+                    ),
+
+                    "Joining Date": st.column_config.DateColumn(
+                        "Joining Date"
+                    )
+                }
             )
 
             st.caption(
-                f"Total Guards: {len(guards)}"
+                f"Total Guards: {total_guards}"
             )
 
     # ==================================================
@@ -294,7 +429,7 @@ def show_guards():
                 "### 💼 Employment Information"
             )
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
             with col1:
 
@@ -304,6 +439,19 @@ def show_guards():
                 )
 
             with col2:
+
+                monthly_salary = st.number_input(
+                    "Monthly Salary (₹) *",
+                    min_value=0.0,
+                    value=0.0,
+                    step=500.0,
+                    format="%.2f",
+                    help=(
+                        "Monthly salary paid to this guard"
+                    )
+                )
+
+            with col3:
 
                 status = st.selectbox(
                     "Status",
@@ -378,68 +526,86 @@ def show_guards():
 
         if submitted:
 
+            if not name.strip():
+
+                st.error(
+                    "Full name is required."
+                )
+
+                return
+
             valid, message = validate_phone(phone)
 
             if not valid:
 
                 st.error(message)
 
-            else:
+                return
 
-                valid, message = validate_pincode(
-                    pincode
+            valid, message = validate_pincode(
+                pincode
+            )
+
+            if not valid:
+
+                st.error(message)
+
+                return
+
+            valid, message = validate_aadhaar(
+                aadhaar_number
+            )
+
+            if not valid:
+
+                st.error(message)
+
+                return
+
+            if monthly_salary < 0:
+
+                st.error(
+                    "Monthly salary cannot be negative."
                 )
 
-                if not valid:
+                return
 
-                    st.error(message)
+            success, message = create_guard(
 
-                else:
+                name=name,
 
-                    valid, message = validate_aadhaar(
-                        aadhaar_number
-                    )
+                phone=phone,
 
-                    if not valid:
+                email=email,
 
-                        st.error(message)
+                aadhaar_number=aadhaar_number,
 
-                    else:
+                address=address,
 
-                        success, message = create_guard(
+                pincode=pincode,
 
-                            name=name,
+                emergency_contact=emergency_contact,
 
-                            phone=phone,
+                joining_date=joining_date,
 
-                            email=email,
+                monthly_salary=monthly_salary,
 
-                            aadhaar_number=aadhaar_number,
+                status=status,
 
-                            address=address,
+                user_id=user_id,
 
-                            pincode=pincode,
+                photo=photo
+            )
 
-                            emergency_contact=emergency_contact,
+            if success:
 
-                            joining_date=joining_date,
+                st.success(message)
 
-                            status=status,
+                st.rerun()
 
-                            user_id=user_id,
+            else:
 
-                            photo=photo
-                        )
-
-                        if success:
-
-                            st.success(message)
-
-                            st.rerun()
-
-                        else:
-
-                            st.error(message)
+                st.error(message)
 
     # ==================================================
     # TAB 3 - MANAGE GUARD
@@ -459,6 +625,10 @@ def show_guards():
 
         else:
 
+            # ----------------------------------------------
+            # GUARD SELECTOR
+            # ----------------------------------------------
+
             guard_options = {}
 
             for guard in guards:
@@ -469,7 +639,8 @@ def show_guards():
 
             selected_guard_label = st.selectbox(
                 "Select Guard",
-                list(guard_options.keys())
+                list(guard_options.keys()),
+                key="manage_guard_selector"
             )
 
             selected_guard_id = guard_options[
@@ -482,7 +653,6 @@ def show_guards():
 
             if guard:
 
-               
                 # ==========================================
                 # PROFILE HEADER
                 # ==========================================
@@ -529,11 +699,6 @@ def show_guards():
                     )
 
                     st.write(
-                        f"**PIN Code:** "
-                        f"{guard.pincode or '-'}"
-                    )
-
-                    st.write(
                         f"**Status:** "
                         f"{guard.status}"
                     )
@@ -543,12 +708,62 @@ def show_guards():
                         f"{mask_aadhaar(guard.aadhaar_number)}"
                     )
 
+                # ==========================================
+                # GUARD METRICS
+                # ==========================================
+
+                st.divider()
+
+                salary = float(
+                    getattr(
+                        guard,
+                        "monthly_salary",
+                        0
+                    ) or 0
+                )
+
+                metric_col1, metric_col2, metric_col3 = st.columns(3)
+
+                with metric_col1:
+
+                    st.metric(
+                        "💰 Monthly Salary",
+                        f"₹ {salary:,.2f}"
+                    )
+
+                with metric_col2:
+
+                    st.metric(
+                        "📅 Joining Date",
+                        str(
+                            guard.joining_date
+                            or "-"
+                        )
+                    )
+
+                with metric_col3:
+
+                    assignments = get_guard_sites(
+                        guard.id
+                    )
+
+                    st.metric(
+                        "🏢 Assigned Sites",
+                        len(assignments)
+                    )
+
+                # ==========================================
+                # SITE ASSIGNMENT
+                # ==========================================
+
+                show_guard_site_assignment(guard)
+
                 st.divider()
 
                 # ==========================================
                 # EDIT GUARD FORM
                 # ==========================================
-                show_guard_site_assignment(guard)
+
                 st.markdown(
                     "### ✏️ Edit Guard Profile"
                 )
@@ -636,7 +851,7 @@ def show_guards():
                         "#### 💼 Employment Information"
                     )
 
-                    col1, col2 = st.columns(2)
+                    col1, col2, col3 = st.columns(3)
 
                     with col1:
 
@@ -645,22 +860,48 @@ def show_guards():
                             value=guard.joining_date
                         )
 
-                    
-
                     with col2:
 
-                        status_index = 0
+                        edit_monthly_salary = st.number_input(
+                            "Monthly Salary (₹) *",
+                            min_value=0.0,
+                            value=float(
+                                getattr(
+                                    guard,
+                                    "monthly_salary",
+                                    0
+                                ) or 0
+                            ),
+                            step=500.0,
+                            format="%.2f",
+                            key=(
+                                f"edit_monthly_salary_"
+                                f"{guard.id}"
+                            ),
+                            help=(
+                                "Monthly salary paid to "
+                                "this guard"
+                            )
+                        )
 
-                        if guard.status == "Inactive":
+                    with col3:
 
-                            status_index = 1
+                        status_options = [
+                            "Active",
+                            "Inactive"
+                        ]
+
+                        status_index = (
+                            status_options.index(
+                                guard.status
+                            )
+                            if guard.status in status_options
+                            else 0
+                        )
 
                         edit_status = st.selectbox(
                             "Status",
-                            [
-                                "Active",
-                                "Inactive"
-                            ],
+                            status_options,
                             index=status_index
                         )
 
@@ -693,20 +934,27 @@ def show_guards():
 
                     st.divider()
 
-                    update_submitted = st.form_submit_button(
-                        "💾 Update Guard",
-                        width="stretch",
-                        type="primary"
+                    update_submitted = (
+                        st.form_submit_button(
+                            "💾 Update Guard",
+                            width="stretch",
+                            type="primary"
+                        )
                     )
-
-
-               
 
                 # ==========================================
                 # PROCESS UPDATE FORM
                 # ==========================================
 
                 if update_submitted:
+
+                    if not edit_name.strip():
+
+                        st.error(
+                            "Full name is required."
+                        )
+
+                        return
 
                     valid, message = validate_phone(
                         edit_phone
@@ -716,67 +964,79 @@ def show_guards():
 
                         st.error(message)
 
-                    else:
+                        return
 
-                        valid, message = validate_pincode(
-                            edit_pincode
+                    valid, message = validate_pincode(
+                        edit_pincode
+                    )
+
+                    if not valid:
+
+                        st.error(message)
+
+                        return
+
+                    valid, message = validate_aadhaar(
+                        edit_aadhaar
+                    )
+
+                    if not valid:
+
+                        st.error(message)
+
+                        return
+
+                    if edit_monthly_salary < 0:
+
+                        st.error(
+                            "Monthly salary cannot be negative."
                         )
 
-                        if not valid:
+                        return
 
-                            st.error(message)
+                    success, message = update_guard(
 
-                        else:
+                        guard_id=guard.id,
 
-                            valid, message = validate_aadhaar(
-                                edit_aadhaar
-                            )
+                        name=edit_name,
 
-                            if not valid:
+                        phone=edit_phone,
 
-                                st.error(message)
+                        email=edit_email,
 
-                            else:
+                        aadhaar_number=edit_aadhaar,
 
-                                success, message = update_guard(
+                        address=edit_address,
 
-                                    guard_id=guard.id,
+                        pincode=edit_pincode,
 
-                                    name=edit_name,
+                        emergency_contact=edit_emergency_contact,
 
-                                    phone=edit_phone,
+                        joining_date=edit_joining_date,
 
-                                    email=edit_email,
+                        monthly_salary=edit_monthly_salary,
 
-                                    aadhaar_number=edit_aadhaar,
+                        status=edit_status,
 
-                                    address=edit_address,
+                        user_id=guard.user_id,
 
-                                    pincode=edit_pincode,
+                        photo=edit_photo
+                    )
 
-                                    emergency_contact=edit_emergency_contact,
+                    if success:
 
-                                    joining_date=edit_joining_date,
+                        st.success(message)
 
-                                    status=edit_status,
+                        st.rerun()
 
-                                    user_id=guard.user_id,
+                    else:
 
-                                    photo=edit_photo
-                                )
+                        st.error(message)
 
-                                if success:
 
-                                    st.success(message)
-
-                                    print("Guard updated successfully.")
-
-                                    st.rerun()
-
-                                else:
-
-                                    st.error(message)
-
+# ==================================================
+# GUARD SITE ASSIGNMENT
+# ==================================================
 
 def show_guard_site_assignment(guard):
 
@@ -785,7 +1045,6 @@ def show_guard_site_assignment(guard):
     st.subheader("🏢 Assigned Sites")
 
     assignments = get_guard_sites(guard.id)
-
 
     # ==============================================
     # GET ACTIVE SITES
@@ -799,21 +1058,37 @@ def show_guard_site_assignment(guard):
         if site.status == "Active"
     ]
 
+    # ----------------------------------------------
+    # FILTER ALREADY ASSIGNED SITES
+    # ----------------------------------------------
 
-    if active_sites:
+    assigned_site_ids = {
+        assignment.site_id
+        for assignment in assignments
+    }
+
+    available_sites = [
+        site
+        for site in active_sites
+        if site.id not in assigned_site_ids
+    ]
+
+    # ==============================================
+    # ASSIGN SITE
+    # ==============================================
+
+    if available_sites:
 
         site_options = {
             f"{site.site_code} - {site.name}": site.id
-            for site in active_sites
+            for site in available_sites
         }
-
 
         selected_site_label = st.selectbox(
             "Select Site",
             list(site_options.keys()),
             key=f"assign_site_{guard.id}"
         )
-
 
         if st.button(
             "➕ Assign Site",
@@ -841,6 +1116,11 @@ def show_guard_site_assignment(guard):
 
                 st.error(str(e))
 
+    else:
+
+        st.info(
+            "No additional active sites are available."
+        )
 
     # ==============================================
     # DISPLAY ASSIGNED SITES
@@ -854,6 +1134,9 @@ def show_guard_site_assignment(guard):
 
         return
 
+    st.caption(
+        f"Total Assigned Sites: {len(assignments)}"
+    )
 
     for assignment in assignments:
 
@@ -862,7 +1145,6 @@ def show_guard_site_assignment(guard):
         col1, col2, col3 = st.columns(
             [3, 2, 1]
         )
-
 
         with col1:
 
@@ -873,7 +1155,6 @@ def show_guard_site_assignment(guard):
             st.caption(
                 f"Site Code: {site.site_code}"
             )
-
 
         with col2:
 
@@ -886,13 +1167,12 @@ def show_guard_site_assignment(guard):
                 f"{assignment.assigned_date}"
             )
 
-
         with col3:
 
             if st.button(
                 "❌ Unassign",
                 key=f"guard_unassign_{assignment.id}",
-                type="primary",
+                type="secondary",
                 width="stretch"
             ):
 
