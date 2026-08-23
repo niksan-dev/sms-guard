@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import date
+from sqlalchemy import or_, func
 
 import plotly.express as px
 import pandas as pd
@@ -10,7 +11,7 @@ from database.connection import SessionLocal
 from database.models import User
 from database.models import Guard
 from database.models import Site
-
+from database.payment import Payment
 
 # ==================================================
 # OPTIONAL MODELS
@@ -98,6 +99,24 @@ def get_dashboard_data():
             .count()
         )
 
+        # ==========================================
+        # TOTAL MONTHLY GUARD SALARY
+        # ==========================================
+
+        total_guard_salary = (
+            db.query(
+                func.coalesce(
+                    func.sum(Guard.monthly_salary),
+                    0
+                )
+            )
+            .scalar()
+            or 0
+        )
+
+        total_guard_salary = float(
+            total_guard_salary
+        )
 
         # ==========================================
         # SITES
@@ -111,13 +130,85 @@ def get_dashboard_data():
             .count()
         )
 
+        # ==========================================
+        # TOTAL EXPECTED SITE COLLECTION
+        #
+        # guards_required × guard_rate
+        # ==========================================
+
+        total_site_collection = (
+            db.query(
+                func.coalesce(
+                    func.sum(
+                        Site.guards_required
+                        * Site.guard_rate
+                    ),
+                    0
+                )
+            )
+            .scalar()
+            or 0
+        )
+
+        total_site_collection = float(
+            total_site_collection
+        )
+
+        # ==========================================
+        # PAYMENT COLLECTION
+        # ==========================================
+
+        total_collected = 0.0
+
+        # Try common Payment model structures
+        if hasattr(Payment, "amount"):
+
+            payment_query = db.query(Payment)
+
+            # If payment status exists, count
+            # only completed / paid collections
+            if hasattr(Payment, "status"):
+
+                payment_query = payment_query.filter(
+                    Payment.status.in_(
+                        [
+                            "Paid",
+                            "Completed",
+                            "Collected"
+                        ]
+                    )
+                )
+
+            total_collected = (
+                payment_query
+                .with_entities(
+                    func.coalesce(
+                        func.sum(Payment.amount),
+                        0
+                    )
+                )
+                .scalar()
+                or 0
+            )
+
+        total_collected = float(
+            total_collected
+        )
+
+        # ==========================================
+        # PENDING COLLECTION
+        # ==========================================
+
+        total_pending = max(
+            0,
+            total_site_collection - total_collected
+        )
 
         # ==========================================
         # USERS
         # ==========================================
 
         total_users = db.query(User).count()
-
 
         # ==========================================
         # SHIFTS TODAY
@@ -147,14 +238,16 @@ def get_dashboard_data():
                     .count()
                 )
 
-
         # ==========================================
         # OPEN INCIDENTS
         # ==========================================
 
         open_incidents = 0
 
-        if Incident and hasattr(Incident, "status"):
+        if (
+            Incident
+            and hasattr(Incident, "status")
+        ):
 
             open_incidents = (
                 db.query(Incident)
@@ -168,7 +261,6 @@ def get_dashboard_data():
                 )
                 .count()
             )
-
 
         # ==========================================
         # ATTENDANCE TODAY
@@ -188,28 +280,34 @@ def get_dashboard_data():
                     .count()
                 )
 
-
         # ==========================================
         # RETURN DATA
         # ==========================================
 
         return {
 
+            # Guards
             "total_guards": total_guards,
             "active_guards": active_guards,
+            "total_guard_salary": total_guard_salary,
 
+            # Sites
             "total_sites": total_sites,
             "active_sites": active_sites,
 
+            # Collections
+            "total_site_collection": total_site_collection,
+            "total_collected": total_collected,
+            "total_pending": total_pending,
+
+            # Users
             "total_users": total_users,
 
+            # Operations
             "shifts_today": shifts_today,
-
             "open_incidents": open_incidents,
-
             "attendance_today": attendance_today,
         }
-
 
     finally:
 
@@ -507,52 +605,82 @@ def show_dashboard():
 
 
     # ==============================================
-    # SECONDARY STATISTICS
+    # FINANCIAL STATISTICS
     # ==============================================
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    inactive_guards = (
-        data["total_guards"]
-        - data["active_guards"]
+    st.html(
+        """
+    <div class="dashboard-section-title">
+        💰 Financial Overview
+    </div>
+    """
     )
 
+    col1, col2, col3, col4 = st.columns(4)
 
-    col1, col2, col3 = st.columns(3)
 
+    # ==============================================
+    # TOTAL GUARD SALARY
+    # ==============================================
 
     with col1:
 
         dashboard_card(
-            title="Check-ins Today",
-            value=data["attendance_today"],
-            icon="📍",
-            icon_class="icon-cyan",
-            footer="Today's attendance",
-            footer_class="status-positive"
+            title="Guard Salary",
+            value=f'₹ {data["total_guard_salary"]:,.0f}',
+            icon="👮",
+            icon_class="icon-red",
+            footer="Total monthly salary",
+            footer_class="status-danger"
         )
 
+
+    # ==============================================
+    # TOTAL COLLECTION
+    # ==============================================
 
     with col2:
 
         dashboard_card(
-            title="System Users",
-            value=data["total_users"],
-            icon="👥",
+            title="Total Collection",
+            value=f'₹ {data["total_site_collection"]:,.0f}',
+            icon="💰",
             icon_class="icon-purple",
-            footer="Registered users",
-            footer_class=""
+            footer="Expected monthly collection",
+            footer_class="status-positive"
         )
 
+
+    # ==============================================
+    # COLLECTED
+    # ==============================================
 
     with col3:
 
         dashboard_card(
-            title="Inactive Guards",
-            value=inactive_guards,
-            icon="⚠️",
+            title="Collected",
+            value=f'₹ {data["total_collected"]:,.0f}',
+            icon="✅",
+            icon_class="icon-cyan",
+            footer="Amount received",
+            footer_class="status-positive"
+        )
+
+
+    # ==============================================
+    # PENDING
+    # ==============================================
+
+    with col4:
+
+        dashboard_card(
+            title="Pending",
+            value=f'₹ {data["total_pending"]:,.0f}',
+            icon="⏳",
             icon_class="icon-orange",
-            footer="Not currently active",
+            footer="Amount yet to collect",
             footer_class="status-warning"
         )
 
