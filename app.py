@@ -38,9 +38,17 @@ from views.users import show_users
 from views.reports import show_reports
 from views.settings import show_settings
 from views.payments import show_payments
+from views.guard_work import show_guard_work
 
 from views.company_settings import show_company_settings
 
+
+# from database.connection import engine
+# from sqlalchemy import text
+
+# with engine.connect() as connection:
+#     connection.execute(text("DROP TABLE IF EXISTS guard_work_logs"))
+#     connection.commit()
 
 # ==================================================
 # UI COMPONENTS
@@ -178,6 +186,10 @@ if selected_page == "Dashboard":
 elif selected_page == "Guards":
 
     show_guards()
+
+elif selected_page == "Guard Work":
+
+    show_guard_work()
 
 
 elif selected_page == "Sites":

@@ -17,6 +17,8 @@ from sqlalchemy.orm import relationship
 from database.connection import Base
 
 
+
+
 # ==================================================
 # USERS
 # ==================================================
@@ -130,6 +132,8 @@ class Guard(Base):
         server_default="0"
     )
 
+
+
     phone = Column(String, nullable=True)
 
     email = Column(String, nullable=True)
@@ -206,6 +210,18 @@ class Guard(Base):
 
     site_assignments = relationship(
         "SiteGuardAssignment",
+        back_populates="guard",
+        cascade="all, delete-orphan"
+    )
+
+    daily_work_records = relationship(
+        "GuardDailyWork",
+        back_populates="guard",
+        cascade="all, delete-orphan"
+    )
+
+    work_logs = relationship(
+        "GuardWorkLog",
         back_populates="guard",
         cascade="all, delete-orphan"
     )
@@ -370,6 +386,18 @@ class Site(Base):
         cascade="all, delete-orphan"
     )
 
+    daily_work_records = relationship(
+        "GuardDailyWork",
+        back_populates="site",
+        cascade="all, delete-orphan"
+    )
+
+    work_logs = relationship(
+        "GuardWorkLog",
+        back_populates="site",
+        cascade="all, delete-orphan"
+    )
+
 
 # ==================================================
 # SHIFTS
@@ -530,3 +558,8 @@ from database.payment import Payment
 # SITE GUARD ASSIGNMENT MODEL
 #=================================================
 from database.site_guard_assignment import SiteGuardAssignment
+
+#=================================================
+# GUARD DAILY WORK MODEL
+#=================================================
+from database.guard_daily_work import GuardDailyWork

@@ -45,6 +45,7 @@ from database.models import (
     CompanySettings,
     Payment,
     SiteGuardAssignment,
+    GuardDailyWork,
 )
 
 from database.auth_session import AuthSession
