@@ -16,6 +16,8 @@ from database.models import Guard
 from database.models import Site
 
 
+
+
 # ==================================================
 # CREATE DAILY WORK RECORD
 # ==================================================

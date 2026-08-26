@@ -397,124 +397,6 @@ def show_daily_work_records(selected_date):
 
 
 # ==================================================
-# TAB 2 - GUARD ATTENDANCE
-# ==================================================
-
-def show_guard_attendance_tab():
-
-    selected_date = st.date_input(
-        "Select Date",
-        value=date.today(),
-        key="guard_attendance_date"
-    )
-
-    attendance = get_guard_daily_attendance(
-        selected_date
-    )
-
-    st.subheader("👮 Guard Attendance")
-
-    if not attendance:
-
-        st.info(
-            "No guard attendance records found."
-        )
-
-        return
-
-    df = pd.DataFrame(attendance)
-
-    required_columns = [
-        "guard_name",
-        "site_name",
-        "shift_number",
-        "status"
-    ]
-
-    df = df[
-        [
-            column
-            for column in required_columns
-            if column in df.columns
-        ]
-    ]
-
-    if "shift_number" in df.columns:
-
-        df["shift_number"] = (
-            "Shift "
-            + df["shift_number"].astype(str)
-        )
-
-    df.columns = [
-        "Guard",
-        "Site",
-        "Shift",
-        "Status"
-    ]
-
-    st.dataframe(
-        df,
-        width="stretch",
-        hide_index=True
-    )
-
-    total_shifts = len(attendance)
-
-    shift_1 = sum(
-        1
-        for item in attendance
-        if item.get("shift_number") == 1
-    )
-
-    shift_2 = sum(
-        1
-        for item in attendance
-        if item.get("shift_number") == 2
-    )
-
-    unique_guards = len(
-        set(
-            item.get("guard_id")
-            for item in attendance
-            if item.get("guard_id") is not None
-        )
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-
-        st.metric(
-            "Total Shifts",
-            total_shifts
-        )
-
-    with col2:
-
-        st.metric(
-            "Shift 1",
-            shift_1
-        )
-
-    with col3:
-
-        st.metric(
-            "Shift 2",
-            shift_2
-        )
-
-    with col4:
-
-        st.metric(
-            "Unique Guards",
-            unique_guards
-        )
-
-
-# ==================================================
 # TAB 3 - SITE ATTENDANCE
 # ==================================================
 
@@ -542,40 +424,6 @@ def show_site_attendance_tab():
 
     df = pd.DataFrame(attendance)
 
-    required_columns = [
-        "site_name",
-        "guard_name",
-        "shift_number",
-        "status"
-    ]
-
-    df = df[
-        [
-            column
-            for column in required_columns
-            if column in df.columns
-        ]
-    ]
-
-    if "shift_number" in df.columns:
-
-        df["shift_number"] = (
-            "Shift "
-            + df["shift_number"].astype(str)
-        )
-
-    df.columns = [
-        "Site",
-        "Guard",
-        "Shift",
-        "Status"
-    ]
-
-    st.dataframe(
-        df,
-        width="stretch",
-        hide_index=True
-    )
 
     total_sites = len(
         set(
@@ -605,6 +453,43 @@ def show_site_attendance_tab():
             total_shifts
         )
 
+    required_columns = [
+        "site_name",
+        "guard_name",
+        "shift_number",
+        "status"
+    ]
+
+    df = df[
+        [
+            column
+            for column in required_columns
+            if column in df.columns
+        ]
+    ]
+
+    if "shift_number" in df.columns:
+
+        df["shift_number"] = (
+            "Shift "
+            + df["shift_number"].astype(str)
+        )
+
+    df.columns = [
+        "Site",
+        "Guard",
+        "Shift",
+        "Status"
+    ]
+
+    st.dataframe(
+        df,
+        width="stretch",
+        hide_index=True
+    )
+
+    
+
 def show_guard_attendance_tab():
 
     daily_tab, monthly_tab = st.tabs([
@@ -624,9 +509,7 @@ def show_guard_attendance_tab():
             key="guard_daily_attendance_date"
         )
 
-        attendance = get_guard_daily_attendance(
-            selected_date
-        )
+        attendance = get_guard_daily_attendance(selected_date)
 
         if not attendance:
 
@@ -637,6 +520,61 @@ def show_guard_attendance_tab():
         else:
 
             df = pd.DataFrame(attendance)
+
+
+            # ----------------------------------
+            # DAILY SUMMARY
+            # ----------------------------------
+
+            total_shifts = len(df)
+
+            shift_1_count = len(
+                df[
+                    df["shift_number"] == 1
+                ]
+            )
+
+            shift_2_count = len(
+                df[
+                    df["shift_number"] == 2
+                ]
+            )
+
+            unique_guards = df[
+                "guard_id"
+            ].nunique()
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+
+                st.metric(
+                    "Recorded Shifts",
+                    total_shifts
+                )
+
+            with col2:
+
+                st.metric(
+                    "Shift 1",
+                    shift_1_count
+                )
+
+            with col3:
+
+                st.metric(
+                    "Shift 2",
+                    shift_2_count
+                )
+
+            with col4:
+
+                st.metric(
+                    "Unique Guards",
+                    unique_guards
+                )
 
             # ----------------------------------
             # SEARCH
@@ -721,59 +659,7 @@ def show_guard_attendance_tab():
                 height=400
             )
 
-            # ----------------------------------
-            # DAILY SUMMARY
-            # ----------------------------------
-
-            total_shifts = len(df)
-
-            shift_1_count = len(
-                df[
-                    df["shift_number"] == 1
-                ]
-            )
-
-            shift_2_count = len(
-                df[
-                    df["shift_number"] == 2
-                ]
-            )
-
-            unique_guards = df[
-                "guard_id"
-            ].nunique()
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            col1, col2, col3, col4 = st.columns(4)
-
-            with col1:
-
-                st.metric(
-                    "Recorded Shifts",
-                    total_shifts
-                )
-
-            with col2:
-
-                st.metric(
-                    "Shift 1",
-                    shift_1_count
-                )
-
-            with col3:
-
-                st.metric(
-                    "Shift 2",
-                    shift_2_count
-                )
-
-            with col4:
-
-                st.metric(
-                    "Unique Guards",
-                    unique_guards
-                )
+            
 
     # ==========================================
     # MONTHLY RECORDS
@@ -823,6 +709,68 @@ def show_guard_attendance_tab():
         else:
 
             df = pd.DataFrame(attendance)
+
+
+            # ----------------------------------
+            # MONTHLY SUMMARY
+            # ----------------------------------
+
+            total_guards = len(df)
+
+            total_present_days = int(
+                df["present_days"].sum()
+            )
+
+            total_shift_1 = int(
+                df["shift_1_count"].sum()
+            )
+
+            total_shift_2 = int(
+                df["shift_2_count"].sum()
+            )
+
+            total_shifts = int(
+                df["total_shifts"].sum()
+            )
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            col1, col2, col3, col4, col5 = st.columns(5)
+
+            with col1:
+
+                st.metric(
+                    "Total Guards",
+                    total_guards
+                )
+
+            with col2:
+
+                st.metric(
+                    "Present Days",
+                    total_present_days
+                )
+
+            with col3:
+
+                st.metric(
+                    "Shift 1",
+                    total_shift_1
+                )
+
+            with col4:
+
+                st.metric(
+                    "Shift 2",
+                    total_shift_2
+                )
+
+            with col5:
+
+                st.metric(
+                    "Total Shifts",
+                    total_shifts
+                )
 
             # ----------------------------------
             # SEARCH
@@ -889,63 +837,4 @@ def show_guard_attendance_tab():
                 height=400
             )
 
-            # ----------------------------------
-            # MONTHLY SUMMARY
-            # ----------------------------------
-
-            total_guards = len(df)
-
-            total_present_days = int(
-                df["present_days"].sum()
-            )
-
-            total_shift_1 = int(
-                df["shift_1_count"].sum()
-            )
-
-            total_shift_2 = int(
-                df["shift_2_count"].sum()
-            )
-
-            total_shifts = int(
-                df["total_shifts"].sum()
-            )
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            col1, col2, col3, col4, col5 = st.columns(5)
-
-            with col1:
-
-                st.metric(
-                    "Total Guards",
-                    total_guards
-                )
-
-            with col2:
-
-                st.metric(
-                    "Present Days",
-                    total_present_days
-                )
-
-            with col3:
-
-                st.metric(
-                    "Shift 1",
-                    total_shift_1
-                )
-
-            with col4:
-
-                st.metric(
-                    "Shift 2",
-                    total_shift_2
-                )
-
-            with col5:
-
-                st.metric(
-                    "Total Shifts",
-                    total_shifts
-                )
+            
