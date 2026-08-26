@@ -39,7 +39,6 @@ from views.reports import show_reports
 from views.settings import show_settings
 from views.payments import show_payments
 from views.guard_work import show_guard_work
-
 from views.company_settings import show_company_settings
 
 
@@ -188,6 +187,7 @@ elif selected_page == "Guards":
     show_guards()
 
 elif selected_page == "Guard Work":
+   #print("Guard Work page selected")
 
     show_guard_work()
 

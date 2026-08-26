@@ -220,12 +220,6 @@ class Guard(Base):
         cascade="all, delete-orphan"
     )
 
-    work_logs = relationship(
-        "GuardWorkLog",
-        back_populates="guard",
-        cascade="all, delete-orphan"
-    )
-
 
 # ==================================================
 # SITE MODEL
@@ -388,12 +382,6 @@ class Site(Base):
 
     daily_work_records = relationship(
         "GuardDailyWork",
-        back_populates="site",
-        cascade="all, delete-orphan"
-    )
-
-    work_logs = relationship(
-        "GuardWorkLog",
         back_populates="site",
         cascade="all, delete-orphan"
     )

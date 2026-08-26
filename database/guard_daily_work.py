@@ -3,11 +3,12 @@ from datetime import datetime
 from sqlalchemy import (
     Column,
     Integer,
-    Float,
     Date,
     DateTime,
+    String,
     ForeignKey,
-    UniqueConstraint
+    UniqueConstraint,
+    CheckConstraint,
 )
 
 from sqlalchemy.orm import relationship
@@ -68,50 +69,25 @@ class GuardDailyWork(Base):
     )
 
     # ==================================================
-    # SHIFTS WORKED
+    # SHIFT
     #
-    # Allowed values:
-    # 1 = One shift
-    # 2 = Two shifts
+    # 1 = Shift 1
+    # 2 = Shift 2
     # ==================================================
 
-    shifts_worked = Column(
+    shift_number = Column(
         Integer,
-        nullable=False,
-        default=1
+        nullable=False
     )
 
     # ==================================================
-    # FINANCIAL SNAPSHOT
-    #
-    # These values are copied when work is saved.
-    #
-    # Future changes to guard salary or site rate
-    # will NOT affect old work records.
+    # ATTENDANCE STATUS
     # ==================================================
 
-    monthly_salary = Column(
-        Float,
+    status = Column(
+        String(20),
         nullable=False,
-        default=0.0
-    )
-
-    guard_rate = Column(
-        Float,
-        nullable=False,
-        default=0.0
-    )
-
-    daily_salary = Column(
-        Float,
-        nullable=False,
-        default=0.0
-    )
-
-    daily_revenue = Column(
-        Float,
-        nullable=False,
-        default=0.0
+        default="Present"
     )
 
     # ==================================================
@@ -146,19 +122,34 @@ class GuardDailyWork(Base):
     )
 
     # ==================================================
-    # CONSTRAINT
+    # DATABASE CONSTRAINTS
     #
-    # One guard can have only one daily work record
-    # for the same site on the same date.
+    # A guard cannot have the same shift twice
+    # on the same date.
+    #
+    # This prevents:
+    #
+    # Rahul -> SITE-0001 -> Shift 1
+    # Rahul -> SITE-0002 -> Shift 1  ❌
+    #
+    # But allows:
+    #
+    # Rahul -> SITE-0001 -> Shift 1
+    # Rahul -> SITE-0002 -> Shift 2  ✅
     # ==================================================
 
     __table_args__ = (
 
         UniqueConstraint(
             "guard_id",
-            "site_id",
             "work_date",
-            name="uq_guard_site_daily_work"
+            "shift_number",
+            name="uq_guard_date_shift"
+        ),
+
+        CheckConstraint(
+            "shift_number IN (1, 2)",
+            name="ck_guard_daily_work_shift_number"
         ),
 
     )
