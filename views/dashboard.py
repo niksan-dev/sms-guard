@@ -12,6 +12,10 @@ from database.models import User
 from database.models import Guard
 from database.models import Site
 from database.payment import Payment
+from services.guard_daily_work_service import (
+    get_guard_daily_attendance,
+    get_site_daily_attendance,
+)
 
 # ==================================================
 # OPTIONAL MODELS
@@ -281,8 +285,83 @@ def get_dashboard_data():
                 )
 
         # ==========================================
+        # TODAY'S GUARD SALARY
+        # ==========================================
+
+        daily_guard_salary = 0.0
+
+        
+
+        try:
+
+            daily_guard_records = get_guard_daily_attendance(date.today())
+            shifts_today = len(daily_guard_records)
+           # print("================================================",daily_guard_records)
+
+            daily_guard_salary = 0.0
+
+            for record in daily_guard_records or []:
+
+                guard_id = record.get("employee_id")
+
+                total_shifts = float(
+                    record.get("shift_number", 0) or 0
+                )
+
+                guard_shift_rate = float(
+                    record.get(
+                        "salary_per_shift"
+                    ) or 0
+                )
+
+                #print("Shift Details--->>>",guard_id," || ",guard_shift_rate," ||  ",total_shifts)
+
+                daily_guard_salary += (
+                     guard_shift_rate
+                )
+               # print("daily_guard_salary--->>>",daily_guard_salary)
+               
+
+        except Exception:
+
+            daily_guard_salary = 0.0
+
+        # ==========================================
+        # TODAY'S SITE REVENUE
+        # ==========================================
+
+        daily_site_revenue = 0.0
+
+        try:
+
+            daily_site_records = get_site_daily_attendance(date.today())
+
+           # print("daily_site_records  ------->>",daily_site_records)
+
+            daily_site_revenue = 0.0
+
+            for record in daily_site_records or []:
+
+                
+                site_shift_rate = float(
+                    record.get(
+                        "revenue_per_shift"
+                    ) or 0
+                )
+
+                daily_site_revenue += (
+                    site_shift_rate
+                )
+
+        except Exception:
+
+            daily_site_revenue = 0.0
+
+        # ==========================================
         # RETURN DATA
         # ==========================================
+
+        total_profit_today = daily_site_revenue - daily_guard_salary
 
         return {
 
@@ -290,6 +369,8 @@ def get_dashboard_data():
             "total_guards": total_guards,
             "active_guards": active_guards,
             "total_guard_salary": total_guard_salary,
+
+            "total_profit_today":total_profit_today,
 
             # Sites
             "total_sites": total_sites,
@@ -307,6 +388,10 @@ def get_dashboard_data():
             "shifts_today": shifts_today,
             "open_incidents": open_incidents,
             "attendance_today": attendance_today,
+
+            # Today's work financials
+            "daily_guard_salary": daily_guard_salary,
+            "daily_site_revenue": daily_site_revenue,
         }
 
     finally:
@@ -553,8 +638,7 @@ def show_dashboard():
     # PRIMARY STATISTICS
     # ==============================================
 
-    col1, col2, col3, col4 = st.columns(4)
-
+    col1, col2 = st.columns(2)
 
     with col1:
 
@@ -567,7 +651,6 @@ def show_dashboard():
             footer_class="status-positive"
         )
 
-
     with col2:
 
         dashboard_card(
@@ -579,30 +662,67 @@ def show_dashboard():
             footer_class="status-positive"
         )
 
+   
+
+    # ==============================================
+    # TODAY'S WORK FINANCIALS & ALERTS
+    # ==============================================
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.html(
+        """
+    <div class="dashboard-section-title">
+        📅 Today's Operations
+    </div>
+    """
+    )
+
+    col1, col2, col3,col4 = st.columns(4)
+
+    with col1:
+    
+            dashboard_card(
+                title="Shifts Today",
+                value=data["shifts_today"],
+                icon="📅",
+                icon_class="icon-orange",
+                footer="Recorded for today",
+                footer_class="status-warning"
+            )
+
+    with col2:
+
+        dashboard_card(
+            title="Daily Guard Salary",
+            value=f'₹ {data["daily_guard_salary"]:,.2f}',
+            icon="👮",
+            icon_class="icon-red",
+            footer="Salary earned from today's shifts",
+            footer_class="status-danger"
+        )
 
     with col3:
 
         dashboard_card(
-            title="Shifts Today",
-            value=data["shifts_today"],
-            icon="📅",
-            icon_class="icon-orange",
-            footer="Scheduled for today",
-            footer_class="status-warning"
+            title="Daily Site Revenue",
+            value=f'₹ {data["daily_site_revenue"]:,.2f}',
+            icon="💰",
+            icon_class="icon-cyan",
+            footer="Revenue generated from today's shifts",
+            footer_class="status-positive"
         )
-
 
     with col4:
 
         dashboard_card(
-            title="Open Incidents",
-            value=data["open_incidents"],
-            icon="🚨",
+            title="Today's Revenue",
+            value=f'₹ {data["total_profit_today"]:,.2f}',
+            icon="📈",
             icon_class="icon-red",
-            footer="Requires attention",
-            footer_class="status-danger"
+            footer="Profit generated from today's shifts",
+            footer_class="status-positive"
         )
-
 
     # ==============================================
     # FINANCIAL STATISTICS

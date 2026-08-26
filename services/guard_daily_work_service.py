@@ -282,13 +282,15 @@ def get_daily_work_summary(work_date):
 
 def get_guard_daily_attendance(selected_date):
 
-    """
-    Get guard attendance records for a selected date.
-    """
-
     db = SessionLocal()
 
     try:
+
+        # Actual days in the month of selected date
+        total_days_in_month = calendar.monthrange(
+            selected_date.year,
+            selected_date.month
+        )[1]
 
         records = (
             db.query(GuardDailyWork)
@@ -313,13 +315,32 @@ def get_guard_daily_attendance(selected_date):
             guard = record.guard
             site = record.site
 
+            monthly_salary = float(
+                guard.monthly_salary or 0
+            ) if guard else 0.0
+
+            # Salary calculations based on actual days
+            daily_salary = (
+                monthly_salary / total_days_in_month
+                if total_days_in_month > 0
+                else 0
+            )
+
+            salary_per_shift = daily_salary
+
+            # Only Present generates salary
+            actual_salary = (
+                salary_per_shift
+                if record.status == "Present"
+                else 0.0
+            )
+
             attendance.append({
 
                 "id": record.id,
 
                 "work_date": record.work_date,
 
-                # Guard information
                 "guard_id": record.guard_id,
 
                 "employee_id": (
@@ -334,7 +355,6 @@ def get_guard_daily_attendance(selected_date):
                     else "Unknown Guard"
                 ),
 
-                # Site information
                 "site_id": record.site_id,
 
                 "site_code": (
@@ -349,13 +369,28 @@ def get_guard_daily_attendance(selected_date):
                     else "Unknown Site"
                 ),
 
-                # Shift information
                 "shift_number": record.shift_number,
 
-                "status": (
-                    record.status
-                    if record.status
-                    else "Present"
+                "status": record.status or "Present",
+
+                # Financial information
+                "total_days": total_days_in_month,
+
+                "monthly_salary": monthly_salary,
+
+                "daily_salary": round(
+                    daily_salary,
+                    2
+                ),
+
+                "salary_per_shift": round(
+                    salary_per_shift,
+                    2
+                ),
+
+                "actual_salary": round(
+                    actual_salary,
+                    2
                 ),
             })
 
@@ -430,46 +465,28 @@ def get_site_daily_attendance(work_date):
         db.close()
 
 def get_guard_monthly_attendance(year, month):
-    """
-    Get monthly attendance summary for all guards.
-
-    Present Days:
-        Number of unique dates where the guard was Present.
-
-    Shift 1:
-        Number of Present Shift 1 records.
-
-    Shift 2:
-        Number of Present Shift 2 records.
-
-    Total Shifts:
-        Shift 1 + Shift 2.
-    """
 
     db = SessionLocal()
 
     try:
 
-        # First day of selected month
+        total_days_in_month = calendar.monthrange(
+            year,
+            month
+        )[1]
+
         start_date = date(
             year,
             month,
             1
         )
 
-        # Last day of selected month
-        last_day = calendar.monthrange(
-            year,
-            month
-        )[1]
-
         end_date = date(
             year,
             month,
-            last_day
+            total_days_in_month
         )
 
-        # Get all guards
         guards = (
             db.query(Guard)
             .order_by(
@@ -482,6 +499,10 @@ def get_guard_monthly_attendance(year, month):
 
         for guard in guards:
 
+            monthly_salary = float(
+                guard.monthly_salary or 0
+            )
+
             records = (
                 db.query(GuardDailyWork)
                 .filter(
@@ -493,46 +514,56 @@ def get_guard_monthly_attendance(year, month):
                 .all()
             )
 
-            # Unique dates worked
             present_dates = {
                 record.work_date
                 for record in records
             }
 
-            present_days = len(
-                present_dates
-            )
+            present_days = len(present_dates)
 
-            # Shift 1 count
-            shift_1_count = len([
-                record
+            shift_1_count = sum(
+                1
                 for record in records
                 if record.shift_number == 1
-            ])
+            )
 
-            # Shift 2 count
-            shift_2_count = len([
-                record
+            shift_2_count = sum(
+                1
                 for record in records
                 if record.shift_number == 2
-            ])
+            )
 
-            # Total recorded Present shifts
-            total_shifts = len(
-                records
+            total_shifts = len(records)
+
+            daily_salary = (
+                monthly_salary / total_days_in_month
+                if total_days_in_month > 0
+                else 0
+            )
+
+            salary_per_shift = daily_salary / 2
+
+            actual_salary = (
+                total_shifts * salary_per_shift
             )
 
             monthly_attendance.append({
+
                 "guard_id": guard.id,
 
                 "employee_id": (
-                    guard.employee_id
-                    or "-"
+                    guard.employee_id or "-"
                 ),
 
                 "guard_name": (
-                    guard.name
-                    or "Unknown Guard"
+                    guard.name or "Unknown Guard"
+                ),
+
+                "total_days": total_days_in_month,
+
+                "monthly_salary": round(
+                    monthly_salary,
+                    2
                 ),
 
                 "present_days": present_days,
@@ -542,6 +573,11 @@ def get_guard_monthly_attendance(year, month):
                 "shift_2_count": shift_2_count,
 
                 "total_shifts": total_shifts,
+
+                "actual_salary": round(
+                    actual_salary,
+                    2
+                ),
             })
 
         return monthly_attendance
@@ -553,13 +589,14 @@ def get_guard_monthly_attendance(year, month):
 
 def get_site_daily_attendance(selected_date):
 
-    """
-    Get site-wise attendance records for a selected date.
-    """
-
     db = SessionLocal()
 
     try:
+
+        total_days_in_month = calendar.monthrange(
+            selected_date.year,
+            selected_date.month
+        )[1]
 
         records = (
             db.query(GuardDailyWork)
@@ -585,15 +622,29 @@ def get_site_daily_attendance(selected_date):
             guard = record.guard
             site = record.site
 
+            guard_rate = float(
+                site.guard_rate or 0
+            ) if site else 0.0
+
+            daily_revenue = (
+                guard_rate / total_days_in_month
+                if total_days_in_month > 0
+                else 0
+            )
+
+            revenue_per_shift = daily_revenue
+
+            actual_revenue = (
+                revenue_per_shift
+                if record.status == "Present"
+                else 0.0
+            )
+
             attendance.append({
 
                 "id": record.id,
 
                 "work_date": record.work_date,
-
-                # ----------------------------------
-                # SITE INFORMATION
-                # ----------------------------------
 
                 "site_id": record.site_id,
 
@@ -615,9 +666,10 @@ def get_site_daily_attendance(selected_date):
                     else 0
                 ),
 
-                # ----------------------------------
-                # GUARD INFORMATION
-                # ----------------------------------
+                "guard_rate": round(
+                    guard_rate,
+                    2
+                ),
 
                 "guard_id": record.guard_id,
 
@@ -633,16 +685,26 @@ def get_site_daily_attendance(selected_date):
                     else "Unknown Guard"
                 ),
 
-                # ----------------------------------
-                # SHIFT INFORMATION
-                # ----------------------------------
-
                 "shift_number": record.shift_number,
 
-                "status": (
-                    record.status
-                    if record.status
-                    else "Present"
+                "status": record.status or "Present",
+
+                # Financial information
+                "total_days": total_days_in_month,
+
+                "daily_revenue": round(
+                    daily_revenue,
+                    2
+                ),
+
+                "revenue_per_shift": round(
+                    revenue_per_shift,
+                    2
+                ),
+
+                "actual_revenue": round(
+                    actual_revenue,
+                    2
                 ),
             })
 
@@ -654,19 +716,14 @@ def get_site_daily_attendance(selected_date):
 
 def get_site_monthly_attendance(year, month):
 
-    """
-    Get monthly attendance summary for all sites.
-
-    Each Present record represents one completed guard shift.
-    """
-
     db = SessionLocal()
 
     try:
 
-        # ------------------------------------------
-        # MONTH DATE RANGE
-        # ------------------------------------------
+        total_days_in_month = calendar.monthrange(
+            year,
+            month
+        )[1]
 
         start_date = date(
             year,
@@ -674,22 +731,11 @@ def get_site_monthly_attendance(year, month):
             1
         )
 
-        last_day = calendar.monthrange(
-            year,
-            month
-        )[1]
-
         end_date = date(
             year,
             month,
-            last_day
+            total_days_in_month
         )
-
-        days_in_month = last_day
-
-        # ------------------------------------------
-        # GET ALL SITES
-        # ------------------------------------------
 
         sites = (
             db.query(Site)
@@ -703,9 +749,13 @@ def get_site_monthly_attendance(year, month):
 
         for site in sites:
 
-            # --------------------------------------
-            # GET PRESENT RECORDS
-            # --------------------------------------
+            guard_rate = float(
+                site.guard_rate or 0
+            )
+
+            guards_required = int(
+                site.guards_required or 0
+            )
 
             records = (
                 db.query(GuardDailyWork)
@@ -718,84 +768,71 @@ def get_site_monthly_attendance(year, month):
                 .all()
             )
 
-            # --------------------------------------
-            # SHIFT COUNTS
-            # --------------------------------------
-
-            shift_1_count = len([
-                record
+            shift_1_count = sum(
+                1
                 for record in records
                 if record.shift_number == 1
-            ])
+            )
 
-            shift_2_count = len([
-                record
+            shift_2_count = sum(
+                1
                 for record in records
                 if record.shift_number == 2
-            ])
+            )
 
             total_shifts = len(records)
-
-            # --------------------------------------
-            # UNIQUE GUARDS
-            # --------------------------------------
 
             unique_guards = len({
                 record.guard_id
                 for record in records
             })
 
-            # --------------------------------------
-            # REQUIRED SHIFTS
-            #
-            # guards_required × days × 2 shifts
-            # --------------------------------------
-
-            guards_required = int(
-                site.guards_required or 0
+            # Financial calculation
+            daily_revenue = (
+                guard_rate / total_days_in_month
+                if total_days_in_month > 0
+                else 0
             )
 
+            revenue_per_shift = daily_revenue / 2
+
+            actual_revenue = (
+                total_shifts * revenue_per_shift
+            )
+
+            # Expected shifts for attendance coverage
             required_shifts = (
                 guards_required
-                * days_in_month
+                * total_days_in_month
                 * 2
             )
 
-            # --------------------------------------
-            # COVERAGE
-            # --------------------------------------
-
-            if required_shifts > 0:
-
-                coverage_percent = round(
-                    (
-                        total_shifts
-                        / required_shifts
-                    )
-                    * 100,
+            coverage_percent = (
+                round(
+                    (total_shifts / required_shifts) * 100,
                     2
                 )
-
-            else:
-
-                coverage_percent = 0
-
-            # --------------------------------------
-            # ADD SUMMARY
-            # --------------------------------------
+                if required_shifts > 0
+                else 0
+            )
 
             monthly_attendance.append({
 
                 "site_id": site.id,
 
                 "site_code": (
-                    site.site_code
-                    or "-"
+                    site.site_code or "-"
                 ),
 
                 "site_name": (
-                    site.name
-                    or "Unknown Site"
+                    site.name or "Unknown Site"
+                ),
+
+                "total_days": total_days_in_month,
+
+                "guard_rate": round(
+                    guard_rate,
+                    2
                 ),
 
                 "guards_required": guards_required,
@@ -811,6 +848,11 @@ def get_site_monthly_attendance(year, month):
                 "required_shifts": required_shifts,
 
                 "coverage_percent": coverage_percent,
+
+                "actual_revenue": round(
+                    actual_revenue,
+                    2
+                ),
             })
 
         return monthly_attendance
