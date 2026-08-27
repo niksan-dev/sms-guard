@@ -15,6 +15,16 @@ from services.guard_daily_work_service import (
     get_site_monthly_attendance,
 )
 
+
+from services.guard_advance_service import (
+    create_guard_advance,
+    get_guard_monthly_advances,
+    get_monthly_advance_totals,
+    get_monthly_category_totals,
+    delete_guard_advance,
+    get_monthly_advance_totals,
+)
+
 from services.guard_service import get_all_guards
 from services.site_service import get_all_sites
 
@@ -470,10 +480,11 @@ def show_guard_work():
 
     st.divider()
 
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📝 Record Work",
         "👮 Guard Attendance",
-        "🏢 Site Attendance"
+        "🏢 Site Attendance",
+        "💰 Guard Advances"
     ])
 
     with tab1:
@@ -484,6 +495,9 @@ def show_guard_work():
 
     with tab3:
         show_site_attendance_tab()
+
+    with tab4:
+        show_guard_advances_tab()
 
 
 # ==================================================
@@ -851,6 +865,14 @@ def show_daily_work_records(selected_date):
 
 def show_guard_attendance_tab():
 
+    st.markdown("""
+    <style>
+    [data-testid="stMetricValue"] {
+        font-size: 32px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     daily_tab, monthly_tab = st.tabs([
         "📅 Daily Records",
         "📊 Monthly Records"
@@ -1150,6 +1172,13 @@ def show_guard_attendance_tab():
             int(selected_month)
         )
 
+        # Get total advances for every guard
+        # for the selected month
+        monthly_advances = get_monthly_advance_totals(
+            int(selected_year),
+            int(selected_month)
+        )
+
         st.subheader(
             "📊 Monthly Guard Attendance"
         )
@@ -1241,7 +1270,17 @@ def show_guard_attendance_tab():
                 else 0
             )
 
-            col1, col2, col3, col4 = st.columns(4)
+            total_advance = sum(
+                float(amount or 0)
+                for amount in monthly_advances.values()
+            )
+
+            total_net_payable = (
+                float(total_actual_salary)
+                - float(total_advance)
+            )
+
+            col1, col2, col3, col4, col5, col6 = st.columns(6)
 
             with col1:
 
@@ -1268,9 +1307,21 @@ def show_guard_attendance_tab():
 
                 st.metric(
                     "Actual Salary",
-                    format_currency(
-                        total_actual_salary
-                    )
+                    format_currency(total_actual_salary)
+                )
+
+            with col5:
+
+                st.metric(
+                    "Total Advance",
+                    format_currency(total_advance)
+                )
+
+            with col6:
+
+                st.metric(
+                    "Net Payable",
+                    format_currency(total_net_payable)
                 )
 
             st.divider()
@@ -1335,6 +1386,24 @@ def show_guard_attendance_tab():
 
             for _, row in df.iterrows():
 
+                guard_id = row.get("guard_id")
+
+                actual_salary = float(
+                    row.get("actual_salary", 0) or 0
+                )
+
+                total_advance = float(
+                    monthly_advances.get(
+                        guard_id,
+                        0
+                    ) or 0
+                )
+
+                net_payable = (
+                    actual_salary
+                    - total_advance
+                )
+
                 table_data.append({
 
                     "Employee ID": row.get(
@@ -1346,6 +1415,20 @@ def show_guard_attendance_tab():
                         "guard_name",
                         "Unknown Guard"
                     ),
+
+                    # "Total Days": row.get(
+                    #     "total_days",
+                    #     "-"
+                    # ),
+
+                    "Monthly Salary": format_currency(
+                        row.get("monthly_salary", 0)
+                    ),
+
+                    # "Present Days": row.get(
+                    #     "present_days",
+                    #     0
+                    # ),
 
                     "Shift 1": row.get(
                         "shift_1_count",
@@ -1362,30 +1445,20 @@ def show_guard_attendance_tab():
                         0
                     ),
 
-                    "Total Days": row.get(
-                        "total_days",
-                        0
-                    ),
-
-                    "Monthly Salary": format_currency(
-                        row.get(
-                            "monthly_salary",
-                            0
-                        )
-                    ),
-
                     "Shift Rate": format_currency(
-                        row.get(
-                            "shift_rate",
-                            0
-                        )
+                        row.get("shift_rate", 0)
                     ),
 
                     "Actual Salary": format_currency(
-                        row.get(
-                            "actual_salary",
-                            0
-                        )
+                        actual_salary
+                    ),
+
+                    "Total Advance": format_currency(
+                        total_advance
+                    ),
+
+                    "Net Payable": format_currency(
+                        net_payable
                     )
                 })
 
@@ -1901,3 +1974,409 @@ def show_site_attendance_tab():
                 hide_index=True,
                 height=400
             )
+
+# ==================================================
+# TAB 4 - GUARD ADVANCES
+# ==================================================
+
+def show_guard_advances_tab():
+
+    st.subheader("💰 Guard Advances")
+
+    st.caption(
+        "Record money given to guards in advance and "
+        "track monthly deductions."
+    )
+
+    guards = get_active_guards()
+
+    if not guards:
+
+        st.warning(
+            "No active guards available."
+        )
+
+        return
+
+    # ==============================================
+    # RECORD ADVANCE
+    # ==============================================
+
+    st.markdown("### ➕ Record Advance")
+
+    guard_map = {
+        f"{guard.name} ({guard.employee_id})": guard
+        for guard in guards
+    }
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        selected_guard_label = st.selectbox(
+            "Select Guard",
+            options=list(guard_map.keys()),
+            key="advance_guard"
+        )
+
+        selected_guard = guard_map[
+            selected_guard_label
+        ]
+
+    with col2:
+
+        category = st.selectbox(
+            "Category",
+            options=[
+                "Uniform",
+                "Kharchi",
+                "Ration",
+                "Medical",
+                "Travel",
+                "Other"
+            ],
+            key="advance_category"
+        )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        amount = st.number_input(
+            "Amount",
+            min_value=0.0,
+            value=0.0,
+            step=100.0,
+            key="advance_amount"
+        )
+
+    with col2:
+
+        record_date = st.date_input(
+            "Date Given",
+            value=date.today(),
+            key="advance_record_date"
+        )
+
+    description = st.text_area(
+        "Description / Notes",
+        placeholder="Enter reason or details...",
+        key="advance_description"
+    )
+
+    if st.button(
+        "💰 Record Advance",
+        type="primary",
+        width="stretch",
+        key="record_guard_advance"
+    ):
+
+        success, message = create_guard_advance(
+            guard_id=selected_guard.id,
+            category=category,
+            amount=amount,
+            record_date=record_date,
+            description=description
+        )
+
+        if success:
+
+            st.success(message)
+
+            st.rerun()
+
+        else:
+
+            st.error(message)
+
+    st.divider()
+
+    # ==============================================
+    # MONTHLY ADVANCE RECORDS
+    # ==============================================
+
+    st.markdown("### 📊 Monthly Advance Records")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        selected_month = st.selectbox(
+            "Select Month",
+            options=list(range(1, 13)),
+            index=date.today().month - 1,
+            format_func=lambda month: date(
+                2000,
+                month,
+                1
+            ).strftime("%B"),
+            key="advance_month"
+        )
+
+    with col2:
+
+        selected_year = st.number_input(
+            "Select Year",
+            min_value=2020,
+            max_value=2100,
+            value=date.today().year,
+            step=1,
+            key="advance_year"
+        )
+
+    advances = get_guard_monthly_advances(
+        int(selected_year),
+        int(selected_month)
+    )
+
+    # ==============================================
+    # MONTHLY SUMMARY
+    # ==============================================
+
+    advance_totals = get_monthly_advance_totals(
+        int(selected_year),
+        int(selected_month)
+    )
+
+    category_totals = get_monthly_category_totals(
+        int(selected_year),
+        int(selected_month)
+    )
+
+    total_advance_amount = sum(
+        advance_totals.values()
+    )
+
+    total_guards_with_advances = len(
+        advance_totals
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Total Advance Given",
+            format_currency(
+                total_advance_amount
+            )
+        )
+
+    with col2:
+
+        st.metric(
+            "Guards With Advances",
+            total_guards_with_advances
+        )
+
+    with col3:
+
+        st.metric(
+            "Advance Records",
+            len(advances)
+        )
+
+    # ==============================================
+    # CATEGORY SUMMARY
+    # ==============================================
+
+    if category_totals:
+
+        st.markdown(
+            "#### 📦 Category Summary"
+        )
+
+        category_data = []
+
+        for category_name, total_amount in (
+            category_totals.items()
+        ):
+
+            category_data.append({
+
+                "Category": category_name,
+
+                "Total Amount": format_currency(
+                    total_amount
+                )
+            })
+
+        category_df = pd.DataFrame(
+            category_data
+        )
+
+        st.dataframe(
+            category_df,
+            width="stretch",
+            hide_index=True
+        )
+
+    st.divider()
+
+    # ==============================================
+    # ADVANCE RECORDS TABLE
+    # ==============================================
+
+    st.markdown("### 📋 Advance History")
+
+    if not advances:
+
+        st.info(
+            "No advance records found for the selected month."
+        )
+
+        return
+
+    # ----------------------------------------------
+    # SEARCH
+    # ----------------------------------------------
+
+    search_text = st.text_input(
+        "🔍 Search by guard name or employee ID",
+        key="advance_search"
+    )
+
+    filtered_advances = advances
+
+    if search_text:
+
+        search_value = search_text.lower()
+
+        filtered_advances = [
+
+            advance
+
+            for advance in advances
+
+            if (
+
+                search_value
+                in (
+                    advance.guard.name
+                    if advance.guard
+                    else ""
+                ).lower()
+
+                or
+
+                search_value
+                in str(
+                    advance.guard.employee_id
+                    if advance.guard
+                    else ""
+                ).lower()
+            )
+        ]
+
+    # ----------------------------------------------
+    # BUILD TABLE
+    # ----------------------------------------------
+
+    table_data = []
+
+    for advance in filtered_advances:
+
+        table_data.append({
+
+            "ID": advance.id,
+
+            "Employee ID": (
+                advance.guard.employee_id
+                if advance.guard
+                else "-"
+            ),
+
+            "Guard": (
+                advance.guard.name
+                if advance.guard
+                else "Unknown Guard"
+            ),
+
+            "Date Given": advance.record_date,
+
+            "Category": advance.category,
+
+            "Amount": format_currency(
+                advance.amount
+            ),
+
+            "Description": (
+                advance.description
+                or "-"
+            )
+        })
+
+    display_df = pd.DataFrame(
+        table_data
+    )
+
+    st.dataframe(
+        display_df,
+        width="stretch",
+        hide_index=True,
+        height=400
+    )
+
+    # ==============================================
+    # DELETE ADVANCE
+    # ==============================================
+
+    st.markdown(
+        "### 🗑 Delete Advance Record"
+    )
+
+    delete_options = {
+
+        (
+            f"{advance.id} - "
+            f"{advance.guard.name if advance.guard else 'Unknown Guard'} - "
+            f"{advance.category} - "
+            f"{format_currency(advance.amount)}"
+        ): advance.id
+
+        for advance in filtered_advances
+    }
+
+    if delete_options:
+
+        col1, col2 = st.columns(
+            [3, 1],
+            vertical_alignment="bottom"
+        )
+
+        with col1:
+
+            selected_delete_label = st.selectbox(
+                "Select advance to delete",
+                options=list(delete_options.keys()),
+                key="delete_advance_select"
+            )
+
+        with col2:
+
+            if st.button(
+                "🗑 Delete",
+                type="secondary",
+                width="stretch",
+                key="delete_selected_advance"
+            ):
+
+                advance_id = delete_options[
+                    selected_delete_label
+                ]
+
+                success, message = (
+                    delete_guard_advance(
+                        advance_id
+                    )
+                )
+
+                if success:
+
+                    st.success(message)
+
+                    st.rerun()
+
+                else:
+
+                    st.error(message)

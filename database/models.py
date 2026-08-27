@@ -220,6 +220,12 @@ class Guard(Base):
         cascade="all, delete-orphan"
     )
 
+    advances = relationship(
+        "GuardAdvance",
+        back_populates="guard",
+        cascade="all, delete-orphan"
+    )
+
 
 # ==================================================
 # SITE MODEL
@@ -551,3 +557,8 @@ from database.site_guard_assignment import SiteGuardAssignment
 # GUARD DAILY WORK MODEL
 #=================================================
 from database.guard_daily_work import GuardDailyWork
+
+#=================================================
+# GUARD ADVANCES
+#=================================================
+from database.guard_advance import GuardAdvance

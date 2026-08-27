@@ -718,7 +718,7 @@ def show_dashboard():
         dashboard_card(
             title="Today's Revenue",
             value=f'₹ {data["total_profit_today"]:,.2f}',
-            icon="📈",
+            icon="💸",
             icon_class="icon-red",
             footer="Profit generated from today's shifts",
             footer_class="status-positive"
