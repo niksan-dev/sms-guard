@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-
+from services.email_service import (
+    send_email_with_pdf,
+)
 from services.guard_salary_service import (
     get_guard_salary_data,
     create_guard_salary_slip,
@@ -353,7 +355,11 @@ def show_site_bills():
 
 def show_site_bill_actions(bill):
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
+
+    # ========================================================
+    # VIEW
+    # ========================================================
 
     with col1:
 
@@ -366,6 +372,10 @@ def show_site_bill_actions(bill):
             st.session_state[
                 "view_site_bill_id"
             ] = bill.id
+
+    # ========================================================
+    # EXPORT PDF
+    # ========================================================
 
     with col2:
 
@@ -384,6 +394,10 @@ def show_site_bill_actions(bill):
             key=f"export_bill_{bill.id}"
         )
 
+    # ========================================================
+    # PRINT
+    # ========================================================
+
     with col3:
 
         if st.button(
@@ -396,6 +410,108 @@ def show_site_bill_actions(bill):
                 "print_site_bill_id"
             ] = bill.id
 
+    # ========================================================
+    # SEND EMAIL
+    # ========================================================
+
+    with col4:
+
+        if st.button(
+            "📧 Send Email",
+            width="stretch",
+            key=f"email_site_bill_{bill.id}"
+        ):
+
+            st.session_state[
+                "email_site_bill_id"
+            ] = bill.id
+
+    # ========================================================
+    # EMAIL FORM
+    # ========================================================
+
+    if st.session_state.get(
+        "email_site_bill_id"
+    ) == bill.id:
+
+        st.markdown(
+            "### 📧 Send Site Bill"
+        )
+
+        recipient_email = st.text_input(
+            "Site Billing Email",
+            key=f"site_email_{bill.id}",
+            placeholder="accounts@client.com"
+        )
+
+        if st.button(
+            "Send Site Bill",
+            type="primary",
+            key=f"send_site_bill_{bill.id}"
+        ):
+
+            pdf_data = build_site_pdf_from_bill(
+                bill
+            )
+
+            subject = (
+                f"Security Service Bill - "
+                f"{bill.site.site_code} - "
+                f"{month_name(bill.billing_month)} "
+                f"{bill.billing_year}"
+            )
+
+            body = f"""Dear Sir/Madam,
+
+                    Please find attached the security service bill.
+
+                    Site:
+                    {bill.site.site_code} - {bill.site.name}
+
+                    Billing Month:
+                    {month_name(bill.billing_month)} {bill.billing_year}
+
+                    Bill Number:
+                    {bill.bill_number}
+
+                    Gross Amount:
+                    {format_currency(bill.gross_amount)}
+
+                    CGST:
+                    {format_currency(bill.cgst_amount)}
+
+                    SGST:
+                    {format_currency(bill.sgst_amount)}
+
+                    Grand Total:
+                    {format_currency(bill.total_amount)}
+
+                    Regards,
+                    Security Management System
+                    """
+
+            success, message = send_email_with_pdf(
+                recipient_email=recipient_email,
+                subject=subject,
+                body=body,
+                pdf_data=pdf_data,
+                pdf_filename=(
+                    f"{bill.bill_number}.pdf"
+                )
+            )
+
+            if success:
+
+                st.success(message)
+
+            else:
+
+                st.error(message)
+
+    # ========================================================
+    # VIEW PREVIEW
+    # ========================================================
+
     if st.session_state.get(
         "view_site_bill_id"
     ) == bill.id:
@@ -403,6 +519,10 @@ def show_site_bill_actions(bill):
         show_site_bill_preview(
             bill
         )
+
+    # ========================================================
+    # PRINT
+    # ========================================================
 
     if st.session_state.get(
         "print_site_bill_id"

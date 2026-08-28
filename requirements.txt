@@ -6,4 +6,5 @@ alembic
 plotly
 extra-streamlit-components
 reportlab
+python-dotenv
 
