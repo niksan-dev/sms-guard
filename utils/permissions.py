@@ -8,7 +8,7 @@ ROLE_PERMISSIONS = {
         "Guards",
         "Sites",
         "Guard Work",
-        "Payments",
+        "Billing & Payroll",
         "Shifts",
         "Attendance",
         "Incidents",

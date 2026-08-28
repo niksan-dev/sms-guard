@@ -40,7 +40,8 @@ from views.settings import show_settings
 from views.payments import show_payments
 from views.guard_work import show_guard_work
 from views.company_settings import show_company_settings
-
+from views.guard_work import show_guard_work
+from views.billing_payroll import show_billing_payroll
 
 # from database.connection import engine
 # from sqlalchemy import text
@@ -230,9 +231,9 @@ elif selected_page == "Company Settings":
 
     show_company_settings()
 
-elif selected_page == "Payments":
+elif selected_page == "Billing & Payroll":
 
-    show_payments()
+    show_billing_payroll()
 
 
 # ==================================================

@@ -208,11 +208,7 @@ class Guard(Base):
         back_populates="guard"
     )
 
-    site_assignments = relationship(
-        "SiteGuardAssignment",
-        back_populates="guard",
-        cascade="all, delete-orphan"
-    )
+    
 
     daily_work_records = relationship(
         "GuardDailyWork",
@@ -222,6 +218,18 @@ class Guard(Base):
 
     advances = relationship(
         "GuardAdvance",
+        back_populates="guard",
+        cascade="all, delete-orphan"
+    )
+
+    site_assignments = relationship(
+        "SiteGuardAssignment",
+        back_populates="guard",
+        cascade="all, delete-orphan"
+    )
+
+    salary_slips = relationship(
+        "GuardSalarySlip",
         back_populates="guard",
         cascade="all, delete-orphan"
     )
@@ -388,6 +396,12 @@ class Site(Base):
 
     daily_work_records = relationship(
         "GuardDailyWork",
+        back_populates="site",
+        cascade="all, delete-orphan"
+    )
+
+    site_bills = relationship(
+        "SiteBill",
         back_populates="site",
         cascade="all, delete-orphan"
     )
@@ -562,3 +576,12 @@ from database.guard_daily_work import GuardDailyWork
 # GUARD ADVANCES
 #=================================================
 from database.guard_advance import GuardAdvance
+#=================================================
+# SITE BILLS
+#=================================================
+from database.site_bill import SiteBill
+
+#=================================================
+#GUARD SALARY SLIP
+#=================================================
+from database.guard_salary_slip import GuardSalarySlip

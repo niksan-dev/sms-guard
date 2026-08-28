@@ -5,4 +5,5 @@ bcrypt
 alembic
 plotly
 extra-streamlit-components
+reportlab
 
