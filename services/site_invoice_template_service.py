@@ -293,6 +293,9 @@ def _company_values() -> dict[str, Any]:
             "gst_invoice_prefix": settings.gst_invoice_prefix,
             "logo_path": settings.logo_path,
             "updated_at": settings.updated_at,
+            "cgst_rate":settings.cgst_rate,
+            "sgst_rate":settings.sgst_rate,
+            "alternate_phone":settings.alternate_phone,
         }
 
     finally:
@@ -559,7 +562,7 @@ def build_site_invoice_workbook(
         F21      CGST
         F22      SGST
         A23      Amount in words
-
+        G23      Grand Total
         A24      Bank details
         E24      Authorized signature
 
@@ -598,6 +601,8 @@ def build_site_invoice_workbook(
     )
 
     settings = _company_values()
+
+   # print("CGST RATE----->>>>",settings.get("cgst_rate"))
 
     billing_year = int(
         snapshot["billing_year"]
@@ -646,6 +651,10 @@ def build_site_invoice_workbook(
         settings.get("phone")
     )
 
+    company_alternate_phone = _safe(
+            settings.get("alternate_phone")
+        )
+
     company_email = _safe(
         settings.get("email")
     )
@@ -693,6 +702,11 @@ def build_site_invoice_workbook(
         if part and str(part).strip()
     )
 
+    cgst_rate = _safe(settings.get("cgst_rate"))
+
+    sgst_rate = _safe(settings.get("sgst_rate"))
+
+
     # ========================================================
     # HEADER
     # ========================================================
@@ -716,11 +730,15 @@ def build_site_invoice_workbook(
         contact_parts.append(
             company_phone
         )
-
-    if company_email:
+    if company_alternate_phone:
         contact_parts.append(
-            company_email
+            company_alternate_phone
         )
+
+    # if company_email:
+    #     contact_parts.append(
+    #         company_email
+    #     )
 
     ws["C4"] = " / ".join(
         contact_parts
@@ -901,6 +919,16 @@ def build_site_invoice_workbook(
         else "0"
     )
 
+    ws["A21"] = (
+        "Add CGST @ "
+        f"{cgst_rate} of Gross"
+    )
+
+    ws["A22"] = (
+            "Add SGST @ "
+            f"{sgst_rate} of Gross"
+        )
+
     ws["F22"] = (
         sgst_amount
         if sgst_amount
@@ -911,6 +939,8 @@ def build_site_invoice_workbook(
         "Total Amt In Word :- "
         f"{_amount_words(total_amount)}"
     )
+
+    ws["G23"] = (total_amount)
 
     # ========================================================
     # BANK DETAILS

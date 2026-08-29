@@ -161,16 +161,36 @@ def generate_invoice_number(
 def calculate_bill_amounts(
     subtotal,
     bill_type,
-    gst_percentage=18.0,
+    cgst_rate=9.0,
+    sgst_rate=9.0,
     interstate=False
 ):
+    """
+    Calculate GST bill amounts.
+
+    For GST bills:
+
+    Same state:
+        CGST = subtotal × CGST rate
+        SGST = subtotal × SGST rate
+
+    Interstate:
+        IGST = subtotal × (CGST rate + SGST rate)
+
+    For Non-GST:
+        No GST is applied.
+    """
 
     subtotal = float(
         subtotal or 0
     )
 
-    gst_percentage = float(
-        gst_percentage or 0
+    cgst_rate = float(
+        cgst_rate or 0
+    )
+
+    sgst_rate = float(
+        sgst_rate or 0
     )
 
     # ----------------------------------------------
@@ -180,48 +200,87 @@ def calculate_bill_amounts(
     if bill_type == "Non-GST":
 
         return {
-            "subtotal": subtotal,
+            "subtotal": round(
+                subtotal,
+                2
+            ),
+
             "gst_percentage": 0.0,
+
+            "cgst_rate": 0.0,
+
+            "sgst_rate": 0.0,
+
             "cgst_amount": 0.0,
+
             "sgst_amount": 0.0,
+
             "igst_amount": 0.0,
-            "total_amount": subtotal
+
+            "total_amount": round(
+                subtotal,
+                2
+            )
         }
 
-
     # ----------------------------------------------
-    # GST CALCULATION
+    # GST
     # ----------------------------------------------
-
-    gst_amount = (
-        subtotal
-        * gst_percentage
-        / 100
-    )
 
     cgst_amount = 0.0
     sgst_amount = 0.0
     igst_amount = 0.0
 
+    # ----------------------------------------------
+    # INTERSTATE
+    # ----------------------------------------------
 
-    # Interstate → IGST
     if interstate:
 
-        igst_amount = gst_amount
+        total_gst_rate = (
+            cgst_rate
+            + sgst_rate
+        )
 
+        igst_amount = (
+            subtotal
+            * total_gst_rate
+            / 100
+        )
 
-    # Same State → CGST + SGST
+    # ----------------------------------------------
+    # SAME STATE
+    # ----------------------------------------------
+
     else:
 
-        cgst_amount = gst_amount / 2
-        sgst_amount = gst_amount / 2
+        cgst_amount = (
+            subtotal
+            * cgst_rate
+            / 100
+        )
 
+        sgst_amount = (
+            subtotal
+            * sgst_rate
+            / 100
+        )
+
+    # ----------------------------------------------
+    # TOTAL
+    # ----------------------------------------------
 
     total_amount = (
         subtotal
         + cgst_amount
         + sgst_amount
         + igst_amount
+    )
+
+    # Combined GST percentage
+    gst_percentage = (
+        cgst_rate
+        + sgst_rate
     )
 
     return {
@@ -231,7 +290,20 @@ def calculate_bill_amounts(
             2
         ),
 
-        "gst_percentage": gst_percentage,
+        "gst_percentage": round(
+            gst_percentage,
+            2
+        ),
+
+        "cgst_rate": round(
+            cgst_rate,
+            2
+        ),
+
+        "sgst_rate": round(
+            sgst_rate,
+            2
+        ),
 
         "cgst_amount": round(
             cgst_amount,
@@ -303,21 +375,12 @@ def calculate_payment_status(
 # ==================================================
 
 def create_monthly_payment(
-
     site_id,
-
     billing_date,
-
     subtotal,
-
     bill_type="GST",
-
-    gst_percentage=18.0,
-
     due_date=None,
-
     interstate=False,
-
     notes=None
 ):
 
@@ -343,6 +406,25 @@ def create_monthly_payment(
                 "Site not found."
             )
 
+        # ==========================================
+        # GET COMPANY SETTINGS
+        # ==========================================
+
+        company_settings = (
+            db.query(CompanySettings)
+            .order_by(
+                CompanySettings.id.asc()
+            )
+            .first()
+        )
+
+        if not company_settings:
+
+            raise ValueError(
+                "Company settings are not configured. "
+                "Please configure Company Settings "
+                "before creating a bill."
+            )
 
         # ==========================================
         # BILLING PERIOD
@@ -364,7 +446,6 @@ def create_monthly_payment(
             )
         )
 
-
         # ==========================================
         # CHECK DUPLICATE BILL
         # ==========================================
@@ -385,6 +466,21 @@ def create_monthly_payment(
                 "for the selected month."
             )
 
+        # ==========================================
+        # GET GST RATES
+        # ==========================================
+
+        cgst_rate = float(
+            company_settings.cgst_rate
+            if company_settings.cgst_rate is not None
+            else 9.0
+        )
+
+        sgst_rate = float(
+            company_settings.sgst_rate
+            if company_settings.sgst_rate is not None
+            else 9.0
+        )
 
         # ==========================================
         # CALCULATE GST
@@ -396,11 +492,12 @@ def create_monthly_payment(
 
             bill_type=bill_type,
 
-            gst_percentage=gst_percentage,
+            cgst_rate=cgst_rate,
+
+            sgst_rate=sgst_rate,
 
             interstate=interstate
         )
-
 
         # ==========================================
         # GENERATE INVOICE NUMBER
@@ -412,7 +509,6 @@ def create_monthly_payment(
                 bill_type
             )
         )
-
 
         # ==========================================
         # INITIAL PAYMENT VALUES
@@ -436,7 +532,6 @@ def create_monthly_payment(
                 due_date=due_date
             )
         )
-
 
         # ==========================================
         # CREATE PAYMENT
@@ -505,7 +600,6 @@ def create_monthly_payment(
 
         return payment
 
-
     except IntegrityError:
 
         db.rollback()
@@ -516,13 +610,11 @@ def create_monthly_payment(
             "may already exist."
         )
 
-
     except Exception:
 
         db.rollback()
 
         raise
-
 
     finally:
 

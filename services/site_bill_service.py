@@ -8,6 +8,8 @@ from database.connection import SessionLocal
 from database.guard_daily_work import GuardDailyWork
 from database.site_bill import SiteBill
 
+from database.models import CompanySettings
+
 
 # ==================================================
 # HELPERS
@@ -43,7 +45,6 @@ def get_site_bill_data(
     year,
     month
 ):
-
     db = SessionLocal()
 
     try:
@@ -53,13 +54,11 @@ def get_site_bill_data(
         month = int(month)
 
         # ------------------------------------------
-        # GET WORK RECORDS
+        # GET WORK RECORDS FOR SITE / MONTH
         # ------------------------------------------
 
         work_records = (
-
             db.query(GuardDailyWork)
-
             .options(
                 joinedload(
                     GuardDailyWork.guard
@@ -68,11 +67,8 @@ def get_site_bill_data(
                     GuardDailyWork.site
                 )
             )
-
             .filter(
-
-                GuardDailyWork.site_id
-                == site_id,
+                GuardDailyWork.site_id == site_id,
 
                 extract(
                     "year",
@@ -84,29 +80,17 @@ def get_site_bill_data(
                     GuardDailyWork.work_date
                 ) == month
             )
-
             .order_by(
                 GuardDailyWork.work_date.asc(),
                 GuardDailyWork.shift_number.asc()
             )
-
             .all()
         )
 
         if not work_records:
-
             return None
 
         site = work_records[0].site
-
-        # ------------------------------------------
-        # DAYS IN MONTH
-        # ------------------------------------------
-
-        total_days = get_days_in_month(
-            year,
-            month
-        )
 
         # ------------------------------------------
         # PRESENT RECORDS ONLY
@@ -115,17 +99,11 @@ def get_site_bill_data(
         present_records = [
             record
             for record in work_records
-            if (record.status or "").lower()
-            == "present"
+            if (record.status or "").lower() == "present"
         ]
 
         # ------------------------------------------
         # SHIFT COUNTS
-        #
-        # These count guard-shifts.
-        #
-        # If two guards work Shift 1,
-        # shift_1_count = 2.
         # ------------------------------------------
 
         shift_1_count = sum(
@@ -146,6 +124,42 @@ def get_site_bill_data(
         )
 
         # ------------------------------------------
+        # ACTUAL PRESENT DAYS
+        #
+        # A date is considered PRESENT when
+        # there is at least one Present shift.
+        #
+        # Example:
+        #
+        # 01 -> Shift 1 = Present
+        # 02 -> no record
+        # 03 -> Shift 1 + Shift 2
+        #
+        # Present Days = 2
+        # ------------------------------------------
+
+        present_dates = {
+            record.work_date
+            for record in present_records
+            if record.work_date is not None
+        }
+
+        present_days = len(present_dates)
+
+        # ------------------------------------------
+        # CALENDAR DAYS
+        #
+        # Keep this separately because the rate
+        # calculation is still based on the full
+        # month's calendar days.
+        # ------------------------------------------
+
+        calendar_days = get_days_in_month(
+            year,
+            month
+        )
+
+        # ------------------------------------------
         # SITE RATE
         # ------------------------------------------
 
@@ -155,11 +169,16 @@ def get_site_bill_data(
 
         # ------------------------------------------
         # RATE PER SHIFT
+        #
+        # Monthly guard rate represents the rate
+        # for one guard for the full month.
+        #
+        # 2 shifts per day.
         # ------------------------------------------
 
         shift_rate = (
-            monthly_rate / total_days
-            if total_days > 0
+            monthly_rate / calendar_days #this was devided by 2
+            if calendar_days > 0
             else 0.0
         )
 
@@ -170,6 +189,10 @@ def get_site_bill_data(
         gross_amount = (
             shift_rate * total_shifts
         )
+
+        # ------------------------------------------
+        # RETURN BILL DATA
+        # ------------------------------------------
 
         return {
 
@@ -183,7 +206,15 @@ def get_site_bill_data(
 
             "billing_year": year,
 
-            "total_days": total_days,
+            # IMPORTANT:
+            # This is now ACTUAL PRESENT DAYS,
+            # not 28/30/31.
+            "total_days": present_days,
+
+            # Useful if we need it later.
+            "calendar_days": calendar_days,
+
+            "present_days": present_days,
 
             "shift_1_count": shift_1_count,
 
@@ -212,9 +243,7 @@ def get_site_bill_data(
 def create_site_bill(
     site_id,
     year,
-    month,
-    cgst_rate=0.0,
-    sgst_rate=0.0
+    month
 ):
 
     db = SessionLocal()
@@ -236,31 +265,53 @@ def create_site_bill(
             )
 
         # ------------------------------------------
-        # GST
+        # COMPANY GST SETTINGS
         # ------------------------------------------
 
+        company_settings = (
+            db.query(CompanySettings)
+            .first()
+        )
+
+        if not company_settings:
+            return (
+                False,
+                "Company settings not found.",
+                None
+            )
+
+        
+
         cgst_rate = float(
-            cgst_rate or 0
+            company_settings.cgst_rate or 0.0
         )
 
         sgst_rate = float(
-            sgst_rate or 0
+            company_settings.sgst_rate or 0.0
+        )
+
+        # ------------------------------------------
+        # GST CALCULATION
+        # ------------------------------------------
+
+        gross_amount = float(
+            data["gross_amount"] or 0.0
         )
 
         cgst_amount = (
-            data["gross_amount"]
+            gross_amount
             * cgst_rate
             / 100
         )
 
         sgst_amount = (
-            data["gross_amount"]
+            gross_amount
             * sgst_rate
             / 100
         )
 
         total_amount = (
-            data["gross_amount"]
+            gross_amount
             + cgst_amount
             + sgst_amount
         )

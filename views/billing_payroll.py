@@ -338,47 +338,69 @@ def show_site_bills():
 
         st.markdown("### Tax")
 
-        col1, col2 = st.columns(2)
+        # GST rates are controlled centrally from Company Settings.
+        # They are NOT editable from the Site Bill page.
 
-        with col1:
+        company_settings = get_company_settings()
 
-            cgst_rate = st.number_input(
-                "CGST %",
-                min_value=0.0,
-                max_value=100.0,
-                value=0.0,
-                step=0.5,
-                key="site_cgst"
+        if company_settings is None:
+
+            st.warning(
+                "Company Settings are not configured."
             )
 
-        with col2:
+            return
 
-            sgst_rate = st.number_input(
-                "SGST %",
-                min_value=0.0,
-                max_value=100.0,
-                value=0.0,
-                step=0.5,
-                key="site_sgst"
-            )
+        cgst_rate = float(
+            company_settings.cgst_rate
+            if company_settings.cgst_rate is not None
+            else 9.0
+        )
 
-        cgst_amount = (
-            data["gross_amount"]
+        sgst_rate = float(
+            company_settings.sgst_rate
+            if company_settings.sgst_rate is not None
+            else 9.0
+        )
+
+        st.info(
+            f"GST Rates from Company Settings: "
+            f"CGST {cgst_rate:.2f}% | "
+            f"SGST {sgst_rate:.2f}%"
+        )
+
+        # ----------------------------------------------------
+        # GST CALCULATION
+        # ----------------------------------------------------
+
+        gross_amount = float(
+            data["gross_amount"] or 0
+        )
+
+        cgst_amount = round(
+            gross_amount
             * cgst_rate
-            / 100
+            / 100,
+            2
         )
 
-        sgst_amount = (
-            data["gross_amount"]
+        sgst_amount = round(
+            gross_amount
             * sgst_rate
-            / 100
+            / 100,
+            2
         )
 
-        total_amount = (
-            data["gross_amount"]
+        total_amount = round(
+            gross_amount
             + cgst_amount
-            + sgst_amount
+            + sgst_amount,
+            2
         )
+
+        # ----------------------------------------------------
+        # TAX SUMMARY
+        # ----------------------------------------------------
 
         col1, col2, col3 = st.columns(3)
 
@@ -387,7 +409,7 @@ def show_site_bills():
             st.metric(
                 "Gross",
                 format_currency(
-                    data["gross_amount"]
+                    gross_amount
                 )
             )
 
@@ -424,9 +446,7 @@ def show_site_bills():
             success, message, bill = create_site_bill(
                 site_id=selected_site.id,
                 year=int(selected_year),
-                month=int(selected_month),
-                cgst_rate=float(cgst_rate),
-                sgst_rate=float(sgst_rate)
+                month=int(selected_month)
             )
 
             if success:
