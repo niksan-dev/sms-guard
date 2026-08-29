@@ -28,9 +28,10 @@ LOGO_UPLOAD_DIR = "uploads/company"
 
 def save_company_logo(uploaded_file):
 
+    print("111111111111111",LOGO_UPLOAD_DIR)
     if uploaded_file is None:
         return None
-
+    print("2222222222222")
     os.makedirs(
         LOGO_UPLOAD_DIR,
         exist_ok=True
@@ -39,15 +40,15 @@ def save_company_logo(uploaded_file):
     file_extension = os.path.splitext(
         uploaded_file.name
     )[1].lower()
-
+    print("33333333333",file_extension)
     # Use one fixed filename for the company logo
     file_name = f"company_logo{file_extension}"
-
+    print("44444444444",file_name)
     file_path = os.path.join(
         LOGO_UPLOAD_DIR,
         file_name
     )
-
+    print("55555555",file_path)
     with open(
         file_path,
         "wb"
@@ -56,7 +57,7 @@ def save_company_logo(uploaded_file):
         file.write(
             uploaded_file.getbuffer()
         )
-
+    print("666666",file_path)
     return file_path
 
 
@@ -556,21 +557,53 @@ def show_company_settings():
         # ------------------------------------------
         # SAVE NEW LOGO
         # ------------------------------------------
+        #
+        # IMPORTANT:
+        # If the user does not upload a new logo, preserve
+        # the existing logo_path from CompanySettings.
+        # Previously this was set to None on every save,
+        # which cleared the database value whenever the
+        # form was saved without selecting a logo.
+        # ------------------------------------------
+        default_logo_path = 'uploads\\company\\company_logo.png'
+        logo_path = get_value(
+            settings,
+            "logo_path",
+            default_logo_path
+        )
 
-        logo_path = None
+        print("uploaded_logo---->>>",uploaded_logo)
+
+        
 
         if uploaded_logo is not None:
 
-            logo_path = save_company_logo(
+            saved_logo_path = save_company_logo(
                 uploaded_logo
             )
+
+            print(
+                "SAVED LOGO PATH =========>",
+                repr(saved_logo_path)
+            )
+
+            if saved_logo_path:
+
+                logo_path = os.path.normpath(
+                    saved_logo_path
+                )
+
+                print(
+                    "FINAL LOGO PATH =========>",
+                    repr(logo_path)
+                )
 
 
         # ------------------------------------------
         # SAVE COMPANY SETTINGS
         # ------------------------------------------
 
-        save_company_settings(
+        final_settins = save_company_settings(
 
             company_name=company_name,
 
@@ -609,7 +642,7 @@ def show_company_settings():
             logo_path=logo_path
         )
 
-
+        print("final_settins------->>>",final_settins.logo_path)
         st.success(
             "✅ Company settings saved successfully."
         )

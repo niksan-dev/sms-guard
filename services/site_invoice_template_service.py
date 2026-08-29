@@ -20,9 +20,15 @@ from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from sqlalchemy.orm import joinedload
 
+
+from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor
+from openpyxl.drawing.xdr import XDRPositiveSize2D
+from openpyxl.utils.units import pixels_to_EMU
+
 from database.connection import SessionLocal
 from database.site_bill import SiteBill
 from database.company_settings import CompanySettings
+from database.models import Site
 
 
 # Project root: <project>/services/site_invoice_template_service.py
@@ -104,6 +110,7 @@ def _amount_words(number: float) -> str:
         "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen",
         "Eighteen", "Nineteen",
     ]
+
     tens = [
         "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty",
         "Seventy", "Eighty", "Ninety",
@@ -112,15 +119,24 @@ def _amount_words(number: float) -> str:
     def under_100(n: int) -> str:
         if n < 20:
             return ones[n]
-        return tens[n // 10] + (f" {ones[n % 10]}" if n % 10 else "")
+
+        return tens[n // 10] + (
+            f" {ones[n % 10]}"
+            if n % 10
+            else ""
+        )
 
     def under_1000(n: int) -> str:
         if n < 100:
             return under_100(n)
+
         rest = n % 100
+
         result = f"{ones[n // 100]} Hundred"
+
         if rest:
             result += f" {under_100(rest)}"
+
         return result
 
     def indian_integer(n: int) -> str:
@@ -131,35 +147,60 @@ def _amount_words(number: float) -> str:
 
         crore = n // 10_000_000
         n %= 10_000_000
+
         lakh = n // 100_000
         n %= 100_000
+
         thousand = n // 1_000
         n %= 1_000
 
         if crore:
-            parts.append(f"{under_1000(crore)} Crore")
+            parts.append(
+                f"{under_1000(crore)} Crore"
+            )
+
         if lakh:
-            parts.append(f"{under_100(lakh)} Lakh")
+            parts.append(
+                f"{under_100(lakh)} Lakh"
+            )
+
         if thousand:
-            parts.append(f"{under_100(thousand)} Thousand")
+            parts.append(
+                f"{under_100(thousand)} Thousand"
+            )
+
         if n:
-            parts.append(under_1000(n))
+            parts.append(
+                under_1000(n)
+            )
 
         return " ".join(parts)
 
     result = indian_integer(rupees) + " Rupees"
 
     if paise:
-        result += f" and {under_100(paise)} Paise"
+        result += (
+            f" and {under_100(paise)} Paise"
+        )
 
     return result + " Only."
 
 
-def _get_attr(obj: Any, name: str, default: Any = None) -> Any:
+def _get_attr(
+    obj: Any,
+    name: str,
+    default: Any = None
+) -> Any:
     """Read an already-loaded Python/SQLAlchemy attribute safely."""
+
     if obj is None:
         return default
-    return getattr(obj, name, default)
+
+    return getattr(
+        obj,
+        name,
+        default
+    )
 
 
 def _client_name(client: Any) -> str:
@@ -176,6 +217,7 @@ def _client_name(client: Any) -> str:
 
 def _client_pan(client: Any) -> str:
     """Return client PAN if the User model eventually provides one."""
+
     if client is None:
         return ""
 
@@ -206,10 +248,11 @@ class CompanySettingsRequiredError(RuntimeError):
 
 
 def _company_values() -> dict[str, Any]:
-    """Return a detached snapshot of the configured company settings.
+    """
+    Return a detached snapshot of the configured company settings.
 
-    The invoice generator deliberately queries CompanySettings directly so the
-    PDF never depends on a detached SQLAlchemy object.
+    The invoice generator deliberately queries CompanySettings directly so
+    the PDF never depends on a detached SQLAlchemy object.
     """
 
     db = SessionLocal()
@@ -217,7 +260,9 @@ def _company_values() -> dict[str, Any]:
     try:
         settings = (
             db.query(CompanySettings)
-            .order_by(CompanySettings.id.asc())
+            .order_by(
+                CompanySettings.id.asc()
+            )
             .first()
         )
 
@@ -247,18 +292,24 @@ def _company_values() -> dict[str, Any]:
             "invoice_prefix": settings.invoice_prefix,
             "gst_invoice_prefix": settings.gst_invoice_prefix,
             "logo_path": settings.logo_path,
+            "updated_at": settings.updated_at,
         }
+
     finally:
         db.close()
 
 
-def _resolve_logo_path(logo_path: Any) -> Path | None:
+def _resolve_logo_path(
+    logo_path: Any
+) -> Path | None:
     """Resolve CompanySettings.logo_path against the project root."""
 
     if not logo_path:
         return None
 
-    path = Path(str(logo_path))
+    path = Path(
+        str(logo_path)
+    )
 
     if not path.is_absolute():
         path = PROJECT_ROOT / path
@@ -274,36 +325,91 @@ def _resolve_logo_path(logo_path: Any) -> Path | None:
     return None
 
 
-def _apply_company_logo(ws: Any, settings: dict[str, Any]) -> None:
+def _apply_company_logo(
+    ws: Any,
+    settings: dict[str, Any]
+) -> None:
     """Replace the template logo with the logo configured in Company Settings."""
 
     # Remove the static/template logo so a stale logo can never be shown.
     ws._images = []
 
-    logo_path = _resolve_logo_path(settings.get("logo_path"))
+   # print("logo_path=============>>>>>",settings.get("logo_path"))
+
+    logo_path = _resolve_logo_path(
+        settings.get("logo_path")
+    )
+
     if logo_path is None:
         return
 
     try:
-        image = XLImage(str(logo_path))
+        image = XLImage(
+            str(logo_path)
+        )
     except Exception as exc:
         raise ValueError(
-            f"Unable to load company logo: {logo_path} ({exc})"
+            f"Unable to load company logo: "
+            f"{logo_path} ({exc})"
         ) from exc
 
-    # Match the dimensions/position of the logo in the supplied reference
-    # template: approximately 105 x 120 px anchored at A2.
-    image.width = 105
-    image.height = 120
-    image.anchor = "A2"
+    image.width = 110
+    image.height = 110
+    image.anchor = get_image_anchor(ws,image)
+
+    
+
     ws.add_image(image)
 
+def get_image_anchor(ws,image):
+    # Merged range: A2:C5
+    # Calculate approximate width of A:C
+    total_width = sum(
+        ws.column_dimensions[col].width or 8.43
+        for col in ["A", "B"]
+    )
 
+    # Excel column width -> approximate pixels
+    total_width_px = int(total_width * 7)
+
+    # Calculate row height in pixels
+    total_height = sum(
+        ws.row_dimensions[row].height or 15
+        for row in range(2, 5)
+    )
+
+    # Excel points -> pixels
+    total_height_px = int(total_height * 96 / 72)
+
+    # Center position
+    offset_x = max(0, (total_width_px - image.width) // 2)
+    offset_y = max(0, (total_height_px - image.height) // 2)
+
+    # Create anchor
+    anchor = OneCellAnchor(
+        _from=ws["A2"]._from if hasattr(ws["A2"], "_from") else None,
+        ext=XDRPositiveSize2D(
+            cx=pixels_to_EMU(image.width),
+            cy=pixels_to_EMU(image.height)
+        )
+    )
+
+    # Set starting cell
+    anchor._from.col = 0       # A
+    anchor._from.row = 1       # row 2
+
+    # Offset from A2
+    anchor._from.colOff = pixels_to_EMU(offset_x)
+    anchor._from.rowOff = pixels_to_EMU(offset_y)
+
+    return anchor
 # ============================================================
 # DATABASE SNAPSHOT
 # ============================================================
 
-def _load_bill_snapshot(bill: Any) -> dict[str, Any]:
+def _load_bill_snapshot(
+    bill: Any
+) -> dict[str, Any]:
     """
     Reload the SiteBill and its Site/Client relationships while the
     SQLAlchemy session is open, then convert everything needed by the
@@ -313,9 +419,15 @@ def _load_bill_snapshot(bill: Any) -> dict[str, Any]:
     passes a SiteBill whose original session has already been closed.
     """
 
-    bill_id = _get_attr(bill, "id")
+    bill_id = _get_attr(
+        bill,
+        "id"
+    )
+
     if bill_id is None:
-        raise ValueError("Site bill ID is required.")
+        raise ValueError(
+            "Site bill ID is required."
+        )
 
     db = SessionLocal()
 
@@ -323,19 +435,29 @@ def _load_bill_snapshot(bill: Any) -> dict[str, Any]:
         loaded_bill = (
             db.query(SiteBill)
             .options(
-                joinedload(SiteBill.site).joinedload(
-                    __import__("database.models", fromlist=["Site"]).Site.client
+                joinedload(
+                    SiteBill.site
+                ).joinedload(
+                    Site.client
                 )
             )
-            .filter(SiteBill.id == int(bill_id))
+            .filter(
+                SiteBill.id == int(bill_id)
+            )
             .first()
         )
 
         if loaded_bill is None:
-            raise ValueError(f"Site bill not found: {bill_id}")
+            raise ValueError(
+                f"Site bill not found: {bill_id}"
+            )
 
         site = loaded_bill.site
-        client = site.client if site is not None else None
+        client = (
+            site.client
+            if site is not None
+            else None
+        )
 
         # Read all relationship/scalar values before closing the session.
         return {
@@ -353,14 +475,52 @@ def _load_bill_snapshot(bill: Any) -> dict[str, Any]:
             "cgst_amount": loaded_bill.cgst_amount,
             "sgst_amount": loaded_bill.sgst_amount,
             "total_amount": loaded_bill.total_amount,
-            "site_code": _get_attr(site, "site_code", "") if site else "",
-            "site_name": _get_attr(site, "name", "") if site else "",
-            "site_email": _get_attr(site, "email", "") if site else "",
-            "site_address": _site_address(site) if site else "",
+            "site_code": (
+                _get_attr(
+                    site,
+                    "site_code",
+                    ""
+                )
+                if site
+                else ""
+            ),
+            "site_name": (
+                _get_attr(
+                    site,
+                    "name",
+                    ""
+                )
+                if site
+                else ""
+            ),
+            "site_email": (
+                _get_attr(
+                    site,
+                    "email",
+                    ""
+                )
+                if site
+                else ""
+            ),
+            "site_address": (
+                _site_address(site)
+                if site
+                else ""
+            ),
             "customer_name": _client_name(client),
-            "customer_email": _get_attr(client, "email", "") if client else "",
+            "customer_email": (
+                _get_attr(
+                    client,
+                    "email",
+                    ""
+                )
+                if client
+                else ""
+            ),
             "customer_pan": _client_pan(client),
+            "updated_at": loaded_bill.updated_at,
         }
+
     finally:
         db.close()
 
@@ -376,67 +536,151 @@ def build_site_invoice_workbook(
     """
     Fill the supplied Excel invoice template and return XLSX bytes.
 
-    Mapping follows the user's workbook:
+    Reference invoice mapping:
+
+        C2       Company name
+        C3       Company address
+        C4       Company phone / email
+
+        A5       Bill From + company name ONLY
+        D5       Bill To + customer name + site name
         H5       Invoice number
         H7       Invoice date
-        D5       Customer name
-        D9       Customer PAN
+
+        A9       Company PAN
+
         A10      Site address
-        B13      Month text
-        C15:F15  Shift 1
-        C16:F16  Shift 2
-        F20      Gross
+
+        B13      Billing month
+        B15:F15  Shift 1
+        B16:F16  Shift 2
+
+        F20      Gross amount
         F21      CGST
         F22      SGST
         A23      Amount in words
+
+        A24      Bank details
+        E24      Authorized signature
+
+    Important layout change:
+        - Company PAN is NOT written inside Bill From (A5).
+        - Company PAN is written in the row below Bill From (A9).
+        - Site name is shown below the customer name in Bill To (D5).
     """
 
-    path = Path(template_path) if template_path else get_default_site_invoice_template()
+    path = (
+        Path(template_path)
+        if template_path
+        else get_default_site_invoice_template()
+    )
 
     if not path.exists():
-        raise FileNotFoundError(f"Invoice template not found: {path}")
+        raise FileNotFoundError(
+            f"Invoice template not found: {path}"
+        )
 
-    # Keep formulas disabled for this operation; Python writes the final values.
     workbook = load_workbook(path)
+
     if "Invoice" not in workbook.sheetnames:
         raise ValueError(
-            "The selected invoice template must contain an 'Invoice' sheet."
+            "The selected invoice template must contain "
+            "an 'Invoice' sheet."
         )
 
     ws = workbook["Invoice"]
 
-    # The mapping sheet is documentation for the developer/template editor;
-    # it must never appear in the customer-facing PDF.
     if "Python Mapping" in workbook.sheetnames:
         workbook["Python Mapping"].sheet_state = "hidden"
 
-    snapshot = _load_bill_snapshot(bill)
+    snapshot = _load_bill_snapshot(
+        bill
+    )
+
     settings = _company_values()
 
-    billing_year = int(snapshot["billing_year"] or date.today().year)
-    billing_month = int(snapshot["billing_month"] or date.today().month)
+    billing_year = int(
+        snapshot["billing_year"]
+        or date.today().year
+    )
 
-    invoice_date = snapshot["bill_date"] or date.today()
-    invoice_number = snapshot["bill_number"]
+    billing_month = int(
+        snapshot["billing_month"]
+        or date.today().month
+    )
 
-    # --------------------------------------------------------
+    invoice_date = (
+        snapshot["bill_date"]
+        or date.today()
+    )
+
+    invoice_number = snapshot[
+        "bill_number"
+    ]
+
+    # ========================================================
     # COMPANY SETTINGS
-    # --------------------------------------------------------
-    company_name = _safe(settings.get("company_name"))
-    company_address = _safe(settings.get("address"))
-    company_city = _safe(settings.get("city"))
-    company_state = _safe(settings.get("state"))
-    company_pincode = _safe(settings.get("pincode"))
-    company_phone = _safe(settings.get("phone"))
-    company_email = _safe(settings.get("email"))
-    company_pan = _safe(settings.get("pan_number"))
-    company_gst = _safe(settings.get("gst_number"))
-    owner_name = _safe(settings.get("owner_name"))
-    bank_name = _safe(settings.get("bank_name"))
-    account_holder_name = _safe(settings.get("account_holder_name"))
-    account_number = _safe(settings.get("account_number"))
-    ifsc_code = _safe(settings.get("ifsc_code"))
-    branch_name = _safe(settings.get("branch_name"))
+    # ========================================================
+
+    company_name = _safe(
+        settings.get("company_name")
+    )
+
+    company_address = _safe(
+        settings.get("address")
+    )
+
+    company_city = _safe(
+        settings.get("city")
+    )
+
+    company_state = _safe(
+        settings.get("state")
+    )
+
+    company_pincode = _safe(
+        settings.get("pincode")
+    )
+
+    company_phone = _safe(
+        settings.get("phone")
+    )
+
+    company_email = _safe(
+        settings.get("email")
+    )
+
+    company_pan = _safe(
+        settings.get("pan_number")
+    )
+
+    company_gst = _safe(
+        settings.get("gst_number")
+    )
+
+    owner_name = _safe(
+        settings.get("owner_name")
+    )
+
+    bank_name = _safe(
+        settings.get("bank_name")
+    )
+
+    account_holder_name = _safe(
+        settings.get("account_holder_name")
+    )
+
+    account_number = _safe(
+        settings.get("account_number")
+    )
+
+    ifsc_code = _safe(
+        settings.get("ifsc_code")
+    )
+
+    branch_name = _safe(
+        settings.get("branch_name")
+    )
 
     full_company_address = ", ".join(
         str(part).strip()
@@ -449,158 +693,442 @@ def build_site_invoice_workbook(
         if part and str(part).strip()
     )
 
-    # --------------------------------------------------------
-    # HEADER / CLIENT
-    # --------------------------------------------------------
-    _apply_company_logo(ws, settings)
+    # ========================================================
+    # HEADER
+    # ========================================================
+
+    _apply_company_logo(
+        ws,
+        settings
+    )
 
     ws["C2"] = company_name
 
-    if full_company_address:
-        ws["C3"] = full_company_address
-    else:
-        ws["C3"] = ""
+    ws["C3"] = (
+        full_company_address
+        if full_company_address
+        else ""
+    )
 
     contact_parts = []
+
     if company_phone:
-        contact_parts.append(company_phone)
+        contact_parts.append(
+            company_phone
+        )
+
     if company_email:
-        contact_parts.append(company_email)
-    ws["C4"] = " / ".join(contact_parts)
+        contact_parts.append(
+            company_email
+        )
 
-    company_identity = [f"Bill From,", company_name]
-    if company_pan:
-        company_identity.append(f"PAN:- {company_pan}")
-    if company_gst:
-        company_identity.append(f"GSTIN:- {company_gst}")
-    ws["A5"] = "\n".join(company_identity)
+    ws["C4"] = " / ".join(
+        contact_parts
+    )
 
-    customer_name = snapshot["customer_name"]
-    ws["D5"] = f"Bill To,\n{customer_name}" if customer_name else "Bill To,\n"
+    # ========================================================
+    # BILL FROM
+    #
+    # PAN deliberately removed from this cell.
+    # ========================================================
+
+    ws["A5"] = (
+        f"Bill From,\n"
+        f"{company_name}"
+    )
+
+    # Optional GST can remain in the dedicated lower identity
+    # row only if the template has a place for it. For the supplied
+    # reference layout, only PAN is placed here.
+    #
+    # Company PAN is written separately below Bill From.
+    ws["A9"] = (
+        f"PAN:- {company_pan}"
+        if company_pan
+        else "PAN:- "
+    )
+
+    # ========================================================
+    # BILL TO
+    #
+    # Customer name + Site name.
+    # ========================================================
+
+    customer_name = _safe(
+        snapshot["customer_name"]
+    )
+
+    site_name = _safe(
+        snapshot["site_name"]
+    )
+
+    bill_to_lines = [
+        "Bill To,"
+    ]
+
+    if customer_name:
+        bill_to_lines.append(
+            customer_name
+        )
+
+    if site_name:
+        bill_to_lines.append(
+            site_name
+        )
+
+    ws["D5"] = "\n".join(
+        bill_to_lines
+    )
+
+    # ========================================================
+    # INVOICE NUMBER / DATE
+    # ========================================================
 
     ws["H5"] = invoice_number
-    ws["H7"] = _date_text(invoice_date)
 
-    # The current project has no PAN column on User. Leave this blank unless
-    # a PAN attribute is added later. Never substitute the company's PAN.
-    customer_pan = snapshot["customer_pan"]
-    ws["D9"] = f"PAN:- {customer_pan}" if customer_pan else "PAN:- "
+    ws["H7"] = _date_text(
+        invoice_date
+    )
 
-    site_address = snapshot["site_address"]
-    site_label = "Site Address:-"
+    # ========================================================
+    # CLIENT PAN
+    #
+    # User model currently may not have PAN. If present later,
+    # use it here. Never substitute company PAN.
+    # ========================================================
+
+    customer_pan = _safe(
+        snapshot["customer_pan"]
+    )
+
+    ws["D9"] = (
+        f"PAN:- {customer_pan}"
+        if customer_pan
+        else "PAN:- "
+    )
+
+    # ========================================================
+    # SITE ADDRESS
+    # ========================================================
+
+    site_address = _safe(
+        snapshot["site_address"]
+    )
+
     ws["A10"] = (
-        f"{site_label} {site_address}"
+        f"Site Address:- {site_address}"
         if site_address
-        else site_label
+        else "Site Address:-"
     )
 
-    # --------------------------------------------------------
+    # ========================================================
     # BILLING DATA
-    # --------------------------------------------------------
-    days = int(snapshot["total_days"] or 0)
-    shift_rate = _number(snapshot["shift_rate"])
-    shift_1_count = int(snapshot["shift_1_count"] or 0)
-    shift_2_count = int(snapshot["shift_2_count"] or 0)
+    # ========================================================
 
-    shift_1_amount = round(shift_rate * shift_1_count, 2)
-    shift_2_amount = round(shift_rate * shift_2_count, 2)
-
-    # Main month row.
-    ws["B13"] = (
-        f"For the month of\n{_month_text(billing_year, billing_month)}"
+    days = int(
+        snapshot["total_days"]
+        or 0
     )
 
-    # Shift 1 row.
+    shift_rate = _number(
+        snapshot["shift_rate"]
+    )
+
+    shift_1_count = int(
+        snapshot["shift_1_count"]
+        or 0
+    )
+
+    shift_2_count = int(
+        snapshot["shift_2_count"]
+        or 0
+    )
+
+    shift_1_amount = round(
+        shift_rate * shift_1_count,
+        2
+    )
+
+    shift_2_amount = round(
+        shift_rate * shift_2_count,
+        2
+    )
+
+    ws["B13"] = (
+        f"For the month of\n"
+        f"{_month_text(billing_year, billing_month)}"
+    )
+
+    # Shift 1
     ws["B15"] = "Day/Night"
     ws["C15"] = "01"
     ws["D15"] = shift_1_count
     ws["E15"] = days
     ws["F15"] = shift_1_amount
 
-    # Shift 2 row.
+    # Shift 2
     ws["B16"] = "Day/Night"
     ws["C16"] = "01"
     ws["D16"] = shift_2_count
     ws["E16"] = days
     ws["F16"] = shift_2_amount
 
-    gross_amount = _number(snapshot["gross_amount"])
-    cgst_amount = _number(snapshot["cgst_amount"])
-    sgst_amount = _number(snapshot["sgst_amount"])
-    total_amount = _number(snapshot["total_amount"])
-
-    # --------------------------------------------------------
-    # TOTALS
-    # --------------------------------------------------------
-    ws["F20"] = gross_amount
-    ws["F21"] = cgst_amount if cgst_amount else "-"
-    ws["F22"] = sgst_amount if sgst_amount else "-"
-    ws["A23"] = (
-        f"Total Amt In Word :- {_amount_words(total_amount)}"
+    gross_amount = _number(
+        snapshot["gross_amount"]
     )
 
-    # --------------------------------------------------------
-    # BANK / SIGNATURE
-    # --------------------------------------------------------
+    cgst_amount = _number(
+        snapshot["cgst_amount"]
+    )
+
+    sgst_amount = _number(
+        snapshot["sgst_amount"]
+    )
+
+    total_amount = _number(
+        snapshot["total_amount"]
+    )
+
+    # ========================================================
+    # TOTALS
+    # ========================================================
+
+    ws["F20"] = gross_amount
+
+    ws["F21"] = (
+        cgst_amount
+        if cgst_amount
+        else "0"
+    )
+
+    ws["F22"] = (
+        sgst_amount
+        if sgst_amount
+        else "0"
+    )
+
+    ws["A23"] = (
+        "Total Amt In Word :- "
+        f"{_amount_words(total_amount)}"
+    )
+
+    # ========================================================
+    # BANK DETAILS
+    # ========================================================
+
     bank_lines = [
-        "BANK DETAILS:-",
-        "",
+        "BANK DETAILS:-"
     ]
 
     if bank_name:
-        bank_lines.append(bank_name)
+        bank_lines.append(
+            f"Bank name :-"
+            f"{bank_name}"
+        )
     elif company_name:
-        bank_lines.append(company_name)
+        bank_lines.append(
+            company_name
+        )
 
     if account_holder_name:
-        bank_lines.append(f"A/C HOLDER :- {account_holder_name}")
+        bank_lines.append(
+            f"A/C HOLDER :- "
+            f"{account_holder_name}"
+        )
 
     if account_number:
-        bank_lines.append(f"ACC NO :- {account_number}")
+        bank_lines.append(
+            f"ACC NO :- "
+            f"{account_number}"
+        )
+
     if ifsc_code:
-        bank_lines.append(f"IFSC CODE:- {ifsc_code}")
+        bank_lines.append(
+            f"IFSC CODE:- "
+            f"{ifsc_code}"
+        )
+
     if branch_name:
-        bank_lines.append(f"BRANCH:- {branch_name}.")
+        bank_lines.append(
+            f"BRANCH:- "
+            f"{branch_name}."
+        )
 
-    ws["A24"] = "\n".join(bank_lines)
-
-    signature_name = owner_name or "Proprietor"
-    ws["E24"] = (
-        f"FOR {company_name}.\n\n\n{signature_name}"
+    ws["A24"] = "\n".join(
+        bank_lines
     )
 
-    # --------------------------------------------------------
+    # ========================================================
+    # SIGNATURE
+    # ========================================================
+
+    signature_name = (
+        owner_name
+        or "Proprietor"
+    )
+
+    ws["E24"] = (
+        f"FOR {company_name}.\n\n"
+        f"Proprietor"
+    )
+
+    # ========================================================
     # PAGE / PRINT SETTINGS
-    # --------------------------------------------------------
-    # The workbook is the visual template. Keep its design, but force the
-    # invoice to print as a single A4 page.
+    # ========================================================
+
     ws.print_area = "A1:H38"
-    ws.page_setup.paperSize = ws.PAPERSIZE_A4
-    ws.page_setup.orientation = "portrait"
+
+    ws.page_setup.paperSize = (
+        ws.PAPERSIZE_A4
+    )
+
+    ws.page_setup.orientation = (
+        "portrait"
+    )
+
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 1
+
     ws.sheet_properties.pageSetUpPr.fitToPage = True
+
     ws.page_margins.left = 0.20
     ws.page_margins.right = 0.20
     ws.page_margins.top = 0.20
     ws.page_margins.bottom = 0.20
 
-    # --------------------------------------------------------
+    # ========================================================
     # FORMATTING
-    # --------------------------------------------------------
-    # Preserve the template's formatting. Only set number formats for values
-    # that Python writes so LibreOffice displays them consistently.
-    for cell in ("F15", "F16", "F20", "F21", "F22"):
-        ws[cell].number_format = '#,##0.00'
+    # ========================================================
 
-    # Force recalculation if the workbook contains any remaining formulas.
+    for cell in (
+        "F15",
+        "F16",
+        "F20",
+        "F21",
+        "F22",
+    ):
+        ws[cell].number_format = (
+            '#,##0.00'
+        )
+
     workbook.calculation.fullCalcOnLoad = True
     workbook.calculation.forceFullCalc = True
     workbook.calculation.calcMode = "auto"
 
     output = io.BytesIO()
-    workbook.save(output)
+
+    workbook.save(
+        output
+    )
+
     return output.getvalue()
+
+
+# ============================================================
+# PDF CACHE
+# ============================================================
+
+# Streamlit reruns the script whenever a button is clicked.  Keep generated
+# PDFs in this process so View -> Export -> Mail does not start Excel again.
+_PDF_CACHE: dict[tuple[Any, ...], bytes] = {}
+
+
+def _pdf_cache_key(
+    bill: Any,
+    template_path: str | os.PathLike | None,
+) -> tuple[Any, ...]:
+    """
+    Build a cache key that invalidates whenever the bill,
+    company settings, or template changes.
+    """
+
+    # --------------------------------------------------------
+    # IMPORTANT:
+    # Always reload the bill from DB.
+    #
+    # Streamlit may rerun with an older SiteBill Python object,
+    # so we must NOT rely only on bill.updated_at here.
+    # --------------------------------------------------------
+
+    snapshot = _load_bill_snapshot(bill)
+
+    bill_key = (
+        snapshot.get("bill_number"),
+        snapshot.get("billing_year"),
+        snapshot.get("billing_month"),
+        snapshot.get("bill_date"),
+
+        snapshot.get("total_days"),
+        snapshot.get("shift_1_count"),
+        snapshot.get("shift_2_count"),
+        snapshot.get("total_shifts"),
+
+        snapshot.get("monthly_rate"),
+        snapshot.get("shift_rate"),
+
+        # IMPORTANT
+        snapshot.get("gross_amount"),
+        snapshot.get("cgst_amount"),
+        snapshot.get("sgst_amount"),
+        snapshot.get("total_amount"),
+
+        # Database modification timestamp
+        snapshot.get("updated_at"),
+    )
+
+    # --------------------------------------------------------
+    # TEMPLATE VERSION
+    # --------------------------------------------------------
+
+    try:
+
+        template = (
+            Path(template_path)
+            if template_path
+            else get_default_site_invoice_template()
+        )
+
+        template_key = (
+            str(template.resolve()),
+            template.stat().st_mtime_ns,
+            template.stat().st_size,
+        )
+
+    except (OSError, ValueError):
+
+        template_key = (
+            str(
+                template_path
+                or DEFAULT_TEMPLATE
+            ),
+        )
+
+    # --------------------------------------------------------
+    # COMPANY SETTINGS VERSION
+    # --------------------------------------------------------
+
+    settings = _company_values()
+
+    company_key = (
+        settings.get("id"),
+        settings.get("updated_at"),
+        settings.get("logo_path"),
+    )
+
+    # --------------------------------------------------------
+    # FINAL CACHE KEY
+    # --------------------------------------------------------
+
+    return (
+        bill_key,
+        company_key,
+        template_key,
+    )
+
+
+def clear_site_invoice_pdf_cache() -> None:
+    """Clear all cached site invoice PDFs."""
+    _PDF_CACHE.clear()
 
 
 # ============================================================
@@ -616,43 +1144,73 @@ def _find_soffice() -> str | None:
     ]
 
     for candidate in candidates:
-        if candidate and Path(candidate).exists():
+
+        if (
+            candidate
+            and Path(candidate).exists()
+        ):
             return candidate
 
     return None
 
 
-def _excel_com_to_pdf(xlsx_data: bytes) -> bytes | None:
-    """Use installed Microsoft Excel on Windows when available."""
+def _excel_com_to_pdf(
+    xlsx_data: bytes
+) -> bytes | None:
+    """Convert XLSX to PDF with Microsoft Excel COM.
+
+    Streamlit can execute the same Python process across many reruns.
+    Explicit COM initialization and cleanup prevents Excel COM from becoming
+    unavailable after the first conversion.
+    """
 
     if os.name != "nt":
         return None
 
     try:
+        import pythoncom  # type: ignore
         import win32com.client  # type: ignore
     except ImportError:
         return None
 
     excel = None
     workbook = None
+    com_initialized = False
 
-    with tempfile.TemporaryDirectory(prefix="site_invoice_excel_") as temp_dir:
+    with tempfile.TemporaryDirectory(
+        prefix="site_invoice_excel_"
+    ) as temp_dir:
+
         temp_path = Path(temp_dir)
         xlsx_path = temp_path / "site_invoice.xlsx"
         pdf_path = temp_path / "site_invoice.pdf"
+
         xlsx_path.write_bytes(xlsx_data)
 
         try:
-            excel = win32com.client.DispatchEx("Excel.Application")
+            # Important for Streamlit/Windows: initialize COM in the current
+            # worker thread before touching Excel.
+            pythoncom.CoInitialize()
+            com_initialized = True
+
+            excel = win32com.client.DispatchEx(
+                "Excel.Application"
+            )
+
             excel.Visible = False
             excel.DisplayAlerts = False
+            excel.ScreenUpdating = False
+            excel.EnableEvents = False
 
             workbook = excel.Workbooks.Open(
                 str(xlsx_path),
-                ReadOnly=True
+                ReadOnly=True,
+                UpdateLinks=0,
+                IgnoreReadOnlyRecommended=True,
+                AddToMru=False,
             )
 
-            # 0 = xlTypePDF
+            # 0 = xlTypePDF, 0 = xlQualityStandard
             workbook.ExportAsFixedFormat(
                 0,
                 str(pdf_path),
@@ -661,10 +1219,11 @@ def _excel_com_to_pdf(xlsx_data: bytes) -> bytes | None:
                 False,
             )
 
-            if pdf_path.exists():
+            if pdf_path.exists() and pdf_path.stat().st_size > 0:
                 return pdf_path.read_bytes()
 
         except Exception:
+            # Excel is optional; caller can fall back to LibreOffice.
             return None
 
         finally:
@@ -676,21 +1235,39 @@ def _excel_com_to_pdf(xlsx_data: bytes) -> bytes | None:
 
             if excel is not None:
                 try:
+                    excel.DisplayAlerts = False
+                except Exception:
+                    pass
+
+                try:
                     excel.Quit()
+                except Exception:
+                    pass
+
+            if com_initialized:
+                try:
+                    pythoncom.CoUninitialize()
                 except Exception:
                     pass
 
     return None
 
 
-def xlsx_bytes_to_pdf(xlsx_data: bytes) -> bytes:
-    """Convert an XLSX byte stream to PDF.
+def xlsx_bytes_to_pdf(
+    xlsx_data: bytes
+) -> bytes:
+    """
+    Convert an XLSX byte stream to PDF.
 
-    Windows: prefer Microsoft Excel if pywin32 + Excel are available.
-    Otherwise fall back to LibreOffice.
+    This function is intentionally kept conversion-only. Caching is performed
+    by generate_site_bill_pdf_from_template(), where the bill/template/company
+    identity is available.
     """
 
-    excel_pdf = _excel_com_to_pdf(xlsx_data)
+    excel_pdf = _excel_com_to_pdf(
+        xlsx_data
+    )
+
     if excel_pdf:
         return excel_pdf
 
@@ -698,15 +1275,17 @@ def xlsx_bytes_to_pdf(xlsx_data: bytes) -> bytes:
 
     if not soffice:
         raise RuntimeError(
-            "Neither Microsoft Excel nor LibreOffice is available for "
-            "Excel-to-PDF conversion. Install LibreOffice, or install "
-            "pywin32 with Microsoft Excel on Windows."
+            "Neither Microsoft Excel nor LibreOffice is available "
+            "for Excel-to-PDF conversion. Install LibreOffice, or "
+            "install pywin32 with Microsoft Excel on Windows."
         )
 
-    with tempfile.TemporaryDirectory(prefix="site_invoice_") as temp_dir:
+    with tempfile.TemporaryDirectory(
+        prefix="site_invoice_"
+    ) as temp_dir:
+
         temp_path = Path(temp_dir)
         xlsx_path = temp_path / "site_invoice.xlsx"
-
         xlsx_path.write_bytes(xlsx_data)
 
         profile_dir = temp_path / "lo_profile"
@@ -715,7 +1294,10 @@ def xlsx_bytes_to_pdf(xlsx_data: bytes) -> bytes:
         command = [
             soffice,
             "--headless",
-            f"-env:UserInstallation=file:///{profile_dir.as_posix()}",
+            (
+                "-env:UserInstallation="
+                f"file:///{profile_dir.as_posix()}"
+            ),
             "--convert-to",
             "pdf",
             "--outdir",
@@ -732,7 +1314,11 @@ def xlsx_bytes_to_pdf(xlsx_data: bytes) -> bytes:
 
         pdf_path = temp_path / "site_invoice.pdf"
 
-        if result.returncode != 0 or not pdf_path.exists():
+        if (
+            result.returncode != 0
+            or not pdf_path.exists()
+            or pdf_path.stat().st_size == 0
+        ):
             raise RuntimeError(
                 "Excel template PDF conversion failed. "
                 f"stdout={result.stdout.strip()} "
@@ -750,11 +1336,47 @@ def generate_site_bill_pdf_from_template(
     bill: Any,
     template_path: str | os.PathLike | None = None,
 ) -> bytes:
-    """Generate the final site bill PDF from the selected Excel template."""
+    """
+    Generate a site bill PDF from the selected Excel template.
+
+    The generated PDF is cached in-process. Streamlit reruns caused by View,
+    Export, Print, or Mail therefore reuse the same PDF instead of launching
+    Microsoft Excel repeatedly.
+    """
+
+    cache_key = _pdf_cache_key(
+        bill,
+        template_path,
+    )
+
+    cached_pdf = _PDF_CACHE.get(
+        cache_key
+    )
+
+    if cached_pdf is not None:
+        return cached_pdf
 
     xlsx_data = build_site_invoice_workbook(
         bill=bill,
         template_path=template_path,
     )
 
-    return xlsx_bytes_to_pdf(xlsx_data)
+    pdf_data = xlsx_bytes_to_pdf(
+        xlsx_data
+    )
+
+    _PDF_CACHE[cache_key] = pdf_data
+
+    # Keep memory bounded if many invoices/templates are used.
+    if len(_PDF_CACHE) > 20:
+        oldest_key = next(
+            iter(_PDF_CACHE)
+        )
+        if oldest_key != cache_key:
+            _PDF_CACHE.pop(
+                oldest_key,
+                None
+            )
+
+    return pdf_data
+

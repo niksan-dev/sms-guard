@@ -91,7 +91,8 @@ def save_company_settings(
                 account_holder_name=account_holder_name,
                 account_number=account_number,
                 ifsc_code=ifsc_code,
-                branch_name=branch_name
+                branch_name=branch_name,
+                logo_path = logo_path
             )
 
             db.add(settings)
@@ -130,6 +131,7 @@ def save_company_settings(
             settings.account_number = account_number
             settings.ifsc_code = ifsc_code
             settings.branch_name = branch_name
+            settings.logo_path = logo_path
 
 
         # ==========================================
