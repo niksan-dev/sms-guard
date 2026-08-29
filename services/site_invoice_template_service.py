@@ -17,10 +17,12 @@ from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
+from openpyxl.drawing.image import Image as XLImage
 from sqlalchemy.orm import joinedload
 
 from database.connection import SessionLocal
 from database.site_bill import SiteBill
+from database.company_settings import CompanySettings
 
 
 # Project root: <project>/services/site_invoice_template_service.py
@@ -199,14 +201,102 @@ def _site_address(site: Any) -> str:
     )
 
 
-def _company_values() -> Any:
-    """Load company settings without making the template service mandatory for startup."""
+class CompanySettingsRequiredError(RuntimeError):
+    """Raised when an invoice is requested before company settings exist."""
+
+
+def _company_values() -> dict[str, Any]:
+    """Return a detached snapshot of the configured company settings.
+
+    The invoice generator deliberately queries CompanySettings directly so the
+    PDF never depends on a detached SQLAlchemy object.
+    """
+
+    db = SessionLocal()
 
     try:
-        from services.company_settings_service import get_company_settings
-        return get_company_settings()
-    except Exception:
+        settings = (
+            db.query(CompanySettings)
+            .order_by(CompanySettings.id.asc())
+            .first()
+        )
+
+        if settings is None:
+            raise CompanySettingsRequiredError(
+                "Company settings are not configured. "
+                "Please configure Company Settings before generating an invoice."
+            )
+
+        return {
+            "id": settings.id,
+            "company_name": settings.company_name,
+            "owner_name": settings.owner_name,
+            "phone": settings.phone,
+            "email": settings.email,
+            "address": settings.address,
+            "city": settings.city,
+            "state": settings.state,
+            "pincode": settings.pincode,
+            "gst_number": settings.gst_number,
+            "pan_number": settings.pan_number,
+            "bank_name": settings.bank_name,
+            "account_holder_name": settings.account_holder_name,
+            "account_number": settings.account_number,
+            "ifsc_code": settings.ifsc_code,
+            "branch_name": settings.branch_name,
+            "invoice_prefix": settings.invoice_prefix,
+            "gst_invoice_prefix": settings.gst_invoice_prefix,
+            "logo_path": settings.logo_path,
+        }
+    finally:
+        db.close()
+
+
+def _resolve_logo_path(logo_path: Any) -> Path | None:
+    """Resolve CompanySettings.logo_path against the project root."""
+
+    if not logo_path:
         return None
+
+    path = Path(str(logo_path))
+
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+
+    try:
+        path = path.resolve()
+    except OSError:
+        return None
+
+    if path.is_file():
+        return path
+
+    return None
+
+
+def _apply_company_logo(ws: Any, settings: dict[str, Any]) -> None:
+    """Replace the template logo with the logo configured in Company Settings."""
+
+    # Remove the static/template logo so a stale logo can never be shown.
+    ws._images = []
+
+    logo_path = _resolve_logo_path(settings.get("logo_path"))
+    if logo_path is None:
+        return
+
+    try:
+        image = XLImage(str(logo_path))
+    except Exception as exc:
+        raise ValueError(
+            f"Unable to load company logo: {logo_path} ({exc})"
+        ) from exc
+
+    # Match the dimensions/position of the logo in the supplied reference
+    # template: approximately 105 x 120 px anchored at A2.
+    image.width = 105
+    image.height = 120
+    image.anchor = "A2"
+    ws.add_image(image)
 
 
 # ============================================================
@@ -332,24 +422,21 @@ def build_site_invoice_workbook(
     # --------------------------------------------------------
     # COMPANY SETTINGS
     # --------------------------------------------------------
-    company_name = (
-        _get_attr(settings, "company_name", "")
-        or "AADHAR SECURITY SERVICES"
-    )
-
-    company_address = _get_attr(settings, "address", "")
-    company_city = _get_attr(settings, "city", "")
-    company_state = _get_attr(settings, "state", "")
-    company_pincode = _get_attr(settings, "pincode", "")
-    company_phone = _get_attr(settings, "phone", "")
-    company_pan = (
-        _get_attr(settings, "pan_number", "")
-        or _get_attr(settings, "pan", "")
-    )
-    owner_name = _get_attr(settings, "owner_name", "")
-    account_number = _get_attr(settings, "account_number", "")
-    ifsc_code = _get_attr(settings, "ifsc_code", "")
-    branch_name = _get_attr(settings, "branch_name", "")
+    company_name = _safe(settings.get("company_name"))
+    company_address = _safe(settings.get("address"))
+    company_city = _safe(settings.get("city"))
+    company_state = _safe(settings.get("state"))
+    company_pincode = _safe(settings.get("pincode"))
+    company_phone = _safe(settings.get("phone"))
+    company_email = _safe(settings.get("email"))
+    company_pan = _safe(settings.get("pan_number"))
+    company_gst = _safe(settings.get("gst_number"))
+    owner_name = _safe(settings.get("owner_name"))
+    bank_name = _safe(settings.get("bank_name"))
+    account_holder_name = _safe(settings.get("account_holder_name"))
+    account_number = _safe(settings.get("account_number"))
+    ifsc_code = _safe(settings.get("ifsc_code"))
+    branch_name = _safe(settings.get("branch_name"))
 
     full_company_address = ", ".join(
         str(part).strip()
@@ -365,15 +452,28 @@ def build_site_invoice_workbook(
     # --------------------------------------------------------
     # HEADER / CLIENT
     # --------------------------------------------------------
+    _apply_company_logo(ws, settings)
+
     ws["C2"] = company_name
 
     if full_company_address:
         ws["C3"] = full_company_address
+    else:
+        ws["C3"] = ""
 
+    contact_parts = []
     if company_phone:
-        ws["C4"] = company_phone
+        contact_parts.append(company_phone)
+    if company_email:
+        contact_parts.append(company_email)
+    ws["C4"] = " / ".join(contact_parts)
 
-    ws["A5"] = f"Bill From,\n{company_name}"
+    company_identity = [f"Bill From,", company_name]
+    if company_pan:
+        company_identity.append(f"PAN:- {company_pan}")
+    if company_gst:
+        company_identity.append(f"GSTIN:- {company_gst}")
+    ws["A5"] = "\n".join(company_identity)
 
     customer_name = snapshot["customer_name"]
     ws["D5"] = f"Bill To,\n{customer_name}" if customer_name else "Bill To,\n"
@@ -445,8 +545,15 @@ def build_site_invoice_workbook(
     bank_lines = [
         "BANK DETAILS:-",
         "",
-        company_name,
     ]
+
+    if bank_name:
+        bank_lines.append(bank_name)
+    elif company_name:
+        bank_lines.append(company_name)
+
+    if account_holder_name:
+        bank_lines.append(f"A/C HOLDER :- {account_holder_name}")
 
     if account_number:
         bank_lines.append(f"ACC NO :- {account_number}")

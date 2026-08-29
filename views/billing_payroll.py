@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
+from pathlib import Path
 from services.email_service import (
     send_email_with_pdf,
 )
@@ -20,6 +21,7 @@ from services.site_bill_service import (
 
 from services.guard_service import get_all_guards
 from services.site_service import get_all_sites
+from services.company_settings_service import get_company_settings
 
 from services.pdf_service import (
     generate_guard_salary_pdf,
@@ -108,12 +110,82 @@ def show_billing_payroll():
 
 
 # ============================================================
+# COMPANY SETTINGS CHECK
+# ============================================================
+
+def _require_company_settings_for_invoice() -> bool:
+    """Stop site billing generation until company settings exist."""
+
+    try:
+        settings = get_company_settings()
+    except Exception as error:
+        st.error(
+            f"Unable to load company settings: {error}"
+        )
+        return False
+
+    if settings is not None:
+        return True
+
+    st.warning(
+        "⚠️ Company settings are not configured. "
+        "Please configure your company details before generating an invoice."
+    )
+
+    st.markdown(
+        "Configure the company name, logo, address, contact number, "
+        "PAN/GST and bank details in **Company Settings**."
+    )
+
+    # If Company Settings is a Streamlit multipage script, open it directly.
+    # Otherwise leave navigation to the application's existing sidebar/router.
+    project_root = Path(__file__).resolve().parents[1]
+    page_candidates = [
+        project_root / "pages" / "company_settings.py",
+        project_root / "pages" / "company_settings_page.py",
+    ]
+
+    existing_page = next(
+        (path for path in page_candidates if path.exists()),
+        None,
+    )
+
+    if existing_page is not None:
+        try:
+            st.page_link(
+                str(existing_page.relative_to(project_root)),
+                label="⚙️ Configure Company Settings",
+                icon="⚙️",
+            )
+        except Exception:
+            if st.button(
+                "⚙️ Configure Company Settings",
+                type="primary",
+                width="stretch",
+                key="configure_company_settings",
+            ):
+                st.switch_page(
+                    str(existing_page.relative_to(project_root))
+                )
+    else:
+        st.info(
+            "Open **Company Settings** from the sidebar, save the company "
+            "details, then return here to generate the invoice."
+        )
+
+    return False
+
+
+# ============================================================
 # SITE BILLS
 # ============================================================
 
 def show_site_bills():
 
     st.subheader("🏢 Site Billing")
+
+    if not _require_company_settings_for_invoice():
+        return
 
     col1, col2 = st.columns(2)
 
@@ -399,281 +471,119 @@ def show_site_bills():
 # SITE BILL ACTIONS
 # ============================================================
 
-# ============================================================
-# SITE BILL ACTIONS
-# ============================================================
+def show_site_bill_actions(
+    bill,
+    template_path=None
+):
 
-def show_site_bill_actions(bill, template_path=None):
+    if template_path is None:
+        template_path = st.session_state.get(
+            "site_invoice_template_path"
+        )
 
     col1, col2, col3, col4 = st.columns(4)
 
-    # ========================================================
-    # VIEW
-    # ========================================================
-
     with col1:
-
         if st.button(
             "👁 View",
             width="stretch",
             key=f"view_bill_{bill.id}"
         ):
-
-            st.session_state[
-                "view_site_bill_id"
-            ] = bill.id
-
-    # ========================================================
-    # EXPORT PDF
-    # ========================================================
+            st.session_state["view_site_bill_id"] = bill.id
 
     with col2:
-
-        pdf_cache_key = (
-            f"site_bill_pdf_{bill.id}"
+        pdf_data = build_site_pdf_from_bill(
+            bill,
+            template_path=template_path
         )
-
-        cached_pdf = get_cached_pdf(
-            pdf_cache_key
+        st.download_button(
+            "📄 Export PDF",
+            data=pdf_data,
+            file_name=f"{bill.bill_number}.pdf",
+            mime="application/pdf",
+            width="stretch",
+            key=f"export_bill_{bill.id}"
         )
-
-        if cached_pdf is None:
-
-            if st.button(
-                "📄 Generate PDF",
-                width="stretch",
-                key=f"generate_bill_pdf_{bill.id}"
-            ):
-
-                with st.spinner(
-                    "Generating PDF..."
-                ):
-
-                    try:
-
-                        pdf_data = (
-                            build_site_pdf_from_bill(
-                                bill
-                            )
-                        )
-
-                        if not pdf_data:
-
-                            st.error(
-                                "Unable to generate PDF."
-                            )
-
-                        else:
-
-                            set_cached_pdf(
-                                pdf_cache_key,
-                                pdf_data
-                            )
-
-                            st.rerun()
-
-                    except Exception as e:
-
-                        st.error(
-                            f"PDF generation failed: {e}"
-                        )
-
-        else:
-
-            st.download_button(
-                "📥 Download PDF",
-                data=cached_pdf,
-                file_name=(
-                    f"{bill.bill_number}.pdf"
-                ),
-                mime="application/pdf",
-                width="stretch",
-                key=f"download_bill_{bill.id}"
-            )
-
-            if st.button(
-                "🔄 Regenerate",
-                width="stretch",
-                key=f"regenerate_bill_{bill.id}"
-            ):
-
-                clear_cached_pdf(
-                    pdf_cache_key
-                )
-
-                st.rerun()
-
-    # ========================================================
-    # PRINT
-    # ========================================================
 
     with col3:
-
         if st.button(
             "🖨 Print",
             width="stretch",
             key=f"print_bill_{bill.id}"
         ):
-
-            st.session_state[
-                "print_site_bill_id"
-            ] = bill.id
-
-    # ========================================================
-    # EMAIL
-    # ========================================================
+            st.session_state["print_site_bill_id"] = bill.id
 
     with col4:
-
         if st.button(
             "📧 Send Email",
             width="stretch",
-            key=f"email_bill_{bill.id}"
+            key=f"email_site_bill_{bill.id}"
         ):
+            st.session_state["email_site_bill_id"] = bill.id
 
-            st.session_state[
-                "email_site_bill_id"
-            ] = bill.id
-
-    # ========================================================
-    # EMAIL FORM
-    # ========================================================
-
-    if st.session_state.get(
-        "email_site_bill_id"
-    ) == bill.id:
-
-        st.markdown(
-            "### 📧 Send Site Bill"
-        )
+    if st.session_state.get("email_site_bill_id") == bill.id:
+        st.markdown("### 📧 Send Site Bill")
 
         recipient_email = st.text_input(
-            "Client Email Address",
-            key=f"bill_email_{bill.id}",
-            placeholder="client@example.com"
+            "Site Billing Email",
+            value=getattr(bill.site, "email", "") or "",
+            key=f"site_email_{bill.id}",
+            placeholder="accounts@client.com"
         )
 
         if st.button(
-            "Send Bill",
+            "Send Site Bill",
             type="primary",
-            key=f"send_bill_{bill.id}"
+            key=f"send_site_bill_{bill.id}"
         ):
+            pdf_data = build_site_pdf_from_bill(
+                bill,
+                template_path=template_path
+            )
 
-            if not recipient_email.strip():
+            subject = (
+                f"Security Service Bill - {bill.site.site_code} - "
+                f"{month_name(bill.billing_month)} {bill.billing_year}"
+            )
 
-                st.error(
-                    "Please enter recipient email."
-                )
+            body = f"""Dear Sir/Madam,
 
-            else:
+Please find attached the security service bill.
 
-                with st.spinner(
-                    "Generating PDF and sending email..."
-                ):
-
-                    try:
-
-                        pdf_data = (
-                            build_site_pdf_from_bill(
-                                bill
-                            )
-                        )
-
-                        if not pdf_data:
-
-                            st.error(
-                                "Unable to generate PDF."
-                            )
-
-                        else:
-
-                            subject = (
-                                f"Site Bill - "
-                                f"{bill.bill_number}"
-                            )
-
-                            body = f"""
-Dear Sir/Madam,
-
-Please find attached the site bill:
-
+Site: {bill.site.site_code} - {bill.site.name}
+Billing Month: {month_name(bill.billing_month)} {bill.billing_year}
 Bill Number: {bill.bill_number}
 
-Billing Period:
-{month_name(bill.billing_month)}
-{bill.billing_year}
-
-Gross Amount:
-{format_currency(bill.gross_amount)}
-
-CGST:
-{format_currency(bill.cgst_amount)}
-
-SGST:
-{format_currency(bill.sgst_amount)}
-
-Total Amount:
-{format_currency(bill.total_amount)}
+Gross Amount: {format_currency(bill.gross_amount)}
+CGST: {format_currency(bill.cgst_amount)}
+SGST: {format_currency(bill.sgst_amount)}
+Grand Total: {format_currency(bill.total_amount)}
 
 Regards,
 Security Management System
 """
 
-                            success, message = (
-                                send_email_with_pdf(
-                                    recipient_email=(
-                                        recipient_email
-                                    ),
-                                    subject=subject,
-                                    body=body,
-                                    pdf_data=pdf_data,
-                                    pdf_filename=(
-                                        f"{bill.bill_number}.pdf"
-                                    )
-                                )
-                            )
+            success, message = send_email_with_pdf(
+                recipient_email=recipient_email,
+                subject=subject,
+                body=body,
+                pdf_data=pdf_data,
+                pdf_filename=f"{bill.bill_number}.pdf"
+            )
 
-                            if success:
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
 
-                                st.success(
-                                    message
-                                )
+    if st.session_state.get("view_site_bill_id") == bill.id:
+        show_site_bill_preview(bill)
 
-                            else:
-
-                                st.error(
-                                    message
-                                )
-
-                    except Exception as e:
-
-                        st.error(
-                            f"Unable to send email: {e}"
-                        )
-
-    # ========================================================
-    # VIEW PREVIEW
-    # ========================================================
-
-    if st.session_state.get(
-        "view_site_bill_id"
-    ) == bill.id:
-
-        show_site_bill_preview(
-            bill
-        )
-
-    # ========================================================
-    # PRINT
-    # ========================================================
-
-    if st.session_state.get(
-        "print_site_bill_id"
-    ) == bill.id:
-
+    if st.session_state.get("print_site_bill_id") == bill.id:
         show_print_button(
             "site",
-            bill
+            bill,
+            template_path=template_path
         )
 
 
@@ -1005,17 +915,9 @@ def show_guard_salary():
 # SALARY SLIP ACTIONS
 # ============================================================
 
-# ============================================================
-# SALARY SLIP ACTIONS
-# ============================================================
-
 def show_salary_slip_actions(slip):
 
     col1, col2, col3 = st.columns(3)
-
-    # ========================================================
-    # VIEW
-    # ========================================================
 
     with col1:
 
@@ -1029,89 +931,22 @@ def show_salary_slip_actions(slip):
                 "view_salary_slip_id"
             ] = slip.id
 
-    # ========================================================
-    # EXPORT PDF
-    # ========================================================
-
     with col2:
 
-        pdf_cache_key = (
-            f"salary_slip_pdf_{slip.id}"
+        pdf_data = build_salary_pdf_from_slip(
+            slip
         )
 
-        cached_pdf = get_cached_pdf(
-            pdf_cache_key
+        st.download_button(
+            "📄 Export PDF",
+            data=pdf_data,
+            file_name=(
+                f"{slip.slip_number}.pdf"
+            ),
+            mime="application/pdf",
+            width="stretch",
+            key=f"export_slip_{slip.id}"
         )
-
-        if cached_pdf is None:
-
-            if st.button(
-                "📄 Generate PDF",
-                width="stretch",
-                key=f"generate_slip_pdf_{slip.id}"
-            ):
-
-                with st.spinner(
-                    "Generating salary slip..."
-                ):
-
-                    try:
-
-                        pdf_data = (
-                            build_salary_pdf_from_slip(
-                                slip
-                            )
-                        )
-
-                        if not pdf_data:
-
-                            st.error(
-                                "Unable to generate salary PDF."
-                            )
-
-                        else:
-
-                            set_cached_pdf(
-                                pdf_cache_key,
-                                pdf_data
-                            )
-
-                            st.rerun()
-
-                    except Exception as e:
-
-                        st.error(
-                            f"PDF generation failed: {e}"
-                        )
-
-        else:
-
-            st.download_button(
-                "📥 Download PDF",
-                data=cached_pdf,
-                file_name=(
-                    f"{slip.slip_number}.pdf"
-                ),
-                mime="application/pdf",
-                width="stretch",
-                key=f"download_slip_{slip.id}"
-            )
-
-            if st.button(
-                "🔄 Regenerate",
-                width="stretch",
-                key=f"regenerate_slip_{slip.id}"
-            ):
-
-                clear_cached_pdf(
-                    pdf_cache_key
-                )
-
-                st.rerun()
-
-    # ========================================================
-    # PRINT
-    # ========================================================
 
     with col3:
 
@@ -1125,10 +960,6 @@ def show_salary_slip_actions(slip):
                 "print_salary_slip_id"
             ] = slip.id
 
-    # ========================================================
-    # VIEW
-    # ========================================================
-
     if st.session_state.get(
         "view_salary_slip_id"
     ) == slip.id:
@@ -1136,10 +967,6 @@ def show_salary_slip_actions(slip):
         show_salary_slip_preview(
             slip
         )
-
-    # ========================================================
-    # PRINT
-    # ========================================================
 
     if st.session_state.get(
         "print_salary_slip_id"
@@ -1342,118 +1169,41 @@ def build_site_pdf_from_bill(
 # PRINT
 # ============================================================
 
-# ============================================================
-# PRINT
-# ============================================================
-
 def show_print_button(
     document_type,
-    document
+    document,
+    template_path=None
 ):
 
     if document_type == "salary":
 
-        cache_key = (
-            f"salary_slip_pdf_{document.id}"
-        )
-
-        filename = (
-            f"{document.slip_number}.pdf"
+        pdf_data = build_salary_pdf_from_slip(
+            document
         )
 
     else:
 
-        cache_key = (
-            f"site_bill_pdf_{document.id}"
+        pdf_data = build_site_pdf_from_bill(
+            document
         )
 
-        filename = (
-            f"{document.bill_number}.pdf"
-        )
-
-    cached_pdf = get_cached_pdf(
-        cache_key
+    st.info(
+        "Use your browser's print dialog "
+        "after opening the generated PDF."
     )
 
-    if cached_pdf is None:
-
-        if st.button(
-            "🖨 Generate PDF for Printing",
-            type="primary",
-            width="stretch",
-            key=f"generate_print_{document_type}_{document.id}"
-        ):
-
-            with st.spinner(
-                "Generating PDF..."
-            ):
-
-                try:
-
-                    if document_type == "salary":
-
-                        pdf_data = (
-                            build_salary_pdf_from_slip(
-                                document
-                            )
-                        )
-
-                    else:
-
-                        pdf_data = (
-                            build_site_pdf_from_bill(
-                                document
-                            )
-                        )
-
-                    if not pdf_data:
-
-                        st.error(
-                            "Unable to generate PDF."
-                        )
-
-                    else:
-
-                        set_cached_pdf(
-                            cache_key,
-                            pdf_data
-                        )
-
-                        st.rerun()
-
-                except Exception as e:
-
-                    st.error(
-                        f"PDF generation failed: {e}"
-                    )
-
-    else:
-
-        st.info(
-            "Click the button below to open "
-            "the PDF for printing."
+    st.download_button(
+        "🖨 Open PDF for Printing",
+        data=pdf_data,
+        file_name=(
+            f"{document.slip_number}.pdf"
+            if document_type == "salary"
+            else f"{document.bill_number}.pdf"
+        ),
+        mime="application/pdf",
+        width="stretch",
+        key=(
+            f"print_pdf_{document_type}_"
+            f"{document.id}"
         )
-
-        st.download_button(
-            "🖨 Open PDF for Printing",
-            data=cached_pdf,
-            file_name=filename,
-            mime="application/pdf",
-            width="stretch",
-            key=f"print_pdf_{document_type}_{document.id}"
-        )
-
-# ============================================================
-# PDF CACHE HELPERS
-# ============================================================
-
-def get_cached_pdf(cache_key):
-    return st.session_state.get(cache_key)
-
-
-def set_cached_pdf(cache_key, pdf_data):
-    st.session_state[cache_key] = pdf_data
-
-
-def clear_cached_pdf(cache_key):
-    st.session_state.pop(cache_key, None)
+    )
