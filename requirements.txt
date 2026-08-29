@@ -10,4 +10,3 @@ python-dotenv
 openpyxl
 gspread
 google-auth
-libreoffice
