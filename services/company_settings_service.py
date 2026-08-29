@@ -35,6 +35,8 @@ def save_company_settings(
     state,
     pincode,
     phone,
+    alternate_phone,
+    
     email,
     pan,
     gstin,
@@ -44,6 +46,8 @@ def save_company_settings(
     account_number,
     ifsc_code,
     branch_name,
+    cgst_rate=0.0,
+    sgst_rate=0.0,
     logo_path=None
 ):
 
@@ -71,6 +75,7 @@ def save_company_settings(
 
                 # Contact information
                 phone=phone,
+                alternate_phone=alternate_phone,
                 email=email,
 
                 # Address
@@ -82,6 +87,8 @@ def save_company_settings(
                 # Tax information
                 pan_number=pan,
                 gst_number=gstin,
+                cgst_rate=cgst_rate,
+                sgst_rate=sgst_rate,
 
                 # Invoice settings
                 invoice_prefix=invoice_prefix,
@@ -111,6 +118,7 @@ def save_company_settings(
             # Contact information
             settings.phone = phone
             settings.email = email
+            settings.alternate_phone=alternate_phone
 
             # Address
             settings.address = address
@@ -121,6 +129,8 @@ def save_company_settings(
             # Tax information
             settings.pan_number = pan
             settings.gst_number = gstin
+            settings.sgst_rate=sgst_rate
+            settings.cgst_rate=cgst_rate
 
             # Invoice settings
             settings.invoice_prefix = invoice_prefix

@@ -3,7 +3,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    DateTime
+    DateTime,
+    Float
 )
 
 from datetime import datetime
@@ -36,6 +37,11 @@ class CompanySettings(Base):
     )
 
     phone = Column(
+        String(10),
+        nullable=True
+    )
+
+    alternate_phone = Column(
         String(10),
         nullable=True
     )
@@ -77,6 +83,18 @@ class CompanySettings(Base):
     pan_number = Column(
         String(10),
         nullable=True
+    )
+
+    cgst_rate = Column(
+        Float,
+        default=9.0,
+        nullable=False
+    )
+
+    sgst_rate = Column(
+        Float,
+        default=9.0,
+        nullable=False
     )
 
     # ==============================================

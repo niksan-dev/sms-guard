@@ -28,10 +28,10 @@ LOGO_UPLOAD_DIR = "uploads/company"
 
 def save_company_logo(uploaded_file):
 
-    print("111111111111111",LOGO_UPLOAD_DIR)
+    #print("111111111111111",LOGO_UPLOAD_DIR)
     if uploaded_file is None:
         return None
-    print("2222222222222")
+    #print("2222222222222")
     os.makedirs(
         LOGO_UPLOAD_DIR,
         exist_ok=True
@@ -40,15 +40,15 @@ def save_company_logo(uploaded_file):
     file_extension = os.path.splitext(
         uploaded_file.name
     )[1].lower()
-    print("33333333333",file_extension)
+    #print("33333333333",file_extension)
     # Use one fixed filename for the company logo
     file_name = f"company_logo{file_extension}"
-    print("44444444444",file_name)
+    #print("44444444444",file_name)
     file_path = os.path.join(
         LOGO_UPLOAD_DIR,
         file_name
     )
-    print("55555555",file_path)
+    #print("55555555",file_path)
     with open(
         file_path,
         "wb"
@@ -57,7 +57,7 @@ def save_company_logo(uploaded_file):
         file.write(
             uploaded_file.getbuffer()
         )
-    print("666666",file_path)
+    #print("666666",file_path)
     return file_path
 
 
@@ -220,7 +220,7 @@ def show_company_settings():
             "📞 Contact Information"
         )
 
-        col1, col2 = st.columns(2)
+        col1, col2,col3 = st.columns(3)
 
         with col1:
 
@@ -232,8 +232,17 @@ def show_company_settings():
                 ),
                 max_chars=10
             )
-
         with col2:
+            alternate_phone = st.text_input(
+                "Alternate Contact Number",
+                value=get_value(
+                    settings,
+                    "alternate_phone" or ""
+                ),
+                max_chars=10,
+            )
+
+        with col3:
 
             email = st.text_input(
                 "Email Address",
@@ -303,7 +312,7 @@ def show_company_settings():
             "🧾 Tax Information"
         )
 
-        col1, col2 = st.columns(2)
+        col1, col2,col3,col4 = st.columns(4)
 
         with col1:
 
@@ -325,6 +334,34 @@ def show_company_settings():
                     "gst_number"
                 ),
                 max_chars=15
+            )
+
+        with col3:
+            cgst_rate = st.number_input(
+                "CGST Rate (%)",
+                min_value=0.0,
+                max_value=100.0,
+                value=float(
+                    settings.cgst_rate
+                    if settings.cgst_rate is not None
+                    else 9.0
+                ),
+                step=0.5,
+                format="%.2f",
+            )
+
+        with col4:
+            sgst_rate = st.number_input(
+                "SGST Rate (%)",
+                min_value=0.0,
+                max_value=100.0,
+                value=float(
+                    settings.sgst_rate
+                    if settings.sgst_rate is not None
+                    else 9.0
+                ),
+                step=0.5,
+                format="%.2f",
             )
 
 
@@ -466,11 +503,17 @@ def show_company_settings():
 
     phone = phone.strip()
 
+    alternate_phone = alternate_phone.strip()
+
     email = email.strip()
 
     pan = pan.strip().upper()
 
     gstin = gstin.strip().upper()
+
+    sgst_rate = float(sgst_rate)
+
+    cgst_rate = float(cgst_rate)
 
     invoice_prefix = invoice_prefix.strip().upper()
 
@@ -618,6 +661,12 @@ def show_company_settings():
             pincode=pincode,
 
             phone=phone,
+
+            alternate_phone=alternate_phone,
+           
+            cgst_rate=cgst_rate,
+
+            sgst_rate=sgst_rate,
 
             email=email,
 
