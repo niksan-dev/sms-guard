@@ -1,0 +1,151 @@
+# ==============================
+# Python
+# ==============================
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# ==============================
+# Virtual Environments
+# ==============================
+
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==============================
+# Distribution / Packaging
+# ==============================
+
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# ==============================
+# PyInstaller
+# ==============================
+
+*.manifest
+*.spec
+
+# ==============================
+# Testing / Coverage
+# ==============================
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# ==============================
+# Type Checkers
+# ==============================
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# ==============================
+# Jupyter Notebook
+# ==============================
+
+.ipynb_checkpoints/
+
+# ==============================
+# IDE / Editors
+# ==============================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# ==============================
+# OS Files
+# ==============================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==============================
+# Environment / Secrets
+# ==============================
+
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Logs
+# ==============================
+
+*.log
+logs/
+
+# ==============================
+# Database
+# ==============================
+
+*.sqlite
+*.sqlite3
+*.db
+
+# ==============================
+# Temporary Files
+# ==============================
+
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ==============================
+# Streamlit
+# ==============================
+
+.streamlit/secrets.toml
+
+# ==============================
+# Local Configuration
+# ==============================
+
+config.local.*
+settings.local.*
+
+# ==============================
+# Generated Data
+# ==============================
+
+data/processed/
+data/output/
+outputs/
+generated/
+
+# ==============================
+# Mac / Linux
+# ==============================
+
+*.DS_Store
+.directory
