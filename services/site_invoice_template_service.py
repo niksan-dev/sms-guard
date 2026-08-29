@@ -6,7 +6,7 @@ Python only fills mapped cells and converts the finished workbook to PDF.
 """
 
 from __future__ import annotations
-
+import time
 import io
 import os
 import shutil
@@ -1336,17 +1336,23 @@ def generate_site_bill_pdf_from_template(
     bill: Any,
     template_path: str | os.PathLike | None = None,
 ) -> bytes:
-    """
-    Generate a site bill PDF from the selected Excel template.
 
-    The generated PDF is cached in-process. Streamlit reruns caused by View,
-    Export, Print, or Mail therefore reuse the same PDF instead of launching
-    Microsoft Excel repeatedly.
-    """
+    total_start = time.perf_counter()
+
+    print("\n========================================")
+    print("START PDF GENERATION")
+    print("========================================")
+
+    start = time.perf_counter()
 
     cache_key = _pdf_cache_key(
         bill,
         template_path,
+    )
+
+    print(
+        f"[1] Cache key: "
+        f"{time.perf_counter() - start:.3f}s"
     )
 
     cached_pdf = _PDF_CACHE.get(
@@ -1354,29 +1360,45 @@ def generate_site_bill_pdf_from_template(
     )
 
     if cached_pdf is not None:
+
+        print(
+            f"[CACHE HIT] "
+            f"{time.perf_counter() - total_start:.3f}s"
+        )
+
         return cached_pdf
+
+    start = time.perf_counter()
 
     xlsx_data = build_site_invoice_workbook(
         bill=bill,
         template_path=template_path,
     )
 
+    print(
+        f"[2] Build XLSX: "
+        f"{time.perf_counter() - start:.3f}s"
+    )
+
+    start = time.perf_counter()
+
     pdf_data = xlsx_bytes_to_pdf(
         xlsx_data
     )
 
+    print(
+        f"[3] XLSX → PDF: "
+        f"{time.perf_counter() - start:.3f}s"
+    )
+
     _PDF_CACHE[cache_key] = pdf_data
 
-    # Keep memory bounded if many invoices/templates are used.
-    if len(_PDF_CACHE) > 20:
-        oldest_key = next(
-            iter(_PDF_CACHE)
-        )
-        if oldest_key != cache_key:
-            _PDF_CACHE.pop(
-                oldest_key,
-                None
-            )
+    print(
+        f"[4] TOTAL: "
+        f"{time.perf_counter() - total_start:.3f}s"
+    )
+
+    print("========================================\n")
 
     return pdf_data
 
