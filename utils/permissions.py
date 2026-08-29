@@ -9,12 +9,12 @@ ROLE_PERMISSIONS = {
         "Sites",
         "Guard Work",
         "Billing & Payroll",
-        "Shifts",
-        "Attendance",
-        "Incidents",
-        "Users",
-        "Reports",
-        "Settings",
+        # "Shifts",
+        # "Attendance",
+        # "Incidents",
+        # "Users",
+        # "Reports",
+        # "Settings",
         "Company Settings"
     ],
 
@@ -23,10 +23,10 @@ ROLE_PERMISSIONS = {
         "Guards",
         "Sites",
         "Guard Work",
-        "Shifts",
-        "Attendance",
-        "Incidents",
-        "Reports"
+        # "Shifts",
+        # "Attendance",
+        # "Incidents",
+        # "Reports"
     ],
 
     UserRole.SUPERVISOR.value: [
@@ -34,16 +34,16 @@ ROLE_PERMISSIONS = {
         "Guards",
         "Sites",
         "Guard Work",
-        "Shifts",
-        "Attendance",
-        "Incidents"
+        # "Shifts",
+        # "Attendance",
+        # "Incidents"
     ],
 
     UserRole.SECURITY_GUARD.value: [
         "Dashboard",
         "My Shift",
-        "Check In / Out",
-        "Incidents"
+        # "Check In / Out",
+        # "Incidents"
     ],
 
     UserRole.CLIENT.value: [

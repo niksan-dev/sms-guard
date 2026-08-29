@@ -13,7 +13,7 @@ PAGE_ICONS = {
     "Guards": "👮",
     "Sites": "🏢",
     "Shifts": "📅",
-    "Payments": "💳",
+    "Billing & Payroll": "💳",
     "Attendance": "🟢",
     "Incidents": "🚨",
     "Users": "👥",
