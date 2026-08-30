@@ -15,7 +15,7 @@ import tempfile
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
-
+import platform
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from sqlalchemy.orm import joinedload
@@ -1278,31 +1278,63 @@ def _excel_com_to_pdf(
     return None
 
 
+import time
+
 def xlsx_bytes_to_pdf(
     xlsx_data: bytes
 ) -> bytes:
-    """
-    Convert an XLSX byte stream to PDF.
 
-    This function is intentionally kept conversion-only. Caching is performed
-    by generate_site_bill_pdf_from_template(), where the bill/template/company
-    identity is available.
-    """
+    import platform
+    import time
 
-    excel_pdf = _excel_com_to_pdf(
-        xlsx_data
+    total_start = time.perf_counter()
+
+    print(
+        f"[PDF] OS: {platform.system()}"
     )
 
-    if excel_pdf:
-        return excel_pdf
+    # --------------------------------------------
+    # Windows → Excel
+    # --------------------------------------------
+
+    if platform.system() == "Windows":
+
+        start = time.perf_counter()
+
+        excel_pdf = _excel_com_to_pdf(
+            xlsx_data
+        )
+
+        print(
+            f"[PDF] Excel COM: "
+            f"{time.perf_counter() - start:.3f}s"
+        )
+
+        if excel_pdf:
+            return excel_pdf
+
+    else:
+        print(
+            "[PDF] Skipping Excel COM "
+            "(non-Windows)"
+        )
+
+    # --------------------------------------------
+    # LibreOffice
+    # --------------------------------------------
+
+    start = time.perf_counter()
 
     soffice = _find_soffice()
 
+    print(
+        f"[PDF] Find soffice: "
+        f"{time.perf_counter() - start:.3f}s"
+    )
+
     if not soffice:
         raise RuntimeError(
-            "Neither Microsoft Excel nor LibreOffice is available "
-            "for Excel-to-PDF conversion. Install LibreOffice, or "
-            "install pywin32 with Microsoft Excel on Windows."
+            "LibreOffice is not available."
         )
 
     with tempfile.TemporaryDirectory(
@@ -1310,19 +1342,37 @@ def xlsx_bytes_to_pdf(
     ) as temp_dir:
 
         temp_path = Path(temp_dir)
-        xlsx_path = temp_path / "site_invoice.xlsx"
-        xlsx_path.write_bytes(xlsx_data)
 
-        profile_dir = temp_path / "lo_profile"
-        profile_dir.mkdir()
+        # Write XLSX
+        start = time.perf_counter()
+
+        xlsx_path = (
+            temp_path / "site_invoice.xlsx"
+        )
+
+        xlsx_path.write_bytes(
+            xlsx_data
+        )
+
+        print(
+            f"[PDF] Write XLSX: "
+            f"{time.perf_counter() - start:.3f}s"
+        )
+
+        # Profile
+        profile_dir = (
+            temp_path / "lo_profile"
+        )
+
+        profile_dir.mkdir(
+            parents=True,
+            exist_ok=True
+        )
 
         command = [
             soffice,
             "--headless",
-            (
-                "-env:UserInstallation="
-                f"file:///{profile_dir.as_posix()}"
-            ),
+            f"-env:UserInstallation={profile_dir.as_uri()}",
             "--convert-to",
             "pdf",
             "--outdir",
@@ -1330,14 +1380,39 @@ def xlsx_bytes_to_pdf(
             str(xlsx_path),
         ]
 
+        # LibreOffice conversion
+        start = time.perf_counter()
+
         result = subprocess.run(
             command,
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=120,
         )
 
-        pdf_path = temp_path / "site_invoice.pdf"
+        print(
+            f"[PDF] LibreOffice: "
+            f"{time.perf_counter() - start:.3f}s"
+        )
+
+        print(
+            f"[PDF] LO return code: "
+            f"{result.returncode}"
+        )
+
+        print(
+            f"[PDF] LO stdout: "
+            f"{result.stdout.strip()}"
+        )
+
+        print(
+            f"[PDF] LO stderr: "
+            f"{result.stderr.strip()}"
+        )
+
+        pdf_path = (
+            temp_path / "site_invoice.pdf"
+        )
 
         if (
             result.returncode != 0
@@ -1345,12 +1420,25 @@ def xlsx_bytes_to_pdf(
             or pdf_path.stat().st_size == 0
         ):
             raise RuntimeError(
-                "Excel template PDF conversion failed. "
-                f"stdout={result.stdout.strip()} "
-                f"stderr={result.stderr.strip()}"
+                "Excel template PDF conversion failed."
             )
 
-        return pdf_path.read_bytes()
+        # Read PDF
+        start = time.perf_counter()
+
+        pdf_data = pdf_path.read_bytes()
+
+        print(
+            f"[PDF] Read PDF: "
+            f"{time.perf_counter() - start:.3f}s"
+        )
+
+        print(
+            f"[PDF] Conversion total: "
+            f"{time.perf_counter() - total_start:.3f}s"
+        )
+
+        return pdf_data
 
 
 # ============================================================
