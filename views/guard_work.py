@@ -14,7 +14,7 @@ from services.guard_daily_work_service import (
     get_site_daily_attendance,
     get_site_monthly_attendance,
 )
-
+from components.page_header import page_header
 
 from services.guard_advance_service import (
     create_guard_advance,
@@ -471,20 +471,10 @@ def is_present(status):
 
 def show_guard_work():
 
-    st.markdown(
-        """
-        <div class="page-header">
-            <div class="page-header-title">
-                👮 Guard Work Management
-            </div>
-            <div class="page-header-subtitle">
-                Record daily guard shifts and monitor guard
-                attendance, salary and site revenue.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+    page_header("Guard Work Management",
+                " Record daily guard shifts and monitor guard attendance, salary and site revenue.",
+                "👮")
 
     tab1, tab2, tab3, tab4 = st.tabs([
         "📝 Record Work",

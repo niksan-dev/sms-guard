@@ -3,6 +3,8 @@ import pandas as pd
 
 from datetime import date
 
+from components.page_header import page_header
+
 from services.guard_service import (
     get_all_guards,
     get_available_guard_users,
@@ -114,17 +116,7 @@ def show_guards():
     # ==================================================
 
 
-    st.html(
-                    """
-                    <div class="billing-page-header">
-            
-                        <div class="billing-page-title">
-                            👮 Guard Management
-                        </div>
-            
-                    </div>
-                    """
-                )
+    page_header("Guard Management","","👮")
 
     # ==================================================
     # TABS

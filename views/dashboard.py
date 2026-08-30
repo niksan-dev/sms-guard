@@ -17,6 +17,8 @@ from services.guard_daily_work_service import (
     get_site_daily_attendance,
 )
 
+from components.page_header import page_header
+
 # ==================================================
 # OPTIONAL MODELS
 # ==================================================
@@ -626,21 +628,8 @@ def show_dashboard():
     # PAGE HEADER
     # ==============================================
 
-    st.html(
-        f"""
-        <div class="billing-page-header">
+    page_header(f"Welcome back, {username}","Here's what's happening with your security operations today.")
 
-            <div class="billing-page-title">
-                Welcome back, {username}
-            </div>
-
-            <div class="dashboard-page-subtitle">
-                        Here's what's happening with your security operations today.
-                    </div>
-
-        </div>
-        """
-    )
 
 
     # ==============================================

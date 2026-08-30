@@ -19,7 +19,7 @@ from services.site_guard_assignment_service import (
 
 from services.guard_service import get_all_guards
 
-
+from components.page_header import page_header
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -86,23 +86,10 @@ def show_sites():
     # PAGE HEADER
     # ----------------------------------------------
 
-
-    st.html(
-                """
-                <div class="billing-page-header">
-        
-                    <div class="billing-page-title">
-                        🏢 Site Management
-                    </div>
-        
-                    <div class="billing-page-subtitle">
-                        Manage client sites, security requirements and site information.
-                    </div>
-        
-                </div>
-                """
-            )
-
+    page_header("Site Management",
+                "Manage client sites, security requirements and site information.",
+                "🏢")
+    
     # ----------------------------------------------
     # TABS
     # ----------------------------------------------

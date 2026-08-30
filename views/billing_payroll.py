@@ -33,6 +33,8 @@ from services.site_invoice_template_service import (
     generate_site_bill_pdf_from_template,
 )
 
+from components.page_header import page_header
+
 
 # ============================================================
 # HELPERS
@@ -86,21 +88,9 @@ def get_active_sites():
 
 def show_billing_payroll():
 
-    st.html(
-        """
-        <div class="billing-page-header">
-
-            <div class="billing-page-title">
-                💰 Billing & Payroll
-            </div>
-
-            <div class="billing-page-subtitle">
-                Generate, view, print and export site bills and guard salary slips.
-            </div>
-
-        </div>
-        """
-    )
+    page_header("Billing & Payroll",
+                "Generate, view, print and export site bills and guard salary slips.",
+                "💰")
 
     site_tab, guard_tab = st.tabs([
         "🏢 Site Bills",

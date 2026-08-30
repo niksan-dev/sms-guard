@@ -14,6 +14,8 @@ from utils.validators import (
     validate_gstin
 )
 
+from components.page_header import page_header
+from components.sub_header import sub_header
 
 # ==================================================
 # UPLOAD DIRECTORY
@@ -117,24 +119,11 @@ def show_company_settings():
 
     # st.title("🏢 Company Settings")
 
-    
+    page_header("Company Settings",
+                "Manage company information, GST details,\nbank details and invoice settings.",
+                "🏢")
 
-    st.html(
-            """
-            <div class="billing-page-header">
     
-                <div class="billing-page-title">
-                    🏢 Company Settings
-                </div>
-    
-                <div class="billing-page-subtitle">
-                    Manage company information, GST details,\n
-                    bank details and invoice settings.
-                </div>
-    
-            </div>
-            """
-        )
 
     # st.caption(
     #     "Manage company information, GST details, "
@@ -204,9 +193,7 @@ def show_company_settings():
         # COMPANY INFORMATION
         # ------------------------------------------
 
-        st.subheader(
-            "🏢 Company Information"
-        )
+        sub_header(" Company Information","🏢")
 
         col1, col2 = st.columns(2)
 
@@ -235,9 +222,7 @@ def show_company_settings():
         # CONTACT INFORMATION
         # ------------------------------------------
 
-        st.subheader(
-            "📞 Contact Information"
-        )
+        sub_header("Contact Information","📞")
 
         col1, col2,col3 = st.columns(3)
 
@@ -276,9 +261,7 @@ def show_company_settings():
         # ADDRESS
         # ------------------------------------------
 
-        st.subheader(
-            "📍 Company Address"
-        )
+        sub_header("Company Address","📍")
 
         address = st.text_area(
             "Address",
@@ -327,9 +310,8 @@ def show_company_settings():
         # TAX INFORMATION
         # ------------------------------------------
 
-        st.subheader(
-            "🧾 Tax Information"
-        )
+
+        sub_header("Tax Information","🧾")
 
         col1, col2,col3,col4 = st.columns(4)
 
@@ -388,9 +370,7 @@ def show_company_settings():
         # INVOICE SETTINGS
         # ------------------------------------------
 
-        st.subheader(
-            "📄 Invoice Settings"
-        )
+        sub_header("Invoice Settings","📄")
 
         invoice_prefix = st.text_input(
             "Invoice Prefix",
@@ -410,9 +390,7 @@ def show_company_settings():
         # BANK DETAILS
         # ------------------------------------------
 
-        st.subheader(
-            "🏦 Bank Details"
-        )
+        sub_header("Bank Details","🏦")
 
         col1, col2 = st.columns(2)
 
@@ -472,9 +450,8 @@ def show_company_settings():
         # COMPANY LOGO
         # ------------------------------------------
 
-        st.subheader(
-            "🖼️ Company Logo"
-        )
+
+        sub_header("Company Logo","🖼️")
 
         uploaded_logo = st.file_uploader(
             "Upload Company Logo",
