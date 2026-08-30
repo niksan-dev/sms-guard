@@ -8,5 +8,3 @@ extra-streamlit-components
 reportlab
 python-dotenv
 openpyxl
-gspread
-google-auth

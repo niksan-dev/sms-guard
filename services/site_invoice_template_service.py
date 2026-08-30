@@ -30,7 +30,6 @@ from database.site_bill import SiteBill
 from database.company_settings import CompanySettings
 from database.models import Site
 
-
 # Project root: <project>/services/site_invoice_template_service.py
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIR = PROJECT_ROOT / "templates" / "site_invoice"
@@ -1165,21 +1164,17 @@ def clear_site_invoice_pdf_cache() -> None:
 # CONVERT XLSX -> PDF
 # ============================================================
 
-def _find_soffice() -> str | None:
+def _find_soffice():
     candidates = [
         shutil.which("soffice"),
         shutil.which("libreoffice"),
-        r"C:\Program Files\LibreOffice\program\soffice.exe",
-        r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+        "/usr/bin/soffice",
+        "/usr/bin/libreoffice",
     ]
 
     for candidate in candidates:
-
-        if (
-            candidate
-            and Path(candidate).exists()
-        ):
-            return candidate
+        if candidate and Path(candidate).exists():
+            return str(candidate)
 
     return None
 
