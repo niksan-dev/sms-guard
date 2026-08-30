@@ -40,7 +40,7 @@ def show_login_page():
         .login-brand-title {
             font-size: 42px;
             font-weight: 900;
-            color: #f1f5f9;
+            color: #1F2937;
             line-height: 1.1;
             letter-spacing: 0.5px;
         }

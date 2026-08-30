@@ -86,13 +86,22 @@ def show_sites():
     # PAGE HEADER
     # ----------------------------------------------
 
-    st.title("🏢 Site Management")
 
-    st.caption(
-        "Manage client sites, security requirements and site information."
-    )
-
-    st.divider()
+    st.html(
+                """
+                <div class="billing-page-header">
+        
+                    <div class="billing-page-title">
+                        🏢 Site Management
+                    </div>
+        
+                    <div class="billing-page-subtitle">
+                        Manage client sites, security requirements and site information.
+                    </div>
+        
+                </div>
+                """
+            )
 
     # ----------------------------------------------
     # TABS
@@ -110,7 +119,14 @@ def show_sites():
 
     with tab_all:
 
-        st.subheader("📋 All Sites")
+        st.markdown(
+            """
+            <div class="site-section-header">
+                📋 All Sites
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         sites = get_all_sites()
         clients = get_client_users()
@@ -397,7 +413,14 @@ def show_sites():
 
     with tab_add:
 
-        st.subheader("➕ Add New Site")
+        st.markdown(
+            """
+            <div class="site-section-header">
+                ➕ Add New Site
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.info(
             f"Next Site Code: {get_next_site_code()}"
@@ -435,7 +458,14 @@ def show_sites():
             # SITE INFORMATION
             # ------------------------------------------
 
-            st.markdown("### 🏢 Site Information")
+            st.markdown(
+                """
+                <div class="site-section-header">
+                    🏢 Site Information
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             col1, col2 = st.columns(2)
 
@@ -457,7 +487,14 @@ def show_sites():
             # CONTACT INFORMATION
             # ------------------------------------------
 
-            st.markdown("### 📞 Contact Information")
+            st.markdown(
+                """
+                <div class="site-section-header">
+                    📞 Contact Information
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             col1, col2, col3 = st.columns(3)
 
@@ -487,7 +524,14 @@ def show_sites():
             # ADDRESS
             # ------------------------------------------
 
-            st.markdown("### 📍 Site Address")
+            st.markdown(
+                """
+                <div class="site-section-header">
+                    📍 Site Address
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             address = st.text_area(
                 "Address",
@@ -516,7 +560,14 @@ def show_sites():
             # SECURITY REQUIREMENTS
             # ------------------------------------------
 
-            st.markdown("### 🛡️ Security Requirements")
+            st.markdown(
+                """
+                <div class="site-section-header">
+                    🛡️ Security Requirements
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             col1, col2, col3 = st.columns(3)
 
@@ -632,7 +683,14 @@ def show_sites():
 
     with tab_manage:
 
-        st.subheader("⚙️ Manage Site")
+        st.markdown(
+            """
+            <div class="site-section-header">
+                ⚙️ Manage Site
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         sites = get_all_sites()
         clients = get_client_users()
@@ -773,7 +831,12 @@ def show_sites():
                 ):
 
                     st.markdown(
-                        "### ✏️ Edit Site Information"
+                        """
+                        <div class="site-section-header">
+                            ✏️ Edit Site Information
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
                     )
 
                     # Basic Information
@@ -798,7 +861,12 @@ def show_sites():
                     # Contact Information
 
                     st.markdown(
-                        "#### 📞 Contact Information"
+                        """
+                        <div class="site-section-header">
+                            📞 Contact Information
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
                     )
 
                     col1, col2, col3 = st.columns(3)
@@ -828,7 +896,12 @@ def show_sites():
                     # Address
 
                     st.markdown(
-                        "#### 📍 Site Address"
+                        """
+                        <div class="site-section-header">
+                            📍 Site Address
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
                     )
 
                     edit_address = st.text_area(
@@ -863,7 +936,12 @@ def show_sites():
                     # Security Requirements
 
                     st.markdown(
-                        "#### 🛡️ Security Requirements"
+                        """
+                        <div class="site-section-header">
+                            🛡️ Security Requirements
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
                     )
 
                     col1, col2, col3 = st.columns(3)
@@ -1056,7 +1134,14 @@ def show_site_guard_assignment(site):
 
     st.divider()
 
-    st.subheader("👮 Assigned Guards")
+    st.markdown(
+        """
+        <div class="site-section-header">
+            👮 Assigned Guards
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     assignments = get_site_guards(site.id)
 

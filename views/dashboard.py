@@ -43,41 +43,45 @@ except ImportError:
 # DASHBOARD CARD
 # ==================================================
 
+# ==================================================
+# DASHBOARD CARD
+# ==================================================
+
 def dashboard_card(
     title,
     value,
     icon,
-    icon_class,
-    footer,
-    footer_class=""
+    icon_class="",
+    footer="",
+    footer_class="",
 ):
 
     st.html(
         f"""
-<div class="dashboard-card">
+        <div class="dashboard-card">
 
-    <div class="dashboard-card-top">
+            <div class="dashboard-card-top">
 
-        <div class="dashboard-card-title">
-            {title}
+                <div class="dashboard-card-title">
+                    {title}
+                </div>
+
+                <div class="dashboard-card-icon {icon_class}">
+                    {icon}
+                </div>
+
+            </div>
+
+            <div class="dashboard-card-value">
+                {value}
+            </div>
+
+            <div class="dashboard-card-footer {footer_class}">
+                {footer}
+            </div>
+
         </div>
-
-        <div class="dashboard-card-icon {icon_class}">
-            {icon}
-        </div>
-
-    </div>
-
-    <div class="dashboard-card-value">
-        {value}
-    </div>
-
-    <div class="dashboard-card-footer {footer_class}">
-        {footer}
-    </div>
-
-</div>
-"""
+        """
     )
 
 
@@ -589,6 +593,7 @@ def create_status_chart(
     return fig
 
 
+
 # ==================================================
 # DASHBOARD PAGE
 # ==================================================
@@ -618,20 +623,24 @@ def show_dashboard():
 
 
     # ==============================================
-    # HEADER
+    # PAGE HEADER
     # ==============================================
 
-    st.markdown(
+    st.html(
         f"""
-# Welcome back, {username} 👋
-"""
-    )
+        <div class="billing-page-header">
 
-    st.caption(
-        "Here's what's happening with your security operations today."
-    )
+            <div class="billing-page-title">
+                Welcome back, {username}
+            </div>
 
-    st.divider()
+            <div class="dashboard-page-subtitle">
+                        Here's what's happening with your security operations today.
+                    </div>
+
+        </div>
+        """
+    )
 
 
     # ==============================================
@@ -640,16 +649,18 @@ def show_dashboard():
 
     col1, col2 = st.columns(2)
 
+
     with col1:
 
         dashboard_card(
             title="Total Guards",
             value=data["total_guards"],
             icon="👮",
-            icon_class="icon-purple",
+            icon_class="icon-blue",
             footer=f'{data["active_guards"]} Active',
-            footer_class="status-positive"
+            footer_class="status-positive",
         )
+
 
     with col2:
 
@@ -659,37 +670,37 @@ def show_dashboard():
             icon="🏢",
             icon_class="icon-blue",
             footer=f'{data["active_sites"]} Active',
-            footer_class="status-positive"
+            footer_class="status-positive",
         )
 
-   
 
     # ==============================================
-    # TODAY'S WORK FINANCIALS & ALERTS
+    # TODAY'S OPERATIONS
     # ==============================================
-
-    st.markdown("<br>", unsafe_allow_html=True)
 
     st.html(
         """
-    <div class="dashboard-section-title">
-        📅 Today's Operations
-    </div>
-    """
+        <div class="dashboard-section-title">
+            📅 Today's Operations
+        </div>
+        """
     )
 
-    col1, col2, col3,col4 = st.columns(4)
+
+    col1, col2, col3, col4 = st.columns(4)
+
 
     with col1:
-    
-            dashboard_card(
-                title="Shifts Today",
-                value=data["shifts_today"],
-                icon="📅",
-                icon_class="icon-orange",
-                footer="Recorded for today",
-                footer_class="status-warning"
-            )
+
+        dashboard_card(
+            title="Shifts Today",
+            value=data["shifts_today"],
+            icon="📅",
+            icon_class="icon-orange",
+            footer="Recorded for today",
+            footer_class="status-warning",
+        )
+
 
     with col2:
 
@@ -698,9 +709,10 @@ def show_dashboard():
             value=f'₹ {data["daily_guard_salary"]:,.2f}',
             icon="👮",
             icon_class="icon-red",
-            footer="Salary earned from today's shifts",
-            footer_class="status-danger"
+            footer="Salary from today's shifts",
+            footer_class="status-danger",
         )
+
 
     with col3:
 
@@ -709,41 +721,38 @@ def show_dashboard():
             value=f'₹ {data["daily_site_revenue"]:,.2f}',
             icon="💰",
             icon_class="icon-cyan",
-            footer="Revenue generated from today's shifts",
-            footer_class="status-positive"
+            footer="Revenue from today's shifts",
+            footer_class="status-positive",
         )
+
 
     with col4:
 
         dashboard_card(
-            title="Today's Revenue",
+            title="Today's Profit",
             value=f'₹ {data["total_profit_today"]:,.2f}',
             icon="💸",
-            icon_class="icon-red",
-            footer="Profit generated from today's shifts",
-            footer_class="status-positive"
+            icon_class="icon-cyan",
+            footer="Profit from today's shifts",
+            footer_class="status-positive",
         )
 
-    # ==============================================
-    # FINANCIAL STATISTICS
-    # ==============================================
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # ==============================================
+    # FINANCIAL OVERVIEW
+    # ==============================================
 
     st.html(
         """
-    <div class="dashboard-section-title">
-        💰 Financial Overview
-    </div>
-    """
+        <div class="dashboard-section-title">
+            💰 Financial Overview
+        </div>
+        """
     )
+
 
     col1, col2, col3, col4 = st.columns(4)
 
-
-    # ==============================================
-    # TOTAL GUARD SALARY
-    # ==============================================
 
     with col1:
 
@@ -753,13 +762,9 @@ def show_dashboard():
             icon="👮",
             icon_class="icon-red",
             footer="Total monthly salary",
-            footer_class="status-danger"
+            footer_class="status-danger",
         )
 
-
-    # ==============================================
-    # TOTAL COLLECTION
-    # ==============================================
 
     with col2:
 
@@ -767,15 +772,11 @@ def show_dashboard():
             title="Total Collection",
             value=f'₹ {data["total_site_collection"]:,.0f}',
             icon="💰",
-            icon_class="icon-purple",
+            icon_class="icon-blue",
             footer="Expected monthly collection",
-            footer_class="status-positive"
+            footer_class="status-positive",
         )
 
-
-    # ==============================================
-    # COLLECTED
-    # ==============================================
 
     with col3:
 
@@ -785,13 +786,9 @@ def show_dashboard():
             icon="✅",
             icon_class="icon-cyan",
             footer="Amount received",
-            footer_class="status-positive"
+            footer_class="status-positive",
         )
 
-
-    # ==============================================
-    # PENDING
-    # ==============================================
 
     with col4:
 
@@ -801,26 +798,22 @@ def show_dashboard():
             icon="⏳",
             icon_class="icon-orange",
             footer="Amount yet to collect",
-            footer_class="status-warning"
+            footer_class="status-warning",
         )
 
 
     # ==============================================
-    # ANALYTICS
+    # SECURITY ANALYTICS
     # ==============================================
-
-    st.markdown("<br>", unsafe_allow_html=True)
 
     st.html(
         """
-<div class="dashboard-section-title">
-    📊 Security Analytics
-</div>
-"""
+        <div class="dashboard-section-title">
+            📊 Security Analytics
+        </div>
+        """
     )
 
-
-    # Get analytics data
 
     guard_chart_data, site_chart_data = (
         get_status_chart_data()
@@ -831,54 +824,66 @@ def show_dashboard():
 
 
     # ==============================================
-    # GUARD STATUS CHART
+    # GUARD STATUS
     # ==============================================
 
     with chart_col1:
 
         st.html(
             """
-<div class="chart-title">
-    👮 Guard Status Overview
-</div>
-"""
+            <div class="dashboard-chart-card">
+
+                <div class="chart-title">
+                    👮 Guard Status Overview
+                </div>
+
+            </div>
+            """
         )
+
 
         fig_guards = create_status_chart(
             guard_chart_data,
-            ""
+            "",
         )
+
 
         st.plotly_chart(
             fig_guards,
             width="stretch",
-            key="guard_status_chart"
+            key="guard_status_chart",
         )
 
 
     # ==============================================
-    # SITE STATUS CHART
+    # SITE STATUS
     # ==============================================
 
     with chart_col2:
 
         st.html(
             """
-<div class="chart-title">
-    🏢 Site Status Overview
-</div>
-"""
+            <div class="dashboard-chart-card">
+
+                <div class="chart-title">
+                    🏢 Site Status Overview
+                </div>
+
+            </div>
+            """
         )
+
 
         fig_sites = create_status_chart(
             site_chart_data,
-            ""
+            "",
         )
+
 
         st.plotly_chart(
             fig_sites,
             width="stretch",
-            key="site_status_chart"
+            key="site_status_chart",
         )
 
 
@@ -886,14 +891,12 @@ def show_dashboard():
     # QUICK ACTIONS
     # ==============================================
 
-    st.divider()
-
     st.html(
         """
-<div class="dashboard-section-title">
-    ⚡ Quick Actions
-</div>
-"""
+        <div class="dashboard-section-title">
+            ⚡ Quick Actions
+        </div>
+        """
     )
 
 
@@ -906,7 +909,7 @@ def show_dashboard():
             "➕ Add Guard",
             key="quick_add_guard",
             width="stretch",
-            type="primary"
+            type="primary",
         ):
 
             st.session_state["selected_page"] = "Guards"
@@ -920,7 +923,7 @@ def show_dashboard():
             "🏢 Add Site",
             key="quick_add_site",
             width="stretch",
-            type="primary"
+            type="primary",
         ):
 
             st.session_state["selected_page"] = "Sites"
@@ -934,7 +937,7 @@ def show_dashboard():
             "📅 Manage Shifts",
             key="quick_manage_shifts",
             width="stretch",
-            type="primary"
+            type="primary",
         ):
 
             st.session_state["selected_page"] = "Shifts"
@@ -948,7 +951,7 @@ def show_dashboard():
             "🚨 Report Incident",
             key="quick_report_incident",
             width="stretch",
-            type="primary"
+            type="primary",
         ):
 
             st.session_state["selected_page"] = "Incidents"

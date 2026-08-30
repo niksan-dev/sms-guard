@@ -113,13 +113,18 @@ def show_guards():
     # PAGE HEADER
     # ==================================================
 
-    st.title("👮 Guard Management")
 
-    st.caption(
-        "Manage security guards, salaries and their profiles."
-    )
-
-    st.divider()
+    st.html(
+                    """
+                    <div class="billing-page-header">
+            
+                        <div class="billing-page-title">
+                            👮 Guard Management
+                        </div>
+            
+                    </div>
+                    """
+                )
 
     # ==================================================
     # TABS
@@ -137,7 +142,14 @@ def show_guards():
 
     with tab1:
 
-        st.subheader("📋 All Guards")
+        #st.subheader("📋 All Guards")
+        st.html(
+            """
+            <div class="dashboard-section-title">
+                📋 All Guards
+            </div>
+            """
+        )
 
         guards = get_all_guards()
 
@@ -320,7 +332,15 @@ def show_guards():
 
     with tab2:
 
-        st.subheader("➕ Add New Guard")
+        #st.subheader("➕ Add New Guard")
+
+        st.html(
+                    """
+                    <div class="dashboard-section-title">
+                        ➕ Add New Guard
+                    </div>
+                    """
+                )
 
         next_employee_id = get_next_employee_id()
 
@@ -613,7 +633,15 @@ def show_guards():
 
     with tab3:
 
-        st.subheader("⚙️ Manage Guard")
+        #st.subheader("⚙️ Manage Guard")
+
+        st.html(
+                            """
+                            <div class="dashboard-section-title">
+                                ⚙️ Manage Guard
+                            </div>
+                            """
+                        )
 
         guards = get_all_guards()
 

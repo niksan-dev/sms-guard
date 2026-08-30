@@ -3,12 +3,13 @@ runOnSave = true
 fileWatcherType = "auto"
 
 [theme]
-base = "dark"
-primaryColor = "#6D42D8"
-backgroundColor = "#0F1724"
-secondaryBackgroundColor = "#1C293B"
-textColor = "#F3F6FB"
+base = "light"
+primaryColor = "#063552"
+backgroundColor = "#F4F6F8"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#17202A"
 font = "sans serif"
+
 
 [client]
 toolbarMode = "minimal"

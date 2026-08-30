@@ -471,20 +471,26 @@ def is_present(status):
 
 def show_guard_work():
 
-    st.title("👮 Guard Work Management")
-
-    st.caption(
-        "Record daily guard shifts and monitor guard attendance, "
-        "salary and site revenue."
+    st.markdown(
+        """
+        <div class="page-header">
+            <div class="page-header-title">
+                👮 Guard Work Management
+            </div>
+            <div class="page-header-subtitle">
+                Record daily guard shifts and monitor guard
+                attendance, salary and site revenue.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-
-    st.divider()
 
     tab1, tab2, tab3, tab4 = st.tabs([
         "📝 Record Work",
         "👮 Guard Attendance",
         "🏢 Site Attendance",
-        "💰 Guard Advances"
+        "💰 Guard Advances",
     ])
 
     with tab1:
@@ -531,8 +537,13 @@ def show_record_work_tab():
 
         return
 
-    st.subheader(
-        "📝 Record Guard Shift"
+    st.markdown(
+        """
+        <div class="guard-section-header">
+            📝 Record Guard Shift
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     guard_map = {
@@ -635,8 +646,13 @@ def show_daily_work_records(selected_date):
         selected_date
     )
 
-    st.subheader(
-        "📋 Recorded Shifts"
+    st.markdown(
+        """
+        <div class="guard-section-header">
+            📋 Recorded Shifts
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     if not records:
@@ -894,8 +910,17 @@ def show_guard_attendance_tab():
             selected_date
         )
 
-        st.subheader(
-            "👮 Daily Guard Attendance"
+        # st.subheader(
+        #     "👮 Daily Guard Attendance"
+        # )
+
+        st.markdown(
+            """
+            <div class="guard-section-header">
+                👮 Daily Guard Attendance
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         if not attendance:
@@ -1179,8 +1204,13 @@ def show_guard_attendance_tab():
             int(selected_month)
         )
 
-        st.subheader(
-            "📊 Monthly Guard Attendance"
+        st.markdown(
+            """
+            <div class="guard-section-header">
+                📊 Monthly Guard Attendance
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         if not attendance:
@@ -1500,8 +1530,13 @@ def show_site_attendance_tab():
             selected_date
         )
 
-        st.subheader(
-            "🏢 Daily Site Attendance"
+        st.markdown(
+            """
+            <div class="guard-section-header">
+                🏢 Daily Site Attendance
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         if not attendance:
@@ -1734,8 +1769,13 @@ def show_site_attendance_tab():
             int(selected_month)
         )
 
-        st.subheader(
-            "📊 Monthly Site Attendance"
+        st.markdown(
+            """
+            <div class="guard-section-header">
+                📊 Monthly Site Attendance
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         if not attendance:
@@ -1981,7 +2021,14 @@ def show_site_attendance_tab():
 
 def show_guard_advances_tab():
 
-    st.subheader("💰 Guard Advances")
+    st.markdown(
+        """
+        <div class="guard-section-header">
+            💰 Guard Advances
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.caption(
         "Record money given to guards in advance and "
@@ -2002,7 +2049,14 @@ def show_guard_advances_tab():
     # RECORD ADVANCE
     # ==============================================
 
-    st.markdown("### ➕ Record Advance")
+    st.markdown(
+        """
+        <div class="guard-section-header">
+            ➕ Record Advance
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     guard_map = {
         f"{guard.name} ({guard.employee_id})": guard
@@ -2095,7 +2149,14 @@ def show_guard_advances_tab():
     # MONTHLY ADVANCE RECORDS
     # ==============================================
 
-    st.markdown("### 📊 Monthly Advance Records")
+    st.markdown(
+        """
+        <div class="guard-section-header">
+            📊 Monthly Advance Records
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     col1, col2 = st.columns(2)
 

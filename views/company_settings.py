@@ -115,12 +115,31 @@ def show_company_settings():
     # PAGE HEADER
     # ==============================================
 
-    st.title("🏢 Company Settings")
+    # st.title("🏢 Company Settings")
 
-    st.caption(
-        "Manage company information, GST details, "
-        "bank details and invoice settings."
-    )
+    
+
+    st.html(
+            """
+            <div class="billing-page-header">
+    
+                <div class="billing-page-title">
+                    🏢 Company Settings
+                </div>
+    
+                <div class="billing-page-subtitle">
+                    Manage company information, GST details,\n
+                    bank details and invoice settings.
+                </div>
+    
+            </div>
+            """
+        )
+
+    # st.caption(
+    #     "Manage company information, GST details, "
+    #     "bank details and invoice settings."
+    # )
 
 
     # ==============================================
