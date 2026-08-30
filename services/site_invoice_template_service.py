@@ -750,8 +750,8 @@ def build_site_invoice_workbook(
     # ========================================================
 
     ws["A5"] = (
-        f"Bill From,\n"
-        f"{company_name}"
+        f"  Bill From,\n"
+        f"          {company_name}"
     )
 
     # Optional GST can remain in the dedicated lower identity
@@ -779,23 +779,30 @@ def build_site_invoice_workbook(
         snapshot["site_name"]
     )
 
-    bill_to_lines = [
-        "Bill To,"
-    ]
+    print("Customer Name---->>>",site_name)
 
-    if customer_name:
-        bill_to_lines.append(
-            customer_name
+    # bill_to_lines = [
+    #     "Bill To,"
+    # ]
+
+    # if customer_name:
+    #     bill_to_lines.append(
+    #       f"        {customer_name}"
+    #     )
+
+    # if site_name:
+    #     bill_to_lines.append(
+    #         site_name
+    #     )
+
+    # ws["D5"] = "\n".join(
+    #     bill_to_lines
+    # )
+
+    ws["D5"] = (
+            f"  Bill To,\n"
+            f"          {site_name}"
         )
-
-    if site_name:
-        bill_to_lines.append(
-            site_name
-        )
-
-    ws["D5"] = "\n".join(
-        bill_to_lines
-    )
 
     # ========================================================
     # INVOICE NUMBER / DATE
@@ -946,12 +953,12 @@ def build_site_invoice_workbook(
     # ========================================================
 
     bank_lines = [
-        "BANK DETAILS:-"
+        "   BANK DETAILS:-"
     ]
 
     if bank_name:
         bank_lines.append(
-            f"Bank name :-"
+            f"  Bank name :-"
             f"{bank_name}"
         )
     elif company_name:
@@ -961,25 +968,25 @@ def build_site_invoice_workbook(
 
     if account_holder_name:
         bank_lines.append(
-            f"A/C HOLDER :- "
+            f"  A/C HOLDER :- "
             f"{account_holder_name}"
         )
 
     if account_number:
         bank_lines.append(
-            f"ACC NO :- "
+            f"  ACC NO :- "
             f"{account_number}"
         )
 
     if ifsc_code:
         bank_lines.append(
-            f"IFSC CODE:- "
+            f"  IFSC CODE:- "
             f"{ifsc_code}"
         )
 
     if branch_name:
         bank_lines.append(
-            f"BRANCH:- "
+            f"  BRANCH:- "
             f"{branch_name}."
         )
 
