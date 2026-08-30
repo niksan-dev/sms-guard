@@ -4,14 +4,14 @@ import html
 import streamlit as st
 
 
-_CSS_LOADED = False
-
-
 def _load_css() -> None:
-    global _CSS_LOADED
+    """
+    Load the common sub-header CSS.
 
-    if _CSS_LOADED:
-        return
+    CSS is intentionally loaded on every Streamlit rerun.
+    Do not cache this with a module-level flag because
+    Streamlit rebuilds the page on every interaction.
+    """
 
     css_path = (
         Path(__file__).resolve().parent.parent
@@ -21,31 +21,34 @@ def _load_css() -> None:
 
     if not css_path.exists():
         raise FileNotFoundError(
-            f"Section header CSS not found: {css_path}"
+            f"Sub header CSS not found: {css_path}"
         )
 
     css = css_path.read_text(
         encoding="utf-8"
     )
 
-    st.html(
-        f"<style>{css}</style>"
+    st.markdown(
+        f"<style>{css}</style>",
+        unsafe_allow_html=True,
     )
-
-    _CSS_LOADED = True
 
 
 def sub_header(
     title: str,
+    description: str = "",
     icon: str = "",
 ) -> None:
     """
-    Render a common section header.
+    Render a common section/sub header.
 
     Parameters
     ----------
     title:
         Section title.
+
+    description:
+        Optional description displayed below the title.
 
     icon:
         Optional emoji/icon displayed before the title.
@@ -57,18 +60,49 @@ def sub_header(
         str(title)
     )
 
+    safe_description = html.escape(
+        str(description)
+    )
+
     safe_icon = html.escape(
         str(icon)
     )
 
-    st.html(
-        f"""
-        <div class="section-header">
+    # --------------------------------------------------
+    # TITLE
+    # --------------------------------------------------
 
-            <div class="section-header-title">
-                {safe_icon} {safe_title}
-            </div>
+    title_html = (
+        '<div class="sub-header-title">'
+        f'{safe_icon} {safe_title}'
+        '</div>'
+    )
 
-        </div>
-        """
+    # --------------------------------------------------
+    # DESCRIPTION
+    # --------------------------------------------------
+
+    description_html = ""
+
+    if safe_description:
+        description_html = (
+            '<div class="sub-header-subtitle">'
+            f'{safe_description}'
+            '</div>'
+        )
+
+    # --------------------------------------------------
+    # COMPLETE HEADER
+    # --------------------------------------------------
+
+    header_html = (
+        '<div class="sub-header">'
+        f'{title_html}'
+        f'{description_html}'
+        '</div>'
+    )
+
+    st.markdown(
+        header_html,
+        unsafe_allow_html=True,
     )

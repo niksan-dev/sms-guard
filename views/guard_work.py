@@ -15,6 +15,7 @@ from services.guard_daily_work_service import (
     get_site_monthly_attendance,
 )
 from components.page_header import page_header
+from components.sub_header import sub_header
 
 from services.guard_advance_service import (
     create_guard_advance,
@@ -527,14 +528,7 @@ def show_record_work_tab():
 
         return
 
-    st.markdown(
-        """
-        <div class="guard-section-header">
-            📝 Record Guard Shift
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    sub_header("Record Guard Shift","","📝")
 
     guard_map = {
         f"{guard.name} ({guard.employee_id})": guard
@@ -636,14 +630,7 @@ def show_daily_work_records(selected_date):
         selected_date
     )
 
-    st.markdown(
-        """
-        <div class="guard-section-header">
-            📋 Recorded Shifts
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    sub_header("Recorded Shifts","","📋")
 
     if not records:
 
@@ -807,9 +794,7 @@ def show_daily_work_records(selected_date):
     # DELETE SHIFT
     # ==============================================
 
-    st.markdown(
-        "### 🗑 Delete a recorded shift"
-    )
+    sub_header("Delete a recorded shift","","🚮")
 
     delete_options = {
 
@@ -900,18 +885,7 @@ def show_guard_attendance_tab():
             selected_date
         )
 
-        # st.subheader(
-        #     "👮 Daily Guard Attendance"
-        # )
-
-        st.markdown(
-            """
-            <div class="guard-section-header">
-                👮 Daily Guard Attendance
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        sub_header("Daily Guard Attendance","","👮")
 
         if not attendance:
 
@@ -1520,14 +1494,7 @@ def show_site_attendance_tab():
             selected_date
         )
 
-        st.markdown(
-            """
-            <div class="guard-section-header">
-                🏢 Daily Site Attendance
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        sub_header("Daily Site Attendance","","🏢")
 
         if not attendance:
 
@@ -1759,14 +1726,7 @@ def show_site_attendance_tab():
             int(selected_month)
         )
 
-        st.markdown(
-            """
-            <div class="guard-section-header">
-                📊 Monthly Site Attendance
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        sub_header("Monthly Site Attendance","","📊")
 
         if not attendance:
 
@@ -2011,19 +1971,10 @@ def show_site_attendance_tab():
 
 def show_guard_advances_tab():
 
-    st.markdown(
-        """
-        <div class="guard-section-header">
-            💰 Guard Advances
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
-    st.caption(
-        "Record money given to guards in advance and "
-        "track monthly deductions."
-    )
+    sub_header("Guard Advances",
+               "",
+                "💰")
 
     guards = get_active_guards()
 

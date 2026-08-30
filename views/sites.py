@@ -20,6 +20,7 @@ from services.site_guard_assignment_service import (
 from services.guard_service import get_all_guards
 
 from components.page_header import page_header
+from components.sub_header import sub_header
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -106,14 +107,8 @@ def show_sites():
 
     with tab_all:
 
-        st.markdown(
-            """
-            <div class="site-section-header">
-                📋 All Sites
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        
+        sub_header("All Sites","","📋")
 
         sites = get_all_sites()
         clients = get_client_users()
@@ -327,11 +322,9 @@ def show_sites():
 
                 if selected_site:
 
-                    st.markdown(
-                        f"### 📊 Metrics for "
-                        f"{selected_site.site_code} - "
-                        f"{selected_site.name}"
-                    )
+                    selected_site_name = f"Metrics for {selected_site.site_code} - {selected_site.name}"
+
+                    sub_header(selected_site_name,"","📊")
 
                     guards_required = int(
                         selected_site.guards_required or 0
@@ -400,14 +393,7 @@ def show_sites():
 
     with tab_add:
 
-        st.markdown(
-            """
-            <div class="site-section-header">
-                ➕ Add New Site
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        sub_header("Add New Site","","➕")
 
         st.info(
             f"Next Site Code: {get_next_site_code()}"
@@ -445,14 +431,7 @@ def show_sites():
             # SITE INFORMATION
             # ------------------------------------------
 
-            st.markdown(
-                """
-                <div class="site-section-header">
-                    🏢 Site Information
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            sub_header("Site Information","","🏢")
 
             col1, col2 = st.columns(2)
 
@@ -474,14 +453,7 @@ def show_sites():
             # CONTACT INFORMATION
             # ------------------------------------------
 
-            st.markdown(
-                """
-                <div class="site-section-header">
-                    📞 Contact Information
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            sub_header("Contact Information","","📞")
 
             col1, col2, col3 = st.columns(3)
 
@@ -511,14 +483,7 @@ def show_sites():
             # ADDRESS
             # ------------------------------------------
 
-            st.markdown(
-                """
-                <div class="site-section-header">
-                    📍 Site Address
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            sub_header("Site Address","","📍")
 
             address = st.text_area(
                 "Address",
@@ -547,14 +512,8 @@ def show_sites():
             # SECURITY REQUIREMENTS
             # ------------------------------------------
 
-            st.markdown(
-                """
-                <div class="site-section-header">
-                    🛡️ Security Requirements
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+
+            sub_header("Security Requirements","","🛡️")
 
             col1, col2, col3 = st.columns(3)
 
@@ -592,7 +551,8 @@ def show_sites():
 
             submitted = st.form_submit_button(
                 "➕ Create Site",
-                width="stretch"
+                width="stretch",
+                type="primary"
             )
 
             # ------------------------------------------
@@ -670,14 +630,8 @@ def show_sites():
 
     with tab_manage:
 
-        st.markdown(
-            """
-            <div class="site-section-header">
-                ⚙️ Manage Site
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+
+        sub_header("Manage Site","","⚙️")
 
         sites = get_all_sites()
         clients = get_client_users()
@@ -816,15 +770,9 @@ def show_sites():
                 with st.form(
                     f"edit_site_form_{site.id}"
                 ):
+                    
 
-                    st.markdown(
-                        """
-                        <div class="site-section-header">
-                            ✏️ Edit Site Information
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                    sub_header("Edit Site Information","","✏️")
 
                     # Basic Information
 
@@ -847,14 +795,8 @@ def show_sites():
 
                     # Contact Information
 
-                    st.markdown(
-                        """
-                        <div class="site-section-header">
-                            📞 Contact Information
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+
+                    sub_header("Contact Information","","📞")
 
                     col1, col2, col3 = st.columns(3)
 
@@ -882,14 +824,7 @@ def show_sites():
 
                     # Address
 
-                    st.markdown(
-                        """
-                        <div class="site-section-header">
-                            📍 Site Address
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                    sub_header("Site Address","","📍")
 
                     edit_address = st.text_area(
                         "Address",
@@ -922,14 +857,8 @@ def show_sites():
 
                     # Security Requirements
 
-                    st.markdown(
-                        """
-                        <div class="site-section-header">
-                            🛡️ Security Requirements
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+
+                    sub_header("Security Requirements","","🛡️")
 
                     col1, col2, col3 = st.columns(3)
 
@@ -983,7 +912,8 @@ def show_sites():
                     update_submitted = (
                         st.form_submit_button(
                             "💾 Update Site",
-                            width="stretch"
+                            width="stretch",
+                            type="primary"
                         )
                     )
 
@@ -1121,14 +1051,7 @@ def show_site_guard_assignment(site):
 
     st.divider()
 
-    st.markdown(
-        """
-        <div class="site-section-header">
-            👮 Assigned Guards
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    sub_header("Assigned Guards","","👮")
 
     assignments = get_site_guards(site.id)
 

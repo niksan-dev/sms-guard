@@ -34,7 +34,7 @@ from services.site_invoice_template_service import (
 )
 
 from components.page_header import page_header
-
+from components.sub_header import sub_header
 
 # ============================================================
 # HELPERS
@@ -179,13 +179,7 @@ def _require_company_settings_for_invoice() -> bool:
 
 def show_site_bills():
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            🏢 Site Billing
-        </div>
-        """
-    )
+    sub_header("Site Billing","","🏢")
 
     if not _require_company_settings_for_invoice():
         return
@@ -228,13 +222,7 @@ def show_site_bills():
         for site in sites
     }
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            📄 Generate Site Bill
-        </div>
-        """
-    )
+    sub_header("Generate Site Bill","","📄")
 
     selected_site_label = st.selectbox(
         "Select Site",
@@ -305,13 +293,8 @@ def show_site_bills():
 
     else:
 
-        st.html(
-            """
-            <div class="billing-section-header">
-                📊 Bill Summary
-            </div>
-            """
-        )
+        sub_header("Bill Summary","","📊")
+
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -350,14 +333,7 @@ def show_site_bills():
         # ----------------------------------------------------
         # GST
         # ----------------------------------------------------
-
-        st.html(
-            """
-            <div class="billing-section-header">
-                🧾 Tax
-            </div>
-            """
-        )
+        sub_header("Tax","","🧾")
 
         # GST rates are controlled centrally from Company Settings.
         # They are NOT editable from the Site Bill page.
@@ -486,13 +462,7 @@ def show_site_bills():
     # SAVED BILL
     # --------------------------------------------------------
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            📋 Saved Bill
-        </div>
-        """
-    )
+    sub_header("Saved Bill","","📋")
 
     bill = get_site_bill(
         selected_site.id,
@@ -640,13 +610,7 @@ Security Management System
 
 def show_site_bill_preview(bill):
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            👁 Bill Preview
-        </div>
-        """
-    )
+    sub_header("Bill Preview","","👁")
 
     st.info(
         f"Invoice: {bill.bill_number}"
@@ -731,14 +695,8 @@ def show_site_bill_preview(bill):
 # ============================================================
 
 def show_guard_salary():
-
-    st.html(
-        """
-        <div class="billing-section-header">
-            👮 Guard Salary
-        </div>
-        """
-    )
+    
+    sub_header("Guard Salary","","👮")
 
     col1, col2 = st.columns(2)
 
@@ -805,13 +763,8 @@ def show_guard_salary():
 
     else:
 
-        st.html(
-            """
-            <div class="billing-section-header">
-                📊 Salary Summary
-            </div>
-            """
-        )
+        sub_header("Salary Summary","","📊")
+
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -880,13 +833,7 @@ def show_guard_salary():
         # ADVANCES
         # ----------------------------------------------------
 
-        st.html(
-            """
-            <div class="billing-section-header">
-                💰 Advances
-            </div>
-            """
-        )
+        sub_header("Advances","","💰")
 
         if data["advances"]:
 
@@ -960,13 +907,7 @@ def show_guard_salary():
     # SAVED SLIP
     # --------------------------------------------------------
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            📋 Saved Salary Slip
-        </div>
-        """
-    )
+    sub_header("Saved Salary Slip","","📋")
 
     slip = get_guard_salary_slip(
         selected_guard.id,
@@ -1061,13 +1002,7 @@ def show_salary_slip_actions(slip):
 
 def show_salary_slip_preview(slip):
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            👁 Salary Slip Preview
-        </div>
-        """
-    )
+    sub_header("Salary Slip Preview","","👁")
 
     st.info(
         f"Slip: {slip.slip_number}"
@@ -1132,13 +1067,7 @@ def show_salary_slip_preview(slip):
         }
     ])
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            💵 Earnings
-        </div>
-        """
-    )
+    sub_header("Earnings","","💵")
 
     st.dataframe(
         earnings,
@@ -1146,13 +1075,8 @@ def show_salary_slip_preview(slip):
         hide_index=True
     )
 
-    st.html(
-        """
-        <div class="billing-section-header">
-            💰 Advances
-        </div>
-        """
-    )
+
+    sub_header("Advances","","💰")
 
     data = get_guard_salary_data(
         slip.guard_id,

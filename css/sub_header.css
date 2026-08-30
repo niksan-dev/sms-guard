@@ -1,43 +1,58 @@
 /* =========================================================
-   SECTION HEADER
-   Common component used throughout the application
+   SUB HEADER
+   Common section header used throughout the application
    ========================================================= */
 
-.section-header {
-
+.sub-header {
     width: 100%;
-
     box-sizing: border-box;
 
-    background: #E7EDF1;
+    background: #E8EEF2;
 
+    border: 1px solid #D1DAE1;
     border-left: 5px solid #56D21F;
 
     border-radius: 8px;
 
-    padding: 10px 15px;
+    padding: 10px 16px;
 
-    margin: 20px 0 15px 0;
+    margin: 10px 0 14px 0;
 
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.06);
 }
 
 
 /* =========================================================
-   SECTION TITLE
+   TITLE
    ========================================================= */
 
-.section-header-title {
-
+.sub-header-title {
     color: #063552;
 
     font-size: 19px;
-
     font-weight: 800;
 
     line-height: 1.3;
 
     margin: 0;
+    padding: 0;
+}
 
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.sub-header-subtitle {
+    color: #667085;
+
+    font-size: 13px;
+    font-weight: 400;
+
+    line-height: 1.4;
+
+    margin-top: 4px;
     padding: 0;
 }
 
@@ -48,17 +63,20 @@
 
 @media (max-width: 768px) {
 
-    .section-header {
+    .sub-header {
+        padding: 9px 13px;
 
-        padding: 9px 12px;
+        border-left-width: 4px;
 
-        margin: 16px 0 12px 0;
-
+        margin-top: 9px;
+        margin-bottom: 12px;
     }
 
-    .section-header-title {
-
+    .sub-header-title {
         font-size: 17px;
+    }
 
+    .sub-header-subtitle {
+        font-size: 12px;
     }
 }

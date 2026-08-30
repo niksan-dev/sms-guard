@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import date
 
 from components.page_header import page_header
+from components.sub_header import sub_header
 
 from services.guard_service import (
     get_all_guards,
@@ -134,14 +135,7 @@ def show_guards():
 
     with tab1:
 
-        #st.subheader("📋 All Guards")
-        st.html(
-            """
-            <div class="dashboard-section-title">
-                📋 All Guards
-            </div>
-            """
-        )
+        sub_header("All Guards","","📋")
 
         guards = get_all_guards()
 
@@ -323,16 +317,7 @@ def show_guards():
     # ==================================================
 
     with tab2:
-
-        #st.subheader("➕ Add New Guard")
-
-        st.html(
-                    """
-                    <div class="dashboard-section-title">
-                        ➕ Add New Guard
-                    </div>
-                    """
-                )
+        sub_header("Add New Guard","","➕")
 
         next_employee_id = get_next_employee_id()
 

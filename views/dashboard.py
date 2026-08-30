@@ -18,7 +18,7 @@ from services.guard_daily_work_service import (
 )
 
 from components.page_header import page_header
-
+from components.sub_header import sub_header
 # ==================================================
 # OPTIONAL MODELS
 # ==================================================
@@ -667,13 +667,7 @@ def show_dashboard():
     # TODAY'S OPERATIONS
     # ==============================================
 
-    st.html(
-        """
-        <div class="dashboard-section-title">
-            📅 Today's Operations
-        </div>
-        """
-    )
+    sub_header("Today's Operations","","📅")
 
 
     col1, col2, col3, col4 = st.columns(4)
@@ -731,13 +725,8 @@ def show_dashboard():
     # FINANCIAL OVERVIEW
     # ==============================================
 
-    st.html(
-        """
-        <div class="dashboard-section-title">
-            💰 Financial Overview
-        </div>
-        """
-    )
+
+    sub_header("Financial Overview","","💰")
 
 
     col1, col2, col3, col4 = st.columns(4)
@@ -794,14 +783,7 @@ def show_dashboard():
     # ==============================================
     # SECURITY ANALYTICS
     # ==============================================
-
-    st.html(
-        """
-        <div class="dashboard-section-title">
-            📊 Security Analytics
-        </div>
-        """
-    )
+    sub_header("Security Analytics","","📊")
 
 
     guard_chart_data, site_chart_data = (
@@ -879,14 +861,7 @@ def show_dashboard():
     # ==============================================
     # QUICK ACTIONS
     # ==============================================
-
-    st.html(
-        """
-        <div class="dashboard-section-title">
-            ⚡ Quick Actions
-        </div>
-        """
-    )
+    sub_header("Quick Actions","","⚡")
 
 
     col1, col2, col3, col4 = st.columns(4)
