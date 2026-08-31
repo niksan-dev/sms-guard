@@ -8,6 +8,7 @@ import utils.constants as constants
 from utils.constants import UserRole
 from components.text_input import text_input
 from components.select_box import select_box
+from components.submit_button import submit_button
 
 from services.auth_session_service import (
     create_login_session
@@ -142,7 +143,7 @@ def show_login_page():
                     placeholder="Enter your password"
                 )
 
-                login_clicked = st.form_submit_button(
+                login_clicked = submit_button(
                     "🔐 Login",
                     width="stretch",
                     type="primary"
@@ -254,7 +255,7 @@ def show_login_page():
                 )
 
 
-                signup_clicked = st.form_submit_button(
+                signup_clicked = submit_button(
                     "📝 Create Account",
                     width="stretch"
                 )

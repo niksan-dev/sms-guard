@@ -12,6 +12,7 @@ from components.date_input import date_input
 from components.text_area import text_area
 from components.search_box import search_box
 from components.button import button
+from components.submit_button import submit_button
 
 from services.guard_service import (
     get_all_guards,
@@ -518,7 +519,7 @@ def show_guards():
 
             st.divider()
 
-            submitted = st.form_submit_button(
+            submitted = submit_button(
                 "➕ Create Guard",
                 width="stretch",
                 type="primary"
@@ -947,7 +948,7 @@ def show_guards():
                     st.divider()
 
                     update_submitted = (
-                        st.form_submit_button(
+                        submit_button(
                             "💾 Update Guard",
                             width="stretch",
                             type="primary"

@@ -1,0 +1,103 @@
+/* =========================================================
+   COMMON SUBMIT BUTTON
+   ========================================================= */
+
+div[data-testid="stFormSubmitButton"] {
+    margin-top: 8px !important;
+}
+
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+div[data-testid="stFormSubmitButton"]>button {
+
+    min-height: 40px !important;
+
+    padding: 8px 20px !important;
+
+    background: #063552 !important;
+
+    color: #FFFFFF !important;
+
+    border: 1px solid #063552 !important;
+
+    border-radius: 8px !important;
+
+    font-size: 14px !important;
+
+    font-weight: 700 !important;
+
+    line-height: 1.2 !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.15) !important;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.05s ease !important;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+div[data-testid="stFormSubmitButton"]>button:hover {
+
+    background: #08496E !important;
+
+    border-color: #08496E !important;
+
+    box-shadow:
+        0 4px 8px rgba(6, 53, 82, 0.18) !important;
+}
+
+
+/* =========================================================
+   CLICK
+   ========================================================= */
+
+div[data-testid="stFormSubmitButton"]>button:active {
+
+    background: #052C44 !important;
+
+    border-color: #052C44 !important;
+
+    transform: translateY(1px) !important;
+
+    box-shadow:
+        0 1px 3px rgba(6, 53, 82, 0.15) !important;
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+div[data-testid="stFormSubmitButton"]>button:focus,
+div[data-testid="stFormSubmitButton"]>button:focus-visible {
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.14),
+        0 2px 5px rgba(6, 53, 82, 0.15) !important;
+}
+
+
+/* =========================================================
+   DISABLED
+   ========================================================= */
+
+div[data-testid="stFormSubmitButton"]>button:disabled {
+
+    opacity: 0.55 !important;
+
+    cursor: not-allowed !important;
+
+    box-shadow: none !important;
+}

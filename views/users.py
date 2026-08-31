@@ -5,6 +5,7 @@ from utils.constants import UserRole
 from components.text_input import text_input
 from components.select_box import select_box
 from components.button import button
+from components.submit_button import submit_button
 
 from services.user_service import (
     get_all_users,
@@ -136,7 +137,7 @@ def show_users():
                 type="password"
             )
 
-            submitted = st.form_submit_button(
+            submitted = submit_button(
                 "Create User",
                 width="stretch",
                 type="secondary"
@@ -253,7 +254,7 @@ def show_users():
                         value=selected_user.phone or ""
                     )
 
-                    update_profile_clicked = st.form_submit_button(
+                    update_profile_clicked = submit_button(
                         "💾 Save Profile Changes",
                         width="stretch",
                         type="secondary"
@@ -315,7 +316,7 @@ def show_users():
                         type="password"
                     )
 
-                    reset_password_clicked = st.form_submit_button(
+                    reset_password_clicked = submit_button(
                         "🔑 Reset Password",
                         width="stretch",
                         type="secondary"

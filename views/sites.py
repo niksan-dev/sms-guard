@@ -27,6 +27,7 @@ from components.select_box import select_box
 from components.text_area import text_area
 from components.search_box import search_box
 from components.button import button
+from components.submit_button import submit_button
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -555,7 +556,7 @@ def show_sites():
 
             st.divider()
 
-            submitted = st.form_submit_button(
+            submitted = submit_button(
                 "➕ Create Site",
                 width="stretch",
                 type="primary"
@@ -916,7 +917,7 @@ def show_sites():
                     st.divider()
 
                     update_submitted = (
-                        st.form_submit_button(
+                        submit_button(
                             "💾 Update Site",
                             width="stretch",
                             type="primary"

@@ -20,6 +20,7 @@ from components.text_input import text_input
 from components.number_input import number_input
 from components.select_box import select_box
 from components.text_area import text_area
+from components.submit_button import submit_button
 # ==================================================
 # UPLOAD DIRECTORY
 # ==================================================
@@ -469,7 +470,7 @@ def show_company_settings():
         # SAVE BUTTON
         # ------------------------------------------
 
-        submitted = st.form_submit_button(
+        submitted = submit_button(
             "💾 Save Company Settings",
             width="stretch"
         )

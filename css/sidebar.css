@@ -1,0 +1,502 @@
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+
+/* =========================================================
+   SIDEBAR BASE
+   ========================================================= */
+
+section[data-testid="stSidebar"] {
+
+    background: #FFFFFF !important;
+
+    border-right: 1px solid #D5DDE3 !important;
+}
+
+
+section[data-testid="stSidebar"]>div {
+
+    background: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+section[data-testid="stSidebar"] .sidebar-brand-title {
+
+    color: #063552 !important;
+
+    font-size: 18px !important;
+
+    font-weight: 800 !important;
+
+    line-height: 1.25 !important;
+
+    letter-spacing: 0.2px !important;
+}
+
+
+section[data-testid="stSidebar"] .sidebar-brand-description {
+
+    margin-top: 14px !important;
+
+    margin-bottom: 18px !important;
+
+    color: #66839A !important;
+
+    font-size: 13px !important;
+
+    font-weight: 400 !important;
+
+    line-height: 1.65 !important;
+}
+
+
+/* =========================================================
+   NAVIGATION TITLE
+   ========================================================= */
+
+section[data-testid="stSidebar"] .sidebar-navigation-title {
+
+    color: #66839A !important;
+
+    font-size: 12px !important;
+
+    font-weight: 600 !important;
+
+    letter-spacing: 0.4px !important;
+
+    margin-bottom: 10px !important;
+}
+
+
+/* =========================================================
+   BUTTON CONTAINER
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"] {
+
+    width: 100% !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+}
+
+
+/* =========================================================
+   ALL SIDEBAR BUTTONS
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button {
+
+    width: 100% !important;
+
+    min-height: 42px !important;
+
+    box-sizing: border-box !important;
+
+    margin: 4px 0 !important;
+
+    padding: 8px 12px !important;
+
+    border-radius: 8px !important;
+
+    font-size: 14px !important;
+
+    font-weight: 600 !important;
+
+    text-align: left !important;
+
+    justify-content: flex-start !important;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.05s ease !important;
+}
+
+
+/* =========================================================
+   NORMAL NAVIGATION BUTTON
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] {
+
+    background: #F3F6F8 !important;
+
+    border: 1px solid #DCE4E9 !important;
+
+    border-radius: 8px !important;
+
+    color: #063552 !important;
+
+    -webkit-text-fill-color: #063552 !important;
+
+    box-shadow:
+        0 1px 3px rgba(6, 53, 82, 0.05) !important;
+}
+
+
+/* =========================================================
+   NORMAL BUTTON - ALL CHILDREN
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] * {
+
+    color: #063552 !important;
+
+    -webkit-text-fill-color: #063552 !important;
+}
+
+
+/* =========================================================
+   NORMAL HOVER
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"]:hover {
+
+    background: #E8EEF2 !important;
+
+    border-color: #B8C7D1 !important;
+
+    color: #063552 !important;
+
+    -webkit-text-fill-color: #063552 !important;
+
+    box-shadow:
+        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+}
+
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"]:hover * {
+
+    color: #063552 !important;
+
+    -webkit-text-fill-color: #063552 !important;
+}
+
+
+/* =========================================================
+   SELECTED NAVIGATION BUTTON
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] {
+
+    width: 100% !important;
+
+    min-height: 42px !important;
+
+    background: #063552 !important;
+
+    border: 1px solid #063552 !important;
+
+    border-left: 4px solid #56D21F !important;
+
+    border-radius: 8px !important;
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+
+    font-size: 14px !important;
+
+    font-weight: 700 !important;
+
+    box-shadow:
+        0 3px 8px rgba(6, 53, 82, 0.18) !important;
+}
+
+
+/* =========================================================
+   SELECTED BUTTON - FORCE EVERY CHILD
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] * {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   SELECTED BUTTON - DIV
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] div {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   SELECTED BUTTON - SPAN
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] span {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   SELECTED BUTTON - P
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] p {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* =========================================================
+   SELECTED BUTTON - SVG
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] svg {
+
+    color: #FFFFFF !important;
+
+    fill: #FFFFFF !important;
+
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   SELECTED HOVER
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover {
+
+    background: #08496E !important;
+
+    border-color: #08496E !important;
+
+    border-left-color: #56D21F !important;
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+
+    box-shadow:
+        0 4px 9px rgba(6, 53, 82, 0.20) !important;
+}
+
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover * {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   SELECTED ACTIVE
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:active {
+
+    background: #052C44 !important;
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+
+    transform: translateY(1px) !important;
+}
+
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:active * {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   BUTTON FOCUS
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button:focus,
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button:focus-visible {
+
+    outline: none !important;
+}
+
+
+/* =========================================================
+   USER PROFILE
+   ========================================================= */
+
+section[data-testid="stSidebar"] .sidebar-user-icon {
+
+    color: #063552 !important;
+
+    font-size: 34px !important;
+
+    line-height: 1 !important;
+
+    text-align: center !important;
+}
+
+
+section[data-testid="stSidebar"] .sidebar-username {
+
+    color: #063552 !important;
+
+    font-size: 14px !important;
+
+    font-weight: 700 !important;
+
+    line-height: 1.3 !important;
+
+    margin-bottom: 3px !important;
+}
+
+
+section[data-testid="stSidebar"] .sidebar-role {
+
+    color: #66839A !important;
+
+    font-size: 13px !important;
+
+    font-weight: 400 !important;
+
+    line-height: 1.3 !important;
+}
+
+
+/* =========================================================
+   DIVIDERS
+   ========================================================= */
+
+section[data-testid="stSidebar"] hr {
+
+    border: none !important;
+
+    border-top: 1px solid #D5DDE3 !important;
+
+    margin: 16px 0 !important;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+section[data-testid="stSidebar"] button[key="sidebar_logout"] {
+
+    width: 100% !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    section[data-testid="stSidebar"] .sidebar-brand-title {
+
+        font-size: 17px !important;
+    }
+
+    section[data-testid="stSidebar"] .sidebar-brand-description {
+
+        font-size: 13px !important;
+
+        line-height: 1.55 !important;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stButton"]>button {
+
+        min-height: 42px !important;
+
+        font-size: 14px !important;
+    }
+}
+
+
+/* =========================================================
+   SIDEBAR NAVIGATION - FINAL OVERRIDE
+   ========================================================= */
+
+/* SELECTED */
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] {
+
+    background: #063552 !important;
+
+    border: 1px solid #063552 !important;
+
+    border-left: 4px solid #56D21F !important;
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* SELECTED - EVERY CHILD */
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] * {
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* SELECTED HOVER */
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover {
+
+    background: #08496E !important;
+
+    border-color: #08496E !important;
+
+    border-left-color: #56D21F !important;
+
+    color: #FFFFFF !important;
+
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+
+/* UNSELECTED */
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] {
+
+    background: #F3F6F8 !important;
+
+    border: 1px solid #DCE4E9 !important;
+
+    color: #063552 !important;
+
+    -webkit-text-fill-color: #063552 !important;
+
+    font-weight: 600 !important;
+}
+
+
+/* UNSELECTED - EVERY CHILD */
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] * {
+
+    color: #063552 !important;
+
+    -webkit-text-fill-color: #063552 !important;
+}

@@ -6,6 +6,7 @@ from components.number_input import number_input
 from components.select_box import select_box
 from components.date_input import date_input
 from components.text_area import text_area
+from components.submit_button import submit_button
 
 from database.connection import SessionLocal
 from database.models import Site
@@ -265,7 +266,7 @@ def show_create_bill():
         # SUBMIT
         # ==============================================
 
-        submitted = st.form_submit_button(
+        submitted = submit_button(
             "➕ Generate Bill",
             width="stretch",
             type="primary"
@@ -575,7 +576,7 @@ def show_record_payment():
         )
 
 
-        submitted = st.form_submit_button(
+        submitted = submit_button(
             "💾 Record Payment",
             width="stretch"
         )
