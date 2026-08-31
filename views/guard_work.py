@@ -21,6 +21,8 @@ from components.number_input import number_input
 from components.select_box import select_box
 from components.date_input import date_input
 from components.text_area import text_area
+from components.search_box import search_box
+from components.button import button
 
 from services.guard_advance_service import (
     create_guard_advance,
@@ -595,7 +597,7 @@ def show_record_work_tab():
             key="work_status"
         )
 
-    if st.button(
+    if button(
         "➕ Record Shift",
         type="primary",
         width="stretch"
@@ -830,7 +832,7 @@ def show_daily_work_records(selected_date):
 
     with col2:
 
-        if st.button(
+        if button(
             "🗑 Delete",
             type="secondary",
             width="stretch",
@@ -1060,7 +1062,7 @@ def show_guard_attendance_tab():
             # SEARCH
             # ======================================
 
-            search_text = st.text_input(
+            search_text = search_box(
                 "🔍 Search by guard name or employee ID",
                 key="guard_daily_search"
             )
@@ -1329,7 +1331,7 @@ def show_guard_attendance_tab():
             # SEARCH
             # ======================================
 
-            search_text = st.text_input(
+            search_text = search_box(
                 "🔍 Search by guard name or employee ID",
                 key="guard_monthly_search"
             )
@@ -1625,7 +1627,7 @@ def show_site_attendance_tab():
             # SEARCH
             # ======================================
 
-            search_text = st.text_input(
+            search_text = search_box(
                 "🔍 Search by site name or site code",
                 key="site_daily_search"
             )
@@ -1844,7 +1846,7 @@ def show_site_attendance_tab():
             # SEARCH
             # ======================================
 
-            search_text = st.text_input(
+            search_text = search_box(
                 "🔍 Search by site name or site code",
                 key="site_monthly_search"
             )
@@ -2064,7 +2066,7 @@ def show_guard_advances_tab():
         key="advance_description"
     )
 
-    if st.button(
+    if button(
         "💰 Record Advance",
         type="primary",
         width="stretch",
@@ -2238,7 +2240,7 @@ def show_guard_advances_tab():
     # SEARCH
     # ----------------------------------------------
 
-    search_text = st.text_input(
+    search_text = search_box(
         "🔍 Search by guard name or employee ID",
         key="advance_search"
     )
@@ -2361,7 +2363,7 @@ def show_guard_advances_tab():
 
         with col2:
 
-            if st.button(
+            if button(
                 "🗑 Delete",
                 type="secondary",
                 width="stretch",

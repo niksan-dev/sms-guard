@@ -19,6 +19,7 @@ from services.guard_daily_work_service import (
 
 from components.page_header import page_header
 from components.sub_header import sub_header
+from components.button import button
 # ==================================================
 # OPTIONAL MODELS
 # ==================================================
@@ -869,7 +870,7 @@ def show_dashboard():
 
     with col1:
 
-        if st.button(
+        if button(
             "➕ Add Guard",
             key="quick_add_guard",
             width="stretch",
@@ -883,7 +884,7 @@ def show_dashboard():
 
     with col2:
 
-        if st.button(
+        if button(
             "🏢 Add Site",
             key="quick_add_site",
             width="stretch",
@@ -897,7 +898,7 @@ def show_dashboard():
 
     with col3:
 
-        if st.button(
+        if button(
             "📅 Manage Shifts",
             key="quick_manage_shifts",
             width="stretch",
@@ -911,7 +912,7 @@ def show_dashboard():
 
     with col4:
 
-        if st.button(
+        if button(
             "🚨 Report Incident",
             key="quick_report_incident",
             width="stretch",

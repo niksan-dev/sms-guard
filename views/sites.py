@@ -25,6 +25,8 @@ from components.text_input import text_input
 from components.number_input import number_input
 from components.select_box import select_box
 from components.text_area import text_area
+from components.search_box import search_box
+from components.button import button
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -127,7 +129,7 @@ def show_sites():
             # SEARCH
             # ------------------------------------------
 
-            search = st.text_input(
+            search = search_box(
                 "🔍 Search Site",
                 placeholder="Search by site code, name, client, city or status...",
                 key="site_search"
@@ -1017,7 +1019,7 @@ def show_sites():
                         )
                     )
 
-                    if st.button(
+                    if button(
                         "🗑️ Delete Site Permanently",
                         key=f"delete_site_{site.id}",
                         type="primary",
@@ -1112,7 +1114,7 @@ def show_site_guard_assignment(site):
                 key=f"assign_guard_{site.id}"
             )
 
-            if st.button(
+            if button(
                 "➕ Assign Guard",
                 key=f"assign_guard_button_{site.id}",
                 type="primary",
@@ -1197,7 +1199,7 @@ def show_site_guard_assignment(site):
 
         with col3:
 
-            if st.button(
+            if button(
                 "❌ Unassign",
                 key=f"unassign_{assignment.id}",
                 width="stretch"

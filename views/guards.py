@@ -10,6 +10,8 @@ from components.number_input import number_input
 from components.select_box import select_box
 from components.date_input import date_input
 from components.text_area import text_area
+from components.search_box import search_box
+from components.button import button
 
 from services.guard_service import (
     get_all_guards,
@@ -198,7 +200,7 @@ def show_guards():
             # SEARCH
             # ----------------------------------------------
 
-            search = st.text_input(
+            search = search_box(
                 "🔍 Search Guard",
                 placeholder=(
                     "Search by employee ID, name, "
@@ -1100,7 +1102,7 @@ def show_guard_site_assignment(guard):
             key=f"assign_site_{guard.id}"
         )
 
-        if st.button(
+        if button(
             "➕ Assign Site",
             key=f"assign_site_button_{guard.id}",
             type="primary",
@@ -1179,7 +1181,7 @@ def show_guard_site_assignment(guard):
 
         with col3:
 
-            if st.button(
+            if button(
                 "❌ Unassign",
                 key=f"guard_unassign_{assignment.id}",
                 type="secondary",

@@ -1,0 +1,187 @@
+/* =========================================================
+   COMMON BUTTONS
+   ========================================================= */
+
+
+/* =========================================================
+   BASE BUTTON
+   ========================================================= */
+
+div[data-testid="stButton"]>button {
+
+    min-height: 40px !important;
+
+    padding: 8px 18px !important;
+
+    border-radius: 8px !important;
+
+    font-size: 14px !important;
+
+    font-weight: 700 !important;
+
+    line-height: 1.2 !important;
+
+    cursor: pointer !important;
+
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.05s ease !important;
+}
+
+
+/* =========================================================
+   PRIMARY
+   ========================================================= */
+
+div[data-testid="stButton"]>button[kind="primary"] {
+
+    background: #063552 !important;
+
+    color: #FFFFFF !important;
+
+    border: 1px solid #063552 !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.15) !important;
+}
+
+
+div[data-testid="stButton"]>button[kind="primary"]:hover {
+
+    background: #08496E !important;
+
+    border-color: #08496E !important;
+
+    box-shadow:
+        0 4px 8px rgba(6, 53, 82, 0.18) !important;
+}
+
+
+div[data-testid="stButton"]>button[kind="primary"]:active {
+
+    background: #052C44 !important;
+
+    border-color: #052C44 !important;
+
+    transform: translateY(1px) !important;
+
+    box-shadow:
+        0 1px 3px rgba(6, 53, 82, 0.15) !important;
+}
+
+
+/* =========================================================
+   SECONDARY
+   ========================================================= */
+
+div[data-testid="stButton"]>button[kind="secondary"] {
+
+    background: #FFFFFF !important;
+
+    color: #063552 !important;
+
+    border: 1px solid #B8C4CE !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.08) !important;
+}
+
+
+div[data-testid="stButton"]>button[kind="secondary"]:hover {
+
+    background: #F3F6F8 !important;
+
+    color: #063552 !important;
+
+    border-color: #7F95A5 !important;
+
+    box-shadow:
+        0 3px 7px rgba(6, 53, 82, 0.11) !important;
+}
+
+
+div[data-testid="stButton"]>button[kind="secondary"]:active {
+
+    background: #E8EEF2 !important;
+
+    border-color: #063552 !important;
+
+    transform: translateY(1px) !important;
+}
+
+
+/* =========================================================
+   SUCCESS
+   ========================================================= */
+
+div[data-testid="stButton"]>button[kind="secondary"]:has(span) {
+
+    border-radius: 8px !important;
+}
+
+
+/* =========================================================
+   DANGER
+   ========================================================= */
+
+button[data-testid="baseButton-secondary"] {
+
+    border-radius: 8px !important;
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+div[data-testid="stButton"]>button:focus,
+div[data-testid="stButton"]>button:focus-visible {
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.14) !important;
+}
+
+
+/* =========================================================
+   DISABLED
+   ========================================================= */
+
+div[data-testid="stButton"]>button:disabled {
+
+    opacity: 0.55 !important;
+
+    cursor: not-allowed !important;
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   FULL WIDTH
+   ========================================================= */
+
+div[data-testid="stButton"]>button {
+
+    width: 100% !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    div[data-testid="stButton"]>button {
+
+        min-height: 42px !important;
+
+        font-size: 14px !important;
+
+        padding: 9px 15px !important;
+    }
+}

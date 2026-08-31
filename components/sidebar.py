@@ -3,7 +3,7 @@ import os
 from services.auth_session_service import delete_login_session
 from utils.cookies import get_cookie_manager
 from utils import constants
-
+from components.button import button
 # ==================================================
 # PAGE ICONS
 # ==================================================
@@ -241,7 +241,7 @@ def render_sidebar(username, role, allowed_pages):
         st.divider()
 
 
-        if st.button(
+        if button(
             "🚪 Logout",
             type="primary",
             key="logout_button",

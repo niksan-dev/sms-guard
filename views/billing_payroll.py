@@ -38,6 +38,7 @@ from components.sub_header import sub_header
 from components.text_input import text_input
 from components.number_input import number_input
 from components.select_box import select_box
+from components.button import button
 # ============================================================
 # HELPERS
 # ============================================================
@@ -157,7 +158,7 @@ def _require_company_settings_for_invoice() -> bool:
                 icon="⚙️",
             )
         except Exception:
-            if st.button(
+            if button(
                 "⚙️ Configure Company Settings",
                 type="primary",
                 width="stretch",
@@ -435,7 +436,7 @@ def show_site_bills():
         # GENERATE
         # ----------------------------------------------------
 
-        if st.button(
+        if button(
             "📄 Generate / Update Bill",
             type="primary",
             width="stretch",
@@ -503,7 +504,7 @@ def show_site_bill_actions(
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if st.button(
+        if button(
             "👁 View",
             width="stretch",
             key=f"view_bill_{bill.id}"
@@ -525,7 +526,7 @@ def show_site_bill_actions(
         )
 
     with col3:
-        if st.button(
+        if button(
             "🖨 Print",
             width="stretch",
             key=f"print_bill_{bill.id}"
@@ -533,7 +534,7 @@ def show_site_bill_actions(
             st.session_state["print_site_bill_id"] = bill.id
 
     with col4:
-        if st.button(
+        if button(
             "📧 Send Email",
             width="stretch",
             key=f"email_site_bill_{bill.id}"
@@ -550,7 +551,7 @@ def show_site_bill_actions(
             placeholder="accounts@client.com"
         )
 
-        if st.button(
+        if button(
             "Send Site Bill",
             type="primary",
             key=f"send_site_bill_{bill.id}"
@@ -878,7 +879,7 @@ def show_guard_salary():
         # GENERATE
         # ----------------------------------------------------
 
-        if st.button(
+        if button(
             "📄 Generate / Update Salary Slip",
             type="primary",
             width="stretch",
@@ -941,7 +942,7 @@ def show_salary_slip_actions(slip):
 
     with col1:
 
-        if st.button(
+        if button(
             "👁 View",
             width="stretch",
             key=f"view_slip_{slip.id}"
@@ -970,7 +971,7 @@ def show_salary_slip_actions(slip):
 
     with col3:
 
-        if st.button(
+        if button(
             "🖨 Print",
             width="stretch",
             key=f"print_slip_{slip.id}"

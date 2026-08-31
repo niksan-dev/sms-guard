@@ -4,6 +4,7 @@ import pandas as pd
 from utils.constants import UserRole
 from components.text_input import text_input
 from components.select_box import select_box
+from components.button import button
 
 from services.user_service import (
     get_all_users,
@@ -408,7 +409,7 @@ def show_users():
                             key=f"user_role_{selected_user.id}"
                         )
 
-                        if st.button(
+                        if button(
                             "Update Role",
                             width="stretch",
                             key=f"update_role_{selected_user.id}",
@@ -456,7 +457,7 @@ def show_users():
 
                     elif selected_user.is_active:
 
-                        if st.button(
+                        if button(
                             "🔴 Deactivate User",
                             width="stretch",
                             key=f"deactivate_{selected_user.id}",
@@ -479,7 +480,7 @@ def show_users():
 
                     else:
 
-                        if st.button(
+                        if button(
                             "🟢 Activate User",
                             width="stretch",
                             key=f"activate_{selected_user.id}",
