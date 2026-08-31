@@ -16,7 +16,10 @@ from utils.validators import (
 
 from components.page_header import page_header
 from components.sub_header import sub_header
-
+from components.text_input import text_input
+from components.number_input import number_input
+from components.select_box import select_box
+from components.text_area import text_area
 # ==================================================
 # UPLOAD DIRECTORY
 # ==================================================
@@ -198,8 +201,7 @@ def show_company_settings():
         col1, col2 = st.columns(2)
 
         with col1:
-
-            company_name = st.text_input(
+            company_name = text_input(
                 "Company Name *",
                 value=get_value(
                     settings,
@@ -209,7 +211,7 @@ def show_company_settings():
 
         with col2:
 
-            owner_name = st.text_input(
+            owner_name = text_input(
                 "Owner / Authorized Person",
                 value=get_value(
                     settings,
@@ -228,7 +230,7 @@ def show_company_settings():
 
         with col1:
 
-            phone = st.text_input(
+            phone = text_input(
                 "Phone Number",
                 value=get_value(
                     settings,
@@ -237,7 +239,7 @@ def show_company_settings():
                 max_chars=10
             )
         with col2:
-            alternate_phone = st.text_input(
+            alternate_phone = text_input(
                 "Alternate Contact Number",
                 value=get_value(
                     settings,
@@ -248,7 +250,7 @@ def show_company_settings():
 
         with col3:
 
-            email = st.text_input(
+            email = text_input(
                 "Email Address",
                 value=get_value(
                     settings,
@@ -263,7 +265,7 @@ def show_company_settings():
 
         sub_header("Company Address","","📍")
 
-        address = st.text_area(
+        address = text_area(
             "Address",
             value=get_value(
                 settings,
@@ -276,7 +278,7 @@ def show_company_settings():
 
         with col1:
 
-            city = st.text_input(
+            city = text_input(
                 "City",
                 value=get_value(
                     settings,
@@ -286,7 +288,7 @@ def show_company_settings():
 
         with col2:
 
-            state = st.text_input(
+            state = text_input(
                 "State",
                 value=get_value(
                     settings,
@@ -296,7 +298,7 @@ def show_company_settings():
 
         with col3:
 
-            pincode = st.text_input(
+            pincode = text_input(
                 "Pincode",
                 value=get_value(
                     settings,
@@ -317,7 +319,7 @@ def show_company_settings():
 
         with col1:
 
-            pan = st.text_input(
+            pan = text_input(
                 "PAN Number",
                 value=get_value(
                     settings,
@@ -328,7 +330,7 @@ def show_company_settings():
 
         with col2:
 
-            gstin = st.text_input(
+            gstin = text_input(
                 "GSTIN",
                 value=get_value(
                     settings,
@@ -338,7 +340,7 @@ def show_company_settings():
             )
 
         with col3:
-            cgst_rate = st.number_input(
+            cgst_rate = number_input(
                 "CGST Rate (%)",
                 min_value=0.0,
                 max_value=100.0,
@@ -352,7 +354,7 @@ def show_company_settings():
             )
 
         with col4:
-            sgst_rate = st.number_input(
+            sgst_rate = number_input(
                 "SGST Rate (%)",
                 min_value=0.0,
                 max_value=100.0,
@@ -372,7 +374,7 @@ def show_company_settings():
 
         sub_header("Invoice Settings","","📄")
 
-        invoice_prefix = st.text_input(
+        invoice_prefix = text_input(
             "Invoice Prefix",
             value=get_value(
                 settings,
@@ -396,7 +398,7 @@ def show_company_settings():
 
         with col1:
 
-            bank_name = st.text_input(
+            bank_name = text_input(
                 "Bank Name",
                 value=get_value(
                     settings,
@@ -406,7 +408,7 @@ def show_company_settings():
 
         with col2:
 
-            account_holder_name = st.text_input(
+            account_holder_name = text_input(
                 "Account Holder Name",
                 value=get_value(
                     settings,
@@ -418,7 +420,7 @@ def show_company_settings():
 
         with col1:
 
-            account_number = st.text_input(
+            account_number = text_input(
                 "Account Number",
                 value=get_value(
                     settings,
@@ -429,7 +431,7 @@ def show_company_settings():
 
         with col2:
 
-            ifsc_code = st.text_input(
+            ifsc_code = text_input(
                 "IFSC Code",
                 value=get_value(
                     settings,
@@ -437,7 +439,7 @@ def show_company_settings():
                 )
             )
 
-        branch_name = st.text_input(
+        branch_name = text_input(
             "Branch Name",
             value=get_value(
                 settings,

@@ -1,6 +1,11 @@
 import streamlit as st
 
 from datetime import date, timedelta
+from components.text_input import text_input
+from components.number_input import number_input
+from components.select_box import select_box
+from components.date_input import date_input
+from components.text_area import text_area
 
 from database.connection import SessionLocal
 from database.models import Site
@@ -107,7 +112,7 @@ def show_create_bill():
         # SITE
         # ==============================================
 
-        selected_site = st.selectbox(
+        selected_site = select_box(
             "🏢 Select Site *",
             list(site_options.keys())
         )
@@ -125,7 +130,7 @@ def show_create_bill():
 
         with col1:
 
-            bill_type = st.selectbox(
+            bill_type = select_box(
                 "📄 Bill Type *",
                 [
                     "Non-GST",
@@ -136,7 +141,7 @@ def show_create_bill():
 
         with col2:
 
-            billing_date = st.date_input(
+            billing_date = date_input(
                 "📅 Billing Month *",
                 value=date.today()
             )
@@ -150,7 +155,7 @@ def show_create_bill():
 
         with col1:
 
-            subtotal = st.number_input(
+            subtotal = number_input(
                 "💰 Service Amount (₹) *",
                 min_value=0.0,
                 value=0.0,
@@ -160,7 +165,7 @@ def show_create_bill():
 
         with col2:
 
-            gst_percentage = st.number_input(
+            gst_percentage = number_input(
                 "GST Percentage",
                 min_value=0.0,
                 max_value=100.0,
@@ -176,7 +181,7 @@ def show_create_bill():
         # DUE DATE
         # ==============================================
 
-        due_date = st.date_input(
+        due_date = date_input(
             "⏰ Payment Due Date",
             value=(
                 date.today()
@@ -202,7 +207,7 @@ def show_create_bill():
         # NOTES
         # ==============================================
 
-        notes = st.text_area(
+        notes = text_area(
             "📝 Notes / Description",
             placeholder=(
                 "Example: Security guard service charges "
@@ -455,7 +460,7 @@ def show_record_payment():
         payment_options[label] = payment
 
 
-    selected_label = st.selectbox(
+    selected_label = select_box(
         "Select Invoice",
         list(payment_options.keys())
     )
@@ -523,7 +528,7 @@ def show_record_payment():
 
         with col1:
 
-            amount = st.number_input(
+            amount = number_input(
                 "Payment Amount (₹) *",
                 min_value=0.01,
                 max_value=float(remaining_amount),
@@ -534,7 +539,7 @@ def show_record_payment():
 
         with col2:
 
-            paid_date = st.date_input(
+            paid_date = date_input(
                 "Payment Date *",
                 value=date.today()
             )
@@ -545,7 +550,7 @@ def show_record_payment():
 
         with col1:
 
-            payment_mode = st.selectbox(
+            payment_mode = select_box(
                 "Payment Mode *",
                 [
                     "Cash",
@@ -560,12 +565,12 @@ def show_record_payment():
 
         with col2:
 
-            transaction_reference = st.text_input(
+            transaction_reference = text_input(
                 "Transaction / Reference Number"
             )
 
 
-        remarks = st.text_area(
+        remarks = text_area(
             "Remarks"
         )
 

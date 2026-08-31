@@ -21,6 +21,10 @@ from services.guard_service import get_all_guards
 
 from components.page_header import page_header
 from components.sub_header import sub_header
+from components.text_input import text_input
+from components.number_input import number_input
+from components.select_box import select_box
+from components.text_area import text_area
 # ==================================================
 # HELPER FUNCTIONS
 # ==================================================
@@ -293,7 +297,7 @@ def show_sites():
                         current_index = index
                         break
 
-                selected_site_label = st.selectbox(
+                selected_site_label = select_box(
                     "📊 View Site Metrics",
                     options=label_list,
                     index=current_index,
@@ -437,14 +441,14 @@ def show_sites():
 
             with col1:
 
-                name = st.text_input(
+                name = text_input(
                     "Site Name *",
                     placeholder="Enter site name"
                 )
 
             with col2:
 
-                selected_client = st.selectbox(
+                selected_client = select_box(
                     "Client",
                     options=list(client_options.keys())
                 )
@@ -459,14 +463,14 @@ def show_sites():
 
             with col1:
 
-                contact_person = st.text_input(
+                contact_person = text_input(
                     "Contact Person",
                     placeholder="Enter contact person name"
                 )
 
             with col2:
 
-                contact_phone = st.text_input(
+                contact_phone = text_input(
                     "Contact Phone",
                     max_chars=10,
                     placeholder="10 digit phone number"
@@ -474,7 +478,7 @@ def show_sites():
 
             with col3:
 
-                email = st.text_input(
+                email = text_input(
                     "Email",
                     placeholder="example@email.com"
                 )
@@ -485,7 +489,7 @@ def show_sites():
 
             sub_header("Site Address","","📍")
 
-            address = st.text_area(
+            address = text_area(
                 "Address",
                 placeholder="Enter complete site address"
             )
@@ -494,15 +498,15 @@ def show_sites():
 
             with col1:
 
-                city = st.text_input("City")
+                city = text_input("City")
 
             with col2:
 
-                state = st.text_input("State")
+                state = text_input("State")
 
             with col3:
 
-                pincode = st.text_input(
+                pincode = text_input(
                     "PIN Code",
                     max_chars=6,
                     placeholder="6 digit PIN code"
@@ -519,7 +523,7 @@ def show_sites():
 
             with col1:
 
-                guards_required = st.number_input(
+                guards_required = number_input(
                     "Number of Guards Required *",
                     min_value=1,
                     value=1,
@@ -528,7 +532,7 @@ def show_sites():
 
             with col2:
 
-                guard_rate = st.number_input(
+                guard_rate = number_input(
                     "Monthly Rate Per Guard (₹)",
                     min_value=0.0,
                     value=0.0,
@@ -542,7 +546,7 @@ def show_sites():
 
             with col3:
 
-                status = st.selectbox(
+                status = select_box(
                     "Status",
                     ["Active", "Inactive"]
                 )
@@ -658,7 +662,7 @@ def show_sites():
 
                 site_options[label] = site.id
 
-            selected_site_label = st.selectbox(
+            selected_site_label = select_box(
                 "Select Site",
                 options=list(site_options.keys()),
                 key="manage_site_selector"
@@ -780,14 +784,14 @@ def show_sites():
 
                     with col1:
 
-                        edit_name = st.text_input(
+                        edit_name = text_input(
                             "Site Name *",
                             value=site.name or ""
                         )
 
                     with col2:
 
-                        edit_selected_client = st.selectbox(
+                        edit_selected_client = select_box(
                             "Client",
                             options=client_labels,
                             index=current_client_index
@@ -802,14 +806,14 @@ def show_sites():
 
                     with col1:
 
-                        edit_contact_person = st.text_input(
+                        edit_contact_person = text_input(
                             "Contact Person",
                             value=site.contact_person or ""
                         )
 
                     with col2:
 
-                        edit_contact_phone = st.text_input(
+                        edit_contact_phone = text_input(
                             "Contact Phone",
                             value=site.contact_phone or "",
                             max_chars=10
@@ -817,7 +821,7 @@ def show_sites():
 
                     with col3:
 
-                        edit_email = st.text_input(
+                        edit_email = text_input(
                             "Email",
                             value=site.email or ""
                         )
@@ -826,7 +830,7 @@ def show_sites():
 
                     sub_header("Site Address","","📍")
 
-                    edit_address = st.text_area(
+                    edit_address = text_area(
                         "Address",
                         value=site.address or ""
                     )
@@ -835,21 +839,21 @@ def show_sites():
 
                     with col1:
 
-                        edit_city = st.text_input(
+                        edit_city = text_input(
                             "City",
                             value=site.city or ""
                         )
 
                     with col2:
 
-                        edit_state = st.text_input(
+                        edit_state = text_input(
                             "State",
                             value=site.state or ""
                         )
 
                     with col3:
 
-                        edit_pincode = st.text_input(
+                        edit_pincode = text_input(
                             "PIN Code",
                             value=site.pincode or "",
                             max_chars=6
@@ -864,7 +868,7 @@ def show_sites():
 
                     with col1:
 
-                        edit_guards_required = st.number_input(
+                        edit_guards_required = number_input(
                             "Number of Guards Required *",
                             min_value=1,
                             value=max(
@@ -878,7 +882,7 @@ def show_sites():
 
                     with col2:
 
-                        edit_guard_rate = st.number_input(
+                        edit_guard_rate = number_input(
                             "Monthly Rate Per Guard (₹)",
                             min_value=0.0,
                             value=float(
@@ -901,7 +905,7 @@ def show_sites():
                             else 0
                         )
 
-                        edit_status = st.selectbox(
+                        edit_status = select_box(
                             "Status",
                             status_options,
                             index=current_status_index
@@ -1102,7 +1106,7 @@ def show_site_guard_assignment(site):
                 for guard in available_guards
             }
 
-            selected_guard_label = st.selectbox(
+            selected_guard_label = select_box(
                 "Select Guard",
                 list(guard_options.keys()),
                 key=f"assign_guard_{site.id}"

@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 
 from utils.constants import UserRole
+from components.text_input import text_input
+from components.select_box import select_box
 
 from services.user_service import (
     get_all_users,
@@ -85,7 +87,7 @@ def show_users():
             # USERNAME
             # ----------------------------------------------
 
-            username = st.text_input(
+            username = text_input(
                 "Username"
             )
 
@@ -93,7 +95,7 @@ def show_users():
             # EMAIL
             # ----------------------------------------------
 
-            email = st.text_input(
+            email = text_input(
                 "Email"
             )
 
@@ -101,7 +103,7 @@ def show_users():
             # PHONE
             # ----------------------------------------------
 
-            phone = st.text_input(
+            phone = text_input(
                 "Phone"
             )
 
@@ -109,7 +111,7 @@ def show_users():
             # ROLE
             # ----------------------------------------------
 
-            role = st.selectbox(
+            role = select_box(
                 "Role",
                 [
                     UserRole.ADMIN_MANAGER.value,
@@ -123,12 +125,12 @@ def show_users():
             # PASSWORD
             # ----------------------------------------------
 
-            password = st.text_input(
+            password = text_input(
                 "Password",
                 type="password"
             )
 
-            confirm_password = st.text_input(
+            confirm_password = text_input(
                 "Confirm Password",
                 type="password"
             )
@@ -211,7 +213,7 @@ def show_users():
                     for user in users
                 }
 
-                selected_label = st.selectbox(
+                selected_label = select_box(
                     "Select User",
                     list(user_options.keys()),
                     key="manage_user_select"
@@ -235,17 +237,17 @@ def show_users():
                     f"edit_user_form_{selected_user.id}"
                 ):
 
-                    edit_username = st.text_input(
+                    edit_username = text_input(
                         "Username",
                         value=selected_user.username
                     )
 
-                    edit_email = st.text_input(
+                    edit_email = text_input(
                         "Email",
                         value=selected_user.email or ""
                     )
 
-                    edit_phone = st.text_input(
+                    edit_phone = text_input(
                         "Phone",
                         value=selected_user.phone or ""
                     )
@@ -302,12 +304,12 @@ def show_users():
                     f"reset_password_form_{selected_user.id}"
                 ):
 
-                    new_password = st.text_input(
+                    new_password = text_input(
                         "New Password",
                         type="password"
                     )
 
-                    confirm_new_password = st.text_input(
+                    confirm_new_password = text_input(
                         "Confirm New Password",
                         type="password"
                     )
@@ -378,7 +380,7 @@ def show_users():
                             "🔒 Super Admin role is protected and cannot be changed."
                         )
 
-                        st.selectbox(
+                        select_box(
                             "User Role",
                             [selected_user.role],
                             disabled=True,
@@ -399,7 +401,7 @@ def show_users():
                             else 0
                         )
 
-                        new_role = st.selectbox(
+                        new_role = select_box(
                             "User Role",
                             role_values,
                             index=current_role_index,

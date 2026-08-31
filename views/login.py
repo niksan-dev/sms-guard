@@ -6,6 +6,8 @@ from utils.auth import (
 )
 import utils.constants as constants
 from utils.constants import UserRole
+from components.text_input import text_input
+from components.select_box import select_box
 
 from services.auth_session_service import (
     create_login_session
@@ -129,12 +131,12 @@ def show_login_page():
 
             with st.form("login_form"):
 
-                username = st.text_input(
+                username = text_input(
                     "Username",
                     placeholder="Enter your username"
                 )
 
-                password = st.text_input(
+                password = text_input(
                     "Password",
                     type="password",
                     placeholder="Enter your password"
@@ -226,7 +228,7 @@ def show_login_page():
 
             with st.form("signup_form"):
 
-                new_role = st.selectbox(
+                new_role = select_box(
                     "Register As",
                     [
                         UserRole.CLIENT.value,
@@ -234,18 +236,18 @@ def show_login_page():
                     ]
                 )
 
-                new_username = st.text_input(
+                new_username = text_input(
                     "Username",
                     placeholder="Choose a username"
                 )
 
-                new_password = st.text_input(
+                new_password = text_input(
                     "Password",
                     type="password",
                     placeholder="Create a password"
                 )
 
-                confirm_password = st.text_input(
+                confirm_password = text_input(
                     "Confirm Password",
                     type="password",
                     placeholder="Confirm your password"

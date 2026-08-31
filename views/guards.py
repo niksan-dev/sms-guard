@@ -5,6 +5,11 @@ from datetime import date
 
 from components.page_header import page_header
 from components.sub_header import sub_header
+from components.text_input import text_input
+from components.number_input import number_input
+from components.select_box import select_box
+from components.date_input import date_input
+from components.text_area import text_area
 
 from services.guard_service import (
     get_all_guards,
@@ -362,18 +367,18 @@ def show_guards():
 
             with col1:
 
-                name = st.text_input(
+                name = text_input(
                     "Full Name *",
                     placeholder="Enter full name"
                 )
 
-                phone = st.text_input(
+                phone = text_input(
                     "Phone Number *",
                     max_chars=10,
                     placeholder="Enter 10 digit phone number"
                 )
 
-                st.text_input(
+                text_input(
                     "Employee ID",
                     value=next_employee_id,
                     disabled=True
@@ -381,19 +386,19 @@ def show_guards():
 
             with col2:
 
-                email = st.text_input(
+                email = text_input(
                     "Email",
                     placeholder="Enter email address"
                 )
 
-                aadhaar_number = st.text_input(
+                aadhaar_number = text_input(
                     "Aadhaar Number *",
                     type="password",
                     max_chars=12,
                     placeholder="Enter 12 digit Aadhaar number"
                 )
 
-                emergency_contact = st.text_input(
+                emergency_contact = text_input(
                     "Emergency Contact",
                     max_chars=10,
                     placeholder="Enter emergency contact number"
@@ -407,12 +412,12 @@ def show_guards():
                 "### 🏠 Address"
             )
 
-            address = st.text_area(
+            address = text_area(
                 "Full Address",
                 placeholder="Enter complete residential address"
             )
 
-            pincode = st.text_input(
+            pincode = text_input(
                 "PIN Code *",
                 max_chars=6,
                 placeholder="Enter 6 digit PIN code"
@@ -430,14 +435,14 @@ def show_guards():
 
             with col1:
 
-                joining_date = st.date_input(
+                joining_date = date_input(
                     "Joining Date *",
                     value=date.today()
                 )
 
             with col2:
 
-                monthly_salary = st.number_input(
+                monthly_salary = number_input(
                     "Monthly Salary (₹) *",
                     min_value=0.0,
                     value=0.0,
@@ -450,7 +455,7 @@ def show_guards():
 
             with col3:
 
-                status = st.selectbox(
+                status = select_box(
                     "Status",
                     [
                         "Active",
@@ -466,7 +471,7 @@ def show_guards():
                 "### 🔐 Login Account"
             )
 
-            selected_user_label = st.selectbox(
+            selected_user_label = select_box(
                 "Link Security Guard User Account",
                 list(user_options.keys())
             )
@@ -642,7 +647,7 @@ def show_guards():
                     f"{guard.employee_id} - {guard.name}"
                 ] = guard.id
 
-            selected_guard_label = st.selectbox(
+            selected_guard_label = select_box(
                 "Select Guard",
                 list(guard_options.keys()),
                 key="manage_guard_selector"
@@ -789,18 +794,18 @@ def show_guards():
 
                     with col1:
 
-                        edit_name = st.text_input(
+                        edit_name = text_input(
                             "Full Name *",
                             value=guard.name or ""
                         )
 
-                        edit_phone = st.text_input(
+                        edit_phone = text_input(
                             "Phone Number *",
                             value=guard.phone or "",
                             max_chars=10
                         )
 
-                        st.text_input(
+                        text_input(
                             "Employee ID",
                             value=guard.employee_id,
                             disabled=True
@@ -808,19 +813,19 @@ def show_guards():
 
                     with col2:
 
-                        edit_email = st.text_input(
+                        edit_email = text_input(
                             "Email",
                             value=guard.email or ""
                         )
 
-                        edit_aadhaar = st.text_input(
+                        edit_aadhaar = text_input(
                             "Aadhaar Number *",
                             value=guard.aadhaar_number or "",
                             type="password",
                             max_chars=12
                         )
 
-                        edit_emergency_contact = st.text_input(
+                        edit_emergency_contact = text_input(
                             "Emergency Contact",
                             value=(
                                 guard.emergency_contact
@@ -837,12 +842,12 @@ def show_guards():
                         "#### 🏠 Address"
                     )
 
-                    edit_address = st.text_area(
+                    edit_address = text_area(
                         "Full Address",
                         value=guard.address or ""
                     )
 
-                    edit_pincode = st.text_input(
+                    edit_pincode = text_input(
                         "PIN Code *",
                         value=guard.pincode or "",
                         max_chars=6
@@ -860,14 +865,14 @@ def show_guards():
 
                     with col1:
 
-                        edit_joining_date = st.date_input(
+                        edit_joining_date = date_input(
                             "Joining Date *",
                             value=guard.joining_date
                         )
 
                     with col2:
 
-                        edit_monthly_salary = st.number_input(
+                        edit_monthly_salary = number_input(
                             "Monthly Salary (₹) *",
                             min_value=0.0,
                             value=float(
@@ -904,7 +909,7 @@ def show_guards():
                             else 0
                         )
 
-                        edit_status = st.selectbox(
+                        edit_status = select_box(
                             "Status",
                             status_options,
                             index=status_index
@@ -1089,7 +1094,7 @@ def show_guard_site_assignment(guard):
             for site in available_sites
         }
 
-        selected_site_label = st.selectbox(
+        selected_site_label = select_box(
             "Select Site",
             list(site_options.keys()),
             key=f"assign_site_{guard.id}"

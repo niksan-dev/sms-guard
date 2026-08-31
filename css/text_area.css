@@ -1,0 +1,247 @@
+/* =========================================================
+   COMMON TEXT AREA
+   ========================================================= */
+
+div[data-testid="stTextArea"] {
+    width: 100% !important;
+
+    margin-bottom: 10px !important;
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+div[data-testid="stTextArea"] label {
+    color: #063552 !important;
+
+    font-size: 14px !important;
+
+    font-weight: 600 !important;
+
+    line-height: 1.4 !important;
+
+    margin-bottom: 5px !important;
+}
+
+
+/* =========================================================
+   TEXT AREA OUTER CONTAINER
+   ========================================================= */
+
+div[data-testid="stTextArea"] div[data-baseweb="textarea"] {
+
+    width: 100% !important;
+
+    box-sizing: border-box !important;
+
+    background: #FFFFFF !important;
+
+    border: 1px solid #B8C4CE !important;
+
+    border-radius: 8px !important;
+
+    overflow: hidden !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.08) !important;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease !important;
+}
+
+
+/* =========================================================
+   TEXT AREA INNER CONTAINER
+   ========================================================= */
+
+div[data-testid="stTextArea"] div[data-baseweb="base-input"] {
+
+    width: 100% !important;
+
+    background: transparent !important;
+
+    border: none !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+
+    overflow: hidden !important;
+}
+
+
+/* =========================================================
+   ACTUAL TEXTAREA
+   ========================================================= */
+
+div[data-testid="stTextArea"] textarea {
+
+    width: 100% !important;
+
+    min-height: 100px !important;
+
+    box-sizing: border-box !important;
+
+    padding: 10px 12px !important;
+
+    background: #FFFFFF !important;
+
+    color: #17202A !important;
+
+    font-size: 14px !important;
+
+    font-weight: 400 !important;
+
+    line-height: 1.5 !important;
+
+    border: none !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+
+    resize: vertical !important;
+}
+
+
+/* =========================================================
+   NORMAL
+   ========================================================= */
+
+div[data-testid="stTextArea"] div[data-baseweb="textarea"] {
+
+    border-top: 1px solid #B8C4CE !important;
+
+    border-right: 1px solid #B8C4CE !important;
+
+    border-bottom: 1px solid #B8C4CE !important;
+
+    border-left: 1px solid #B8C4CE !important;
+
+    border-radius: 8px !important;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+div[data-testid="stTextArea"] div[data-baseweb="textarea"]:hover {
+
+    border-top: 1px solid #7F95A5 !important;
+
+    border-right: 1px solid #7F95A5 !important;
+
+    border-bottom: 1px solid #7F95A5 !important;
+
+    border-left: 1px solid #7F95A5 !important;
+
+    border-radius: 8px !important;
+
+    box-shadow:
+        0 2px 6px rgba(6, 53, 82, 0.11) !important;
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+div[data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within {
+
+    border-top: 1px solid #063552 !important;
+
+    border-right: 1px solid #063552 !important;
+
+    border-bottom: 1px solid #063552 !important;
+
+    border-left: 1px solid #063552 !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.10),
+        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+}
+
+
+/* =========================================================
+   REMOVE NATIVE FOCUS STYLING
+   ========================================================= */
+
+div[data-testid="stTextArea"] textarea:focus,
+div[data-testid="stTextArea"] textarea:focus-visible,
+div[data-testid="stTextArea"] textarea:active {
+
+    border: none !important;
+
+    border-bottom: none !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+div[data-testid="stTextArea"] textarea::placeholder {
+
+    color: #98A2B3 !important;
+
+    opacity: 1 !important;
+}
+
+
+/* =========================================================
+   DISABLED
+   ========================================================= */
+
+div[data-testid="stTextArea"] div[data-baseweb="textarea"]:has(textarea:disabled) {
+
+    background: #F1F4F6 !important;
+
+    border-color: #D5DDE3 !important;
+
+    box-shadow: none !important;
+}
+
+
+div[data-testid="stTextArea"] textarea:disabled {
+
+    background: #F1F4F6 !important;
+
+    color: #98A2B3 !important;
+
+    cursor: not-allowed !important;
+
+    resize: none !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    div[data-testid="stTextArea"] textarea {
+
+        font-size: 14px !important;
+
+        padding: 9px 11px !important;
+    }
+}

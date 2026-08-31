@@ -1,0 +1,189 @@
+/* =========================================================
+   COMMON SELECT BOX
+   ========================================================= */
+
+div[data-testid="stSelectbox"] {
+    width: 100% !important;
+    margin-bottom: 10px !important;
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+div[data-testid="stSelectbox"] label {
+    color: #063552 !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+
+    line-height: 1.4 !important;
+
+    margin-bottom: 5px !important;
+}
+
+
+/* =========================================================
+   SELECT CONTAINER
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+    width: 100% !important;
+}
+
+
+/* =========================================================
+   SELECT BOX
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"]>div {
+
+    width: 100% !important;
+
+    min-height: 42px !important;
+    height: 42px !important;
+
+    box-sizing: border-box !important;
+
+    background: #FFFFFF !important;
+
+    border: 1px solid #B8C4CE !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.08) !important;
+
+    overflow: hidden !important;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease !important;
+}
+
+
+/* =========================================================
+   NORMAL
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"]>div {
+
+    border-top: 1px solid #B8C4CE !important;
+    border-right: 1px solid #B8C4CE !important;
+    border-bottom: 1px solid #B8C4CE !important;
+    border-left: 1px solid #B8C4CE !important;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"]>div:hover {
+
+    border-top: 1px solid #7F95A5 !important;
+    border-right: 1px solid #7F95A5 !important;
+    border-bottom: 1px solid #7F95A5 !important;
+    border-left: 1px solid #7F95A5 !important;
+
+    border-radius: 8px !important;
+
+    box-shadow:
+        0 2px 6px rgba(6, 53, 82, 0.11) !important;
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"]>div:focus-within {
+
+    border-top: 1px solid #063552 !important;
+    border-right: 1px solid #063552 !important;
+    border-bottom: 1px solid #063552 !important;
+    border-left: 1px solid #063552 !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.10),
+        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+}
+
+
+/* =========================================================
+   REMOVE INNER FOCUS BORDERS
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"] *,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] *:focus,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] *:focus-visible {
+
+    outline: none !important;
+
+    border-bottom: none !important;
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   SELECTED TEXT
+   ========================================================= */
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"] input {
+
+    color: #17202A !important;
+
+    font-size: 14px !important;
+
+    background: transparent !important;
+
+    border: none !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   ARROW
+   ========================================================= */
+
+div[data-testid="stSelectbox"] svg {
+    color: #063552 !important;
+}
+
+
+/* =========================================================
+   DROPDOWN
+   ========================================================= */
+
+div[data-baseweb="popover"] {
+
+    border-radius: 8px !important;
+
+    box-shadow:
+        0 6px 18px rgba(6, 53, 82, 0.15) !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    div[data-testid="stSelectbox"] div[data-baseweb="select"]>div {
+
+        height: 42px !important;
+        min-height: 42px !important;
+    }
+}

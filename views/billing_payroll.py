@@ -35,7 +35,9 @@ from services.site_invoice_template_service import (
 
 from components.page_header import page_header
 from components.sub_header import sub_header
-
+from components.text_input import text_input
+from components.number_input import number_input
+from components.select_box import select_box
 # ============================================================
 # HELPERS
 # ============================================================
@@ -188,7 +190,7 @@ def show_site_bills():
 
     with col1:
 
-        selected_month = st.selectbox(
+        selected_month = select_box(
             "Billing Month",
             options=list(range(1, 13)),
             index=date.today().month - 1,
@@ -198,7 +200,7 @@ def show_site_bills():
 
     with col2:
 
-        selected_year = st.number_input(
+        selected_year = number_input(
             "Billing Year",
             min_value=2020,
             max_value=2100,
@@ -224,7 +226,7 @@ def show_site_bills():
 
     sub_header("Generate Site Bill","","📄")
 
-    selected_site_label = st.selectbox(
+    selected_site_label = select_box(
         "Select Site",
         options=list(site_map.keys()),
         key="billing_site_selection"
@@ -255,7 +257,7 @@ def show_site_bills():
         else 0
     )
 
-    selected_template_name = st.selectbox(
+    selected_template_name = select_box(
         "Invoice Template",
         options=template_names,
         index=default_index,
@@ -541,7 +543,7 @@ def show_site_bill_actions(
     if st.session_state.get("email_site_bill_id") == bill.id:
         st.markdown("### 📧 Send Site Bill")
 
-        recipient_email = st.text_input(
+        recipient_email = text_input(
             "Site Billing Email",
             value=getattr(bill.site, "email", "") or "",
             key=f"site_email_{bill.id}",
@@ -702,7 +704,7 @@ def show_guard_salary():
 
     with col1:
 
-        selected_month = st.selectbox(
+        selected_month = select_box(
             "Salary Month",
             options=list(range(1, 13)),
             index=date.today().month - 1,
@@ -712,7 +714,7 @@ def show_guard_salary():
 
     with col2:
 
-        selected_year = st.number_input(
+        selected_year = number_input(
             "Salary Year",
             min_value=2020,
             max_value=2100,
@@ -738,7 +740,7 @@ def show_guard_salary():
 
     st.markdown("### Generate Salary Slip")
 
-    selected_guard_label = st.selectbox(
+    selected_guard_label = select_box(
         "Select Guard",
         options=list(guard_map.keys()),
         key="billing_guard_selection"

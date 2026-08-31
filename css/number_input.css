@@ -1,0 +1,383 @@
+/* =========================================================
+   COMMON NUMBER INPUT
+   ========================================================= */
+
+div[data-testid="stNumberInput"] {
+    width: 100% !important;
+
+    margin-bottom: 10px !important;
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+div[data-testid="stNumberInput"] label {
+    color: #063552 !important;
+
+    font-size: 14px !important;
+
+    font-weight: 600 !important;
+
+    line-height: 1.4 !important;
+
+    margin-bottom: 5px !important;
+}
+
+
+/* =========================================================
+   BASEWEB INPUT
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+
+    width: 100% !important;
+
+    min-height: 42px !important;
+
+    box-sizing: border-box !important;
+
+    background: #FFFFFF !important;
+
+    border: 1px solid #B8C4CE !important;
+
+    border-radius: 8px !important;
+
+    overflow: hidden !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.08) !important;
+
+    outline: none !important;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease !important;
+}
+
+
+/* =========================================================
+   INNER BASE INPUT
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="base-input"] {
+
+    width: 100% !important;
+
+    background: transparent !important;
+
+    border: 0 !important;
+
+    border-radius: 8px !important;
+
+    overflow: hidden !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   ACTUAL INPUT
+   ========================================================= */
+
+div[data-testid="stNumberInput"] input {
+
+    width: 100% !important;
+
+    height: 40px !important;
+
+    box-sizing: border-box !important;
+
+    padding: 8px 12px !important;
+
+    background: #FFFFFF !important;
+
+    color: #17202A !important;
+
+    font-size: 14px !important;
+
+    font-weight: 400 !important;
+
+    border: 0 !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+
+    appearance: none !important;
+
+    -webkit-appearance: none !important;
+}
+
+
+/* =========================================================
+   NORMAL
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+
+    border-color: #B8C4CE !important;
+
+    border-radius: 8px !important;
+
+    box-shadow:
+        0 2px 5px rgba(6, 53, 82, 0.08) !important;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:hover {
+
+    border-color: #7F95A5 !important;
+
+    border-radius: 8px !important;
+
+    box-shadow:
+        0 2px 6px rgba(6, 53, 82, 0.11) !important;
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
+
+    border-color: #063552 !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.10),
+        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+}
+
+
+/* =========================================================
+   ACTUAL INPUT FOCUS
+   ========================================================= */
+
+div[data-testid="stNumberInput"] input:focus,
+div[data-testid="stNumberInput"] input:active {
+
+    border: 0 !important;
+
+    outline: none !important;
+
+    border-radius: 8px !important;
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+div[data-testid="stNumberInput"] input::placeholder {
+
+    color: #98A2B3 !important;
+
+    opacity: 1 !important;
+}
+
+
+/* =========================================================
+   STEPPER BUTTONS
+   ========================================================= */
+
+div[data-testid="stNumberInput"] button {
+
+    color: #063552 !important;
+
+    background: transparent !important;
+
+    border: none !important;
+
+    box-shadow: none !important;
+}
+
+
+div[data-testid="stNumberInput"] button:hover {
+
+    background: #E8EEF2 !important;
+
+    color: #063552 !important;
+}
+
+
+/* =========================================================
+   DISABLED
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:has(input:disabled) {
+
+    background: #F1F4F6 !important;
+
+    border-color: #D5DDE3 !important;
+
+    box-shadow: none !important;
+}
+
+
+div[data-testid="stNumberInput"] input:disabled {
+
+    background: #F1F4F6 !important;
+
+    color: #98A2B3 !important;
+
+    cursor: not-allowed !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    div[data-testid="stNumberInput"] input {
+
+        font-size: 14px !important;
+
+        padding-left: 11px !important;
+
+        padding-right: 11px !important;
+    }
+}
+
+
+/* =========================================================
+   REMOVE STREAMLIT FOCUS / ACTIVE BOTTOM LINE
+   ========================================================= */
+
+div[data-testid="stNumberInput"] *,
+div[data-testid="stNumberInput"] *:focus,
+div[data-testid="stNumberInput"] *:focus-visible,
+div[data-testid="stNumberInput"] *:active {
+
+    outline: none !important;
+}
+
+
+/* =========================================================
+   FORCE OUTER BORDER ON ALL SIDES
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+
+    border-top: 1px solid #B8C4CE !important;
+    border-right: 1px solid #B8C4CE !important;
+    border-bottom: 1px solid #B8C4CE !important;
+    border-left: 1px solid #B8C4CE !important;
+
+    border-radius: 8px !important;
+}
+
+
+/* =========================================================
+   FOCUSED NUMBER INPUT
+   ========================================================= */
+
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
+
+    border-top: 1px solid #063552 !important;
+    border-right: 1px solid #063552 !important;
+    border-bottom: 1px solid #063552 !important;
+    border-left: 1px solid #063552 !important;
+
+    border-radius: 8px !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.10),
+        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+}
+
+
+/* =========================================================
+   REMOVE INPUT BOTTOM BORDER
+   ========================================================= */
+
+div[data-testid="stNumberInput"] input {
+
+    border: none !important;
+
+    border-bottom: none !important;
+
+    outline: none !important;
+
+    box-shadow: none !important;
+}
+
+/* =========================================================
+   NUMBER INPUT — CLEAN FORM FOCUS
+   ========================================================= */
+
+/* Remove Streamlit's native focus styling */
+div[data-testid="stNumberInput"] input:focus,
+div[data-testid="stNumberInput"] input:focus-visible,
+div[data-testid="stNumberInput"] input:active {
+    outline: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+
+/* Keep ONE clean border around the complete control */
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
+
+    border: 1px solid #063552 !important;
+
+    border-radius: 8px !important;
+
+    outline: none !important;
+
+    box-shadow:
+        0 0 0 2px rgba(6, 53, 82, 0.10),
+        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+}
+
+
+/* Explicitly prevent BaseWeb bottom border */
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
+
+    border-top: 1px solid #063552 !important;
+    border-right: 1px solid #063552 !important;
+    border-bottom: 1px solid #063552 !important;
+    border-left: 1px solid #063552 !important;
+}
+
+
+/* Remove focus styling from BaseWeb internals */
+div[data-testid="stNumberInput"] div[data-baseweb="input"] *,
+div[data-testid="stNumberInput"] div[data-baseweb="input"] *:focus,
+div[data-testid="stNumberInput"] div[data-baseweb="input"] *:focus-visible {
+
+    outline: none !important;
+}
+
+
+/* =========================================================
+   HIDE "PRESS ENTER TO SUBMIT FORM"
+   ========================================================= */
+
+/*
+   Streamlit displays this tooltip when a widget inside
+   st.form receives focus.
+
+   Hide the tooltip so the UI remains clean.
+*/
+
+div[data-baseweb="tooltip"] {
+    display: none !important;
+}

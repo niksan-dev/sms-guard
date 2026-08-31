@@ -16,6 +16,11 @@ from services.guard_daily_work_service import (
 )
 from components.page_header import page_header
 from components.sub_header import sub_header
+from components.text_input import text_input
+from components.number_input import number_input
+from components.select_box import select_box
+from components.date_input import date_input
+from components.text_area import text_area
 
 from services.guard_advance_service import (
     create_guard_advance,
@@ -503,7 +508,7 @@ def show_guard_work():
 
 def show_record_work_tab():
 
-    selected_date = st.date_input(
+    selected_date = date_input(
         "Work Date",
         value=date.today(),
         key="work_date"
@@ -544,7 +549,7 @@ def show_record_work_tab():
 
     with col1:
 
-        selected_guard_label = st.selectbox(
+        selected_guard_label = select_box(
             "Select Guard",
             options=list(guard_map.keys()),
             key="selected_guard"
@@ -556,7 +561,7 @@ def show_record_work_tab():
 
     with col2:
 
-        selected_site_label = st.selectbox(
+        selected_site_label = select_box(
             "Select Site",
             options=list(site_map.keys()),
             key="selected_site"
@@ -580,7 +585,7 @@ def show_record_work_tab():
 
     with col2:
 
-        status = st.selectbox(
+        status = select_box(
             "Status",
             options=[
                 "Present",
@@ -815,7 +820,7 @@ def show_daily_work_records(selected_date):
 
     with col1:
 
-        selected_delete_label = st.selectbox(
+        selected_delete_label = select_box(
             "Select shift to delete",
             options=list(
                 delete_options.keys()
@@ -875,7 +880,7 @@ def show_guard_attendance_tab():
 
     with daily_tab:
 
-        selected_date = st.date_input(
+        selected_date = date_input(
             "Select Date",
             value=date.today(),
             key="guard_daily_attendance_date"
@@ -1131,7 +1136,7 @@ def show_guard_attendance_tab():
 
         with col1:
 
-            selected_month = st.selectbox(
+            selected_month = select_box(
                 "Select Month",
                 options=list(
                     range(1, 13)
@@ -1147,7 +1152,7 @@ def show_guard_attendance_tab():
 
         with col2:
 
-            selected_year = st.number_input(
+            selected_year = number_input(
                 "Select Year",
                 min_value=2020,
                 max_value=2100,
@@ -1484,7 +1489,7 @@ def show_site_attendance_tab():
 
     with daily_tab:
 
-        selected_date = st.date_input(
+        selected_date = date_input(
             "Select Date",
             value=date.today(),
             key="site_daily_attendance_date"
@@ -1696,7 +1701,7 @@ def show_site_attendance_tab():
 
         with col1:
 
-            selected_month = st.selectbox(
+            selected_month = select_box(
                 "Select Month",
                 options=list(
                     range(1, 13)
@@ -1712,7 +1717,7 @@ def show_site_attendance_tab():
 
         with col2:
 
-            selected_year = st.number_input(
+            selected_year = number_input(
                 "Select Year",
                 min_value=2020,
                 max_value=2100,
@@ -2008,7 +2013,7 @@ def show_guard_advances_tab():
 
     with col1:
 
-        selected_guard_label = st.selectbox(
+        selected_guard_label = select_box(
             "Select Guard",
             options=list(guard_map.keys()),
             key="advance_guard"
@@ -2020,7 +2025,7 @@ def show_guard_advances_tab():
 
     with col2:
 
-        category = st.selectbox(
+        category = select_box(
             "Category",
             options=[
                 "Uniform",
@@ -2037,7 +2042,7 @@ def show_guard_advances_tab():
 
     with col1:
 
-        amount = st.number_input(
+        amount = number_input(
             "Amount",
             min_value=0.0,
             value=0.0,
@@ -2047,13 +2052,13 @@ def show_guard_advances_tab():
 
     with col2:
 
-        record_date = st.date_input(
+        record_date = date_input(
             "Date Given",
             value=date.today(),
             key="advance_record_date"
         )
 
-    description = st.text_area(
+    description = text_area(
         "Description / Notes",
         placeholder="Enter reason or details...",
         key="advance_description"
@@ -2103,7 +2108,7 @@ def show_guard_advances_tab():
 
     with col1:
 
-        selected_month = st.selectbox(
+        selected_month = select_box(
             "Select Month",
             options=list(range(1, 13)),
             index=date.today().month - 1,
@@ -2117,7 +2122,7 @@ def show_guard_advances_tab():
 
     with col2:
 
-        selected_year = st.number_input(
+        selected_year = number_input(
             "Select Year",
             min_value=2020,
             max_value=2100,
@@ -2348,7 +2353,7 @@ def show_guard_advances_tab():
 
         with col1:
 
-            selected_delete_label = st.selectbox(
+            selected_delete_label = select_box(
                 "Select advance to delete",
                 options=list(delete_options.keys()),
                 key="delete_advance_select"
