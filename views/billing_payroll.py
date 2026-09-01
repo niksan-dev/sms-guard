@@ -1062,15 +1062,15 @@ def show_salary_slip_preview(slip):
         },
         {
             "Description": "Shift 1",
-            "Amount": slip.shift_1_count
+            "Amount": str(slip.shift_1_count)
         },
         {
             "Description": "Shift 2",
-            "Amount": slip.shift_2_count
+            "Amount": str(slip.shift_2_count)
         },
         {
             "Description": "Total Shifts",
-            "Amount": slip.total_shifts
+            "Amount": str(slip.total_shifts)
         },
         {
             "Description": "Gross Salary",

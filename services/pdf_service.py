@@ -64,6 +64,16 @@ if "DejaVuSans-Bold" not in pdfmetrics.getRegisteredFontNames():
         )
     )
 
+# Explicit family mapping prevents ReportLab <b> tags from falling back
+# to Helvetica-Bold.
+pdfmetrics.registerFontFamily(
+    "DejaVuSans",
+    normal="DejaVuSans",
+    bold="DejaVuSans-Bold",
+    italic="DejaVuSans",
+    boldItalic="DejaVuSans-Bold",
+)
+
 
 # ============================================================
 # HELPERS
@@ -439,6 +449,7 @@ def generate_guard_salary_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
             ("ALIGN", (1, 1), (1, -1), "RIGHT"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
@@ -510,6 +521,7 @@ def generate_guard_salary_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
             (
                 "FONTNAME",
@@ -570,6 +582,7 @@ def generate_guard_salary_pdf(data):
             ("GRID", (0, 0), (-1, -1), 0.7, colors.black),
             ("ALIGN", (1, 0), (1, -1), "RIGHT"),
             ("BACKGROUND", (0, 2), (-1, 2), colors.lightgrey),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTSIZE", (0, 0), (-1, -1), 9),
             ("TOPPADDING", (0, 0), (-1, -1), 7),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
@@ -819,6 +832,7 @@ def generate_site_bill_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
             ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
             ("FONTNAME", (4, -1), (-1, -1), "DejaVuSans-Bold"),
@@ -867,6 +881,7 @@ def generate_site_bill_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTNAME", (0, 3), (-1, 3), "DejaVuSans-Bold"),
             ("BACKGROUND", (0, 3), (-1, 3), colors.lightgrey),
             ("FONTSIZE", (0, 0), (-1, -1), 9),
