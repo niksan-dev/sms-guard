@@ -1,6 +1,11 @@
 from io import BytesIO
 from datetime import datetime
 
+from pathlib import Path
+
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.lib.pagesizes import A4
@@ -14,6 +19,50 @@ from reportlab.platypus import (
     TableStyle,
     HRFlowable,
 )
+
+
+
+# ============================================================
+# UNICODE FONT
+# ============================================================
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+FONT_DIR = PROJECT_ROOT / "fonts"
+
+DEJAVU_REGULAR = FONT_DIR / "DejaVuSans.ttf"
+DEJAVU_BOLD = FONT_DIR / "DejaVuSans-Bold.ttf"
+
+
+if not DEJAVU_REGULAR.exists():
+    raise FileNotFoundError(
+        f"DejaVuSans.ttf not found: {DEJAVU_REGULAR}"
+    )
+
+if not DEJAVU_BOLD.exists():
+    raise FileNotFoundError(
+        f"DejaVuSans-Bold.ttf not found: {DEJAVU_BOLD}"
+    )
+
+
+if "DejaVuSans" not in pdfmetrics.getRegisteredFontNames():
+
+    pdfmetrics.registerFont(
+        TTFont(
+            "DejaVuSans",
+            str(DEJAVU_REGULAR)
+        )
+    )
+
+
+if "DejaVuSans-Bold" not in pdfmetrics.getRegisteredFontNames():
+
+    pdfmetrics.registerFont(
+        TTFont(
+            "DejaVuSans-Bold",
+            str(DEJAVU_BOLD)
+        )
+    )
 
 
 # ============================================================
@@ -171,6 +220,7 @@ def get_styles():
         "company": ParagraphStyle(
             "Company",
             parent=styles["Heading1"],
+            fontName="DejaVuSans-Bold",
             fontSize=18,
             leading=22,
             alignment=TA_CENTER,
@@ -180,6 +230,7 @@ def get_styles():
         "title": ParagraphStyle(
             "Title",
             parent=styles["Heading2"],
+            fontName="DejaVuSans-Bold",
             fontSize=13,
             leading=16,
             alignment=TA_CENTER,
@@ -189,6 +240,7 @@ def get_styles():
         "normal": ParagraphStyle(
             "NormalCustom",
             parent=styles["Normal"],
+            fontName="DejaVuSans",
             fontSize=9,
             leading=12,
         ),
@@ -196,6 +248,7 @@ def get_styles():
         "small": ParagraphStyle(
             "Small",
             parent=styles["Normal"],
+            fontName="DejaVuSans",
             fontSize=8,
             leading=10,
         ),
@@ -203,9 +256,19 @@ def get_styles():
         "right": ParagraphStyle(
             "Right",
             parent=styles["Normal"],
+            fontName="DejaVuSans",
             fontSize=9,
             alignment=TA_RIGHT,
         ),
+
+        "bold": ParagraphStyle(
+            "Bold",
+            parent=styles["Normal"],
+            fontName="DejaVuSans-Bold",
+            fontSize=9,
+            leading=12,
+        ),
+
     }
 
 
@@ -295,7 +358,7 @@ def generate_guard_salary_pdf(data):
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
             ("BACKGROUND", (2, 0), (2, -1), colors.whitesmoke),
-            ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             ("LEFTPADDING", (0, 0), (-1, -1), 5),
             ("RIGHTPADDING", (0, 0), (-1, -1), 5),
@@ -376,7 +439,7 @@ def generate_guard_salary_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
             ("ALIGN", (1, 1), (1, -1), "RIGHT"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             ("TOPPADDING", (0, 0), (-1, -1), 5),
@@ -447,12 +510,12 @@ def generate_guard_salary_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
             (
                 "FONTNAME",
                 (0, -1),
                 (-1, -1),
-                "Helvetica-Bold"
+                "DejaVuSans-Bold"
             ),
             ("ALIGN", (3, 1), (3, -1), "RIGHT"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
@@ -650,7 +713,7 @@ def generate_site_bill_pdf(data):
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
             ("BACKGROUND", (2, 0), (2, 1), colors.whitesmoke),
-            ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+            ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             ("SPAN", (1, 2), (3, 2)),
             ("TOPPADDING", (0, 0), (-1, -1), 5),
@@ -756,9 +819,9 @@ def generate_site_bill_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, 0), (-1, 0), "DejaVuSans-Bold"),
             ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
-            ("FONTNAME", (4, -1), (-1, -1), "Helvetica-Bold"),
+            ("FONTNAME", (4, -1), (-1, -1), "DejaVuSans-Bold"),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             ("TOPPADDING", (0, 0), (-1, -1), 6),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
@@ -804,7 +867,7 @@ def generate_site_bill_pdf(data):
         TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-            ("FONTNAME", (0, 3), (-1, 3), "Helvetica-Bold"),
+            ("FONTNAME", (0, 3), (-1, 3), "DejaVuSans-Bold"),
             ("BACKGROUND", (0, 3), (-1, 3), colors.lightgrey),
             ("FONTSIZE", (0, 0), (-1, -1), 9),
             ("TOPPADDING", (0, 0), (-1, -1), 6),

@@ -18,11 +18,15 @@ from services.site_bill_service import (
     get_site_bill,
     get_monthly_site_bills,
 )
-
+from services.guard_monthly_salary_master_pdf_service import (
+    generate_monthly_salary_master_pdf,
+)
 from services.guard_service import get_all_guards
 from services.site_service import get_all_sites
 from services.company_settings_service import get_company_settings
-
+from services.guard_monthly_salary_master_service import (
+    get_monthly_salary_master,
+)
 from services.pdf_service import (
     generate_guard_salary_pdf,
 )
@@ -95,9 +99,10 @@ def show_billing_payroll():
                 "Generate, view, print and export site bills and guard salary slips.",
                 "💰")
 
-    site_tab, guard_tab = st.tabs([
+    site_tab, guard_tab,guard_master = st.tabs([
         "🏢 Site Bills",
-        "👮 Guard Salary"
+        "👮 Guard Salary",
+        "💰 Monthly Salary Master"
     ])
 
     with site_tab:
@@ -108,6 +113,11 @@ def show_billing_payroll():
 
         show_guard_salary()
 
+    with guard_master:
+
+        show_monthly_salary_master()
+
+    
 
 # ============================================================
 # COMPANY SETTINGS CHECK
@@ -1229,3 +1239,517 @@ def show_print_button(
             f"{document.id}"
         )
     )
+
+def show_monthly_salary_master():
+
+    st.markdown(
+        "## 💰 Monthly Salary Master"
+    )
+
+    st.caption(
+        "Monthly payroll summary — one row per guard"
+    )
+
+    # =====================================================
+    # MONTH / YEAR
+    # =====================================================
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        selected_month = st.selectbox(
+            "Month",
+            options=list(range(1, 13)),
+            format_func=lambda m: date(
+                2000,
+                m,
+                1
+            ).strftime("%B"),
+            index=date.today().month - 1,
+            key="salary_master_month",
+        )
+
+    with col2:
+
+        current_year = date.today().year
+
+        selected_year = st.selectbox(
+            "Year",
+            options=list(
+                range(
+                    current_year - 2,
+                    current_year + 3
+                )
+            ),
+            index=2,
+            key="salary_master_year",
+        )
+
+    # =====================================================
+    # GENERATE SALARY MASTER
+    # =====================================================
+
+    if st.button(
+        "📊 Generate Salary Master",
+        type="primary",
+        width="stretch",
+        key="generate_monthly_salary_master",
+    ):
+
+        try:
+
+            with st.spinner(
+                "Calculating monthly salary..."
+            ):
+
+                master = get_monthly_salary_master(
+                    year=int(selected_year),
+                    month=int(selected_month),
+                )
+
+            # Store selected month/year also.
+            st.session_state[
+                "monthly_salary_master_year"
+            ] = int(selected_year)
+
+            st.session_state[
+                "monthly_salary_master_month"
+            ] = int(selected_month)
+
+            st.session_state[
+                "monthly_salary_master"
+            ] = master
+
+            # Remove old PDF.
+            st.session_state.pop(
+                "monthly_salary_master_pdf",
+                None
+            )
+
+            st.success(
+                "Monthly Salary Master generated successfully."
+            )
+
+        except Exception as exc:
+
+            st.error(
+                f"Unable to generate salary master: {exc}"
+            )
+
+            return
+
+    # =====================================================
+    # GET GENERATED MASTER
+    # =====================================================
+
+    master = st.session_state.get(
+        "monthly_salary_master"
+    )
+
+    if not master:
+
+        st.info(
+            "Select a month and click "
+            "'Generate Salary Master'."
+        )
+
+        return
+
+    # =====================================================
+    # SUMMARY
+    # =====================================================
+
+    totals = master.get(
+        "totals",
+        {}
+    )
+
+    st.markdown(
+        f"### {master.get('month_name', '')}"
+    )
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+
+        st.metric(
+            "Guards",
+            master.get(
+                "guard_count",
+                0
+            )
+        )
+
+    with col2:
+
+        st.metric(
+            "Shift 1",
+            totals.get(
+                "shift_1",
+                0
+            )
+        )
+
+    with col3:
+
+        st.metric(
+            "Shift 2",
+            totals.get(
+                "shift_2",
+                0
+            )
+        )
+
+    with col4:
+
+        st.metric(
+            "Earned",
+            format_currency(
+                totals.get(
+                    "earned",
+                    0
+                )
+            )
+        )
+
+    with col5:
+
+        st.metric(
+            "Net Payable",
+            format_currency(
+                totals.get(
+                    "net_payable",
+                    0
+                )
+            )
+        )
+
+    st.divider()
+
+    # =====================================================
+    # BUILD DISPLAY DATA
+    # =====================================================
+
+    rows = master.get(
+        "rows",
+        []
+    )
+
+    display_rows = []
+
+    advance_categories = master.get(
+        "advance_categories",
+        []
+    )
+
+    for row in rows:
+
+        display_row = {
+
+            "Guard ID":
+                row.get(
+                    "employee_id",
+                    ""
+                ),
+
+            "Guard Name":
+                row.get(
+                    "guard_name",
+                    ""
+                ),
+
+            "Salary":
+                row.get(
+                    "monthly_salary",
+                    0
+                ),
+
+            "Shift 1":
+                row.get(
+                    "shift_1",
+                    0
+                ),
+
+            "Shift 2":
+                row.get(
+                    "shift_2",
+                    0
+                ),
+
+            "Total Shifts":
+                row.get(
+                    "total_shifts",
+                    0
+                ),
+        }
+
+        # =================================================
+        # DYNAMIC ADVANCE CATEGORIES
+        # =================================================
+
+        for category in advance_categories:
+
+            display_row[
+                category
+            ] = row.get(
+                f"advance_{category}",
+                0.0
+            )
+
+        # =================================================
+        # EARNED
+        # =================================================
+
+        display_row["Earned"] = row.get(
+            "earned",
+            0.0
+        )
+
+        # =================================================
+        # NET PAYABLE
+        # =================================================
+
+        display_row["Net Payable"] = row.get(
+            "net_payable",
+            0.0
+        )
+
+        display_rows.append(
+            display_row
+        )
+
+    # =====================================================
+    # NO GUARDS
+    # =====================================================
+
+    if not display_rows:
+
+        st.warning(
+            "No guards found for the selected month."
+        )
+
+        return
+
+    # =====================================================
+    # TABLE COLUMN CONFIG
+    # =====================================================
+
+    column_config = {
+
+        "Guard ID":
+            st.column_config.TextColumn(
+                "Guard ID"
+            ),
+
+        "Guard Name":
+            st.column_config.TextColumn(
+                "Guard Name"
+            ),
+
+        "Salary":
+            st.column_config.NumberColumn(
+                "Salary",
+                format="₹%.2f"
+            ),
+
+        "Shift 1":
+            st.column_config.NumberColumn(
+                "Shift 1",
+                format="%d"
+            ),
+
+        "Shift 2":
+            st.column_config.NumberColumn(
+                "Shift 2",
+                format="%d"
+            ),
+
+        "Total Shifts":
+            st.column_config.NumberColumn(
+                "Total Shifts",
+                format="%d"
+            ),
+
+        "Earned":
+            st.column_config.NumberColumn(
+                "Earned",
+                format="₹%.2f"
+            ),
+
+        "Net Payable":
+            st.column_config.NumberColumn(
+                "Net Payable",
+                format="₹%.2f"
+            ),
+    }
+
+    # Dynamic advance columns
+    for category in advance_categories:
+
+        column_config[
+            category
+        ] = st.column_config.NumberColumn(
+            category,
+            format="₹%.2f"
+        )
+
+    # =====================================================
+    # MASTER TABLE
+    # =====================================================
+
+    st.dataframe(
+        display_rows,
+        width="stretch",
+        hide_index=True,
+        column_config=column_config,
+    )
+
+    # =====================================================
+    # ADVANCE SUMMARY
+    # =====================================================
+
+    if advance_categories:
+
+        st.markdown(
+            "### Advance Summary"
+        )
+
+        advance_summary = []
+
+        category_totals = totals.get(
+            "advance_categories",
+            {}
+        )
+
+        for category in advance_categories:
+
+            advance_summary.append({
+
+                "Category":
+                    category,
+
+                "Total":
+                    category_totals.get(
+                        category,
+                        0.0
+                    )
+            })
+
+        advance_summary.append({
+
+            "Category":
+                "TOTAL ADVANCES",
+
+            "Total":
+                totals.get(
+                    "advances",
+                    0.0
+                )
+        })
+
+        st.dataframe(
+            advance_summary,
+            width="stretch",
+            hide_index=True,
+            column_config={
+
+                "Category":
+                    st.column_config.TextColumn(
+                        "Category"
+                    ),
+
+                "Total":
+                    st.column_config.NumberColumn(
+                        "Total",
+                        format="₹%.2f"
+                    ),
+            },
+        )
+
+    # =====================================================
+    # PDF
+    # =====================================================
+
+    st.divider()
+
+    st.markdown(
+        "### 📄 Monthly Salary Master PDF"
+    )
+
+    pdf_col1, pdf_col2 = st.columns(2)
+
+    # =====================================================
+    # GENERATE PDF
+    # =====================================================
+
+    with pdf_col1:
+
+        if st.button(
+            "📄 Generate PDF",
+            type="primary",
+            width="stretch",
+            key="generate_monthly_salary_master_pdf",
+        ):
+
+            try:
+
+                with st.spinner(
+                    "Generating PDF..."
+                ):
+
+                    pdf_data = (
+                        generate_monthly_salary_master_pdf(
+                            master
+                        )
+                    )
+
+                st.session_state[
+                    "monthly_salary_master_pdf"
+                ] = pdf_data
+
+                st.success(
+                    "PDF generated successfully."
+                )
+
+            except Exception as exc:
+
+                st.error(
+                    f"PDF generation failed: {exc}"
+                )
+
+    # =====================================================
+    # EXPORT PDF
+    # =====================================================
+
+    with pdf_col2:
+
+        pdf_data = st.session_state.get(
+            "monthly_salary_master_pdf"
+        )
+
+        if pdf_data:
+
+            file_name = (
+                "Monthly_Salary_Master_"
+                f"{int(selected_year)}_"
+                f"{int(selected_month):02d}.pdf"
+            )
+
+            st.download_button(
+                "⬇️ Export PDF",
+                data=pdf_data,
+                file_name=file_name,
+                mime="application/pdf",
+                width="stretch",
+                key="export_monthly_salary_master_pdf",
+            )
+
+        else:
+
+            st.button(
+                "⬇️ Export PDF",
+                disabled=True,
+                width="stretch",
+                key="export_monthly_salary_master_pdf_disabled",
+            )
