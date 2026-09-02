@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from pathlib import Path
 
 from datetime import date
 
@@ -31,6 +32,21 @@ from services.site_guard_assignment_service import (
 )
 
 from services.site_service import get_all_sites
+
+from services.guard_document_service import (
+    DOCUMENT_TYPES,
+    get_guard_documents,
+    get_guard_document,
+    save_guard_document,
+    delete_guard_document,
+    get_guard_document_file,
+    get_document_readiness,
+    create_guard_documents_zip,
+)
+
+from services.guard_deployment_service import (
+    generate_guard_deployment_pdf,
+)
 
 
 # ==================================================
@@ -78,6 +94,8 @@ def validate_pincode(pincode):
 
     pincode = pincode.strip()
 
+    return True, ""
+
     if not pincode:
         return False, "PIN code is required."
 
@@ -101,6 +119,8 @@ def validate_aadhaar(aadhaar_number):
         .strip()
         .replace(" ", "")
     )
+
+    return True, ""
 
     if not aadhaar_number:
         return False, "Aadhaar number is required."
@@ -192,7 +212,16 @@ def show_guards():
                         guard.joining_date,
 
                     "Status":
-                        guard.status or ""
+                        guard.status or "",
+
+                    "Documents":
+                        len(get_guard_documents(guard.id)),
+
+                    "Document Readiness":
+                        (
+                            f"{get_document_readiness(guard.id)[0]}/"
+                            f"{get_document_readiness(guard.id)[1]}"
+                        ),
                 })
 
             df = pd.DataFrame(guard_data)
@@ -366,7 +395,7 @@ def show_guards():
                 "### 👤 Personal Information"
             )
 
-            col1, col2 = st.columns(2)
+            col1, col2,col3 = st.columns(3)
 
             with col1:
 
@@ -375,31 +404,34 @@ def show_guards():
                     placeholder="Enter full name"
                 )
 
+               
+
+                # text_input(
+                #     "Employee ID",
+                #     value=next_employee_id,
+                #     disabled=True
+                # )
+
+            with col2:
+
                 phone = text_input(
                     "Phone Number *",
                     max_chars=10,
                     placeholder="Enter 10 digit phone number"
                 )
 
-                text_input(
-                    "Employee ID",
-                    value=next_employee_id,
-                    disabled=True
-                )
+                # email = text_input(
+                #     "Email",
+                #     placeholder="Enter email address"
+                # )
 
-            with col2:
-
-                email = text_input(
-                    "Email",
-                    placeholder="Enter email address"
-                )
-
-                aadhaar_number = text_input(
-                    "Aadhaar Number *",
-                    type="password",
-                    max_chars=12,
-                    placeholder="Enter 12 digit Aadhaar number"
-                )
+                # aadhaar_number = text_input(
+                #     "Aadhaar Number *",
+                #     type="password",
+                #     max_chars=12,
+                #     placeholder="Enter 12 digit Aadhaar number"
+                # )
+            with col3:
 
                 emergency_contact = text_input(
                     "Emergency Contact",
@@ -420,11 +452,11 @@ def show_guards():
                 placeholder="Enter complete residential address"
             )
 
-            pincode = text_input(
-                "PIN Code *",
-                max_chars=6,
-                placeholder="Enter 6 digit PIN code"
-            )
+            # pincode = text_input(
+            #     "PIN Code *",
+            #     max_chars=6,
+            #     placeholder="Enter 6 digit PIN code"
+            # )
 
             # ==========================================
             # EMPLOYMENT INFORMATION
@@ -517,6 +549,11 @@ def show_guards():
                     width=180
                 )
 
+            st.info(
+                "📄 Guard documents can be uploaded and managed from "
+                "Manage Guard after the guard profile is created."
+            )
+
             st.divider()
 
             submitted = submit_button(
@@ -547,25 +584,25 @@ def show_guards():
 
                 return
 
-            valid, message = validate_pincode(
-                pincode
-            )
+            # valid, message = validate_pincode(
+            #     pincode
+            # )
 
-            if not valid:
+            # if not valid:
 
-                st.error(message)
+            #     st.error(message)
 
-                return
+            #     return
 
-            valid, message = validate_aadhaar(
-                aadhaar_number
-            )
+            # valid, message = validate_aadhaar(
+            #     aadhaar_number
+            # )
 
-            if not valid:
+            # if not valid:
 
-                st.error(message)
+            #     st.error(message)
 
-                return
+            #     return
 
             if monthly_salary < 0:
 
@@ -581,13 +618,13 @@ def show_guards():
 
                 phone=phone,
 
-                email=email,
+                email="",
 
-                aadhaar_number=aadhaar_number,
+                aadhaar_number="",
 
                 address=address,
 
-                pincode=pincode,
+                pincode="",
 
                 emergency_contact=emergency_contact,
 
@@ -766,6 +803,12 @@ def show_guards():
                     )
 
                 # ==========================================
+                # DOCUMENTS
+                # ==========================================
+
+                show_guard_documents(guard)
+
+                # ==========================================
                 # SITE ASSIGNMENT
                 # ==========================================
 
@@ -793,7 +836,7 @@ def show_guards():
                         "#### 👤 Personal Information"
                     )
 
-                    col1, col2 = st.columns(2)
+                    col1, col2,col3 = st.columns(3)
 
                     with col1:
 
@@ -802,32 +845,34 @@ def show_guards():
                             value=guard.name or ""
                         )
 
+                        
+
+                        # text_input(
+                        #     "Employee ID",
+                        #     value=guard.employee_id,
+                        #     disabled=True
+                        # )
+
+                    with col2:
+
                         edit_phone = text_input(
                             "Phone Number *",
                             value=guard.phone or "",
                             max_chars=10
                         )
 
-                        text_input(
-                            "Employee ID",
-                            value=guard.employee_id,
-                            disabled=True
-                        )
+                        # edit_email = text_input(
+                        #     "Email",
+                        #     value=guard.email or ""
+                        # )
 
+                        # edit_aadhaar = text_input(
+                        #     "Aadhaar Number *",
+                        #     value=guard.aadhaar_number or "",
+                        #     type="password",
+                        #     max_chars=12
+                        # )
                     with col2:
-
-                        edit_email = text_input(
-                            "Email",
-                            value=guard.email or ""
-                        )
-
-                        edit_aadhaar = text_input(
-                            "Aadhaar Number *",
-                            value=guard.aadhaar_number or "",
-                            type="password",
-                            max_chars=12
-                        )
-
                         edit_emergency_contact = text_input(
                             "Emergency Contact",
                             value=(
@@ -979,25 +1024,25 @@ def show_guards():
 
                         return
 
-                    valid, message = validate_pincode(
-                        edit_pincode
-                    )
+                    # valid, message = validate_pincode(
+                    #     edit_pincode
+                    # )
 
-                    if not valid:
+                    # if not valid:
 
-                        st.error(message)
+                    #     st.error(message)
 
-                        return
+                    #     return
 
-                    valid, message = validate_aadhaar(
-                        edit_aadhaar
-                    )
+                    # valid, message = validate_aadhaar(
+                    #     edit_aadhaar
+                    # )
 
-                    if not valid:
+                    # if not valid:
 
-                        st.error(message)
+                    #     st.error(message)
 
-                        return
+                    #     return
 
                     if edit_monthly_salary < 0:
 
@@ -1045,6 +1090,215 @@ def show_guards():
                     else:
 
                         st.error(message)
+
+
+# ==================================================
+# GUARD DOCUMENTS
+# ==================================================
+
+def show_guard_documents(guard):
+
+    st.divider()
+
+    st.subheader("📄 Guard Documents")
+
+    completed, total_required, uploaded_types = (
+        get_document_readiness(guard.id)
+    )
+
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+
+    with metric_col1:
+        st.metric(
+            "📄 Documents Uploaded",
+            len(get_guard_documents(guard.id))
+        )
+
+    with metric_col2:
+        st.metric(
+            "✅ Required Documents",
+            f"{completed}/{total_required}"
+        )
+
+    with metric_col3:
+        missing = total_required - completed
+        st.metric(
+            "⚠️ Missing Required",
+            missing
+        )
+
+    st.caption(
+        "Upload the document file for each document type. "
+        "Document number and expiry date are not required. "
+        "Uploading the same type again replaces the previous file."
+    )
+
+    # ----------------------------------------------
+    # UPLOAD / REPLACE DOCUMENT
+    # ----------------------------------------------
+
+    st.markdown("#### ➕ Upload / Replace Document")
+
+    doc_type = select_box(
+        "Document Type",
+        DOCUMENT_TYPES,
+        key=f"guard_document_type_{guard.id}"
+    )
+
+    existing = get_guard_document(
+        guard.id,
+        doc_type
+    )
+
+    # Document number and expiry date are intentionally not collected.
+    # The uploaded document file itself is the source of record.
+    document_number = ""
+    expiry_date = None
+
+    current_label = (
+        f"Current file: **{existing.original_filename}**"
+        if existing
+        else "No file uploaded yet."
+    )
+
+    st.caption(current_label)
+
+    uploaded_file = st.file_uploader(
+        "Select Document",
+        type=["pdf", "jpg", "jpeg", "png", "webp"],
+        key=f"guard_document_file_{guard.id}_{doc_type}"
+    )
+
+    if uploaded_file:
+        st.caption(
+            f"Selected: {uploaded_file.name} "
+            f"({uploaded_file.size / 1024:.1f} KB)"
+        )
+
+    if button(
+        "💾 Save Document",
+        key=f"save_guard_document_{guard.id}_{doc_type}",
+        type="primary",
+        width="stretch"
+    ):
+        success, message = save_guard_document(
+            guard_id=guard.id,
+            document_type=doc_type,
+            document_number=document_number,
+            uploaded_file=uploaded_file,
+            expiry_date=expiry_date
+        )
+
+        if success:
+            st.success(message)
+            st.rerun()
+        else:
+            st.error(message)
+
+    # ----------------------------------------------
+    # CURRENT DOCUMENTS
+    # ----------------------------------------------
+
+    documents = get_guard_documents(guard.id)
+
+    if not documents:
+        st.info(
+            "No documents uploaded for this guard yet."
+        )
+        return
+
+    st.markdown("#### 📋 Uploaded Documents")
+
+    for document in documents:
+
+        col1, col2, col3, col4 = st.columns(
+            [3, 2, 2, 1]
+        )
+
+        with col1:
+            st.markdown(
+                f"**📄 {document.document_type}**"
+            )
+            st.caption(
+                document.original_filename
+            )
+
+        with col2:
+            st.write("Document uploaded")
+
+        with col3:
+            st.write(
+                document.uploaded_at.strftime("%d %b %Y")
+                if document.uploaded_at
+                else "-"
+            )
+
+        with col4:
+            file_path, file_record = (
+                get_guard_document_file(document.id)
+            )
+
+            if file_path and file_path.exists():
+                try:
+                    file_bytes = file_path.read_bytes()
+
+                    st.download_button(
+                        "⬇️",
+                        data=file_bytes,
+                        file_name=document.original_filename,
+                        mime=document.mime_type or "application/octet-stream",
+                        key=f"download_guard_document_{document.id}",
+                        help="Download document"
+                    )
+                except Exception:
+                    st.caption("File error")
+            else:
+                st.caption("Missing")
+
+            if button(
+                "🗑️",
+                key=f"delete_guard_document_{document.id}",
+                type="secondary",
+                width="content"
+            ):
+                success, message = delete_guard_document(
+                    document.id
+                )
+
+                if success:
+                    st.success(message)
+                    st.rerun()
+                else:
+                    st.error(message)
+
+
+def mask_document_number(document_number, document_type=""):
+
+    if not document_number:
+        return ""
+
+    value = str(document_number).replace(
+        " ",
+        ""
+    )
+
+    document_type = str(
+        document_type or ""
+    ).lower()
+
+    if "aadhaar" in document_type and len(value) == 12:
+        return f"XXXX XXXX {value[-4:]}"
+
+    if "pan" in document_type and len(value) == 10:
+        return f"XXXXX{value[-5:]}"
+
+    if len(value) <= 4:
+        return "X" * len(value)
+
+    return (
+        f"{'X' * (len(value) - 4)}"
+        f"{value[-4:]}"
+    )
 
 
 # ==================================================
@@ -1204,3 +1458,80 @@ def show_guard_site_assignment(guard):
                 except Exception as e:
 
                     st.error(str(e))
+
+        # ----------------------------------------------
+        # GUARD HANDOVER / DOCUMENT PACKAGE
+        # ----------------------------------------------
+
+        action_col1, action_col2 = st.columns(2)
+
+        with action_col1:
+            if st.button(
+                "📄 Guard Details PDF",
+                key=f"guard_details_pdf_{assignment.id}",
+                width="stretch"
+            ):
+                try:
+                    pdf_path = generate_guard_deployment_pdf(
+                        guard_id=guard.id,
+                        site_id=site.id
+                    )
+
+                    st.session_state[
+                        f"guard_pdf_{assignment.id}"
+                    ] = str(pdf_path)
+
+                except Exception as e:
+                    st.error(
+                        f"Could not generate PDF: {e}"
+                    )
+
+            pdf_path_value = st.session_state.get(
+                f"guard_pdf_{assignment.id}"
+            )
+
+            if pdf_path_value:
+                pdf_path = Path(pdf_path_value)
+                if pdf_path.exists():
+                    st.download_button(
+                        "⬇️ Download Guard Details",
+                        data=pdf_path.read_bytes(),
+                        file_name=pdf_path.name,
+                        mime="application/pdf",
+                        key=f"download_guard_details_{assignment.id}",
+                        width="stretch"
+                    )
+
+        with action_col2:
+            if st.button(
+                "📦 Prepare Documents ZIP",
+                key=f"guard_docs_zip_{assignment.id}",
+                width="stretch"
+            ):
+                try:
+                    zip_path = create_guard_documents_zip(
+                        guard.id
+                    )
+                    st.session_state[
+                        f"guard_zip_{assignment.id}"
+                    ] = str(zip_path)
+                except Exception as e:
+                    st.error(
+                        f"Could not prepare documents: {e}"
+                    )
+
+            zip_path_value = st.session_state.get(
+                f"guard_zip_{assignment.id}"
+            )
+
+            if zip_path_value:
+                zip_path = Path(zip_path_value)
+                if zip_path.exists():
+                    st.download_button(
+                        "⬇️ Download All Documents",
+                        data=zip_path.read_bytes(),
+                        file_name=zip_path.name,
+                        mime="application/zip",
+                        key=f"download_guard_docs_{assignment.id}",
+                        width="stretch"
+                    )

@@ -216,6 +216,9 @@ def validate_phone(phone):
 
 def validate_aadhaar(aadhaar_number):
 
+
+    return True, ""
+
     if not aadhaar_number:
 
         return (
@@ -468,31 +471,31 @@ def create_guard(
         # VALIDATE AADHAAR
         # ----------------------------------------------
 
-        valid_aadhaar, aadhaar_message = validate_aadhaar(
-            aadhaar_number
-        )
+        # valid_aadhaar, aadhaar_message = validate_aadhaar(
+        #     aadhaar_number
+        # )
 
-        if not valid_aadhaar:
+        # if not valid_aadhaar:
 
-            return (
-                False,
-                aadhaar_message
-            )
+        #     return (
+        #         False,
+        #         aadhaar_message
+        #     )
 
         # ----------------------------------------------
         # VALIDATE PIN CODE
         # ----------------------------------------------
 
-        valid_pincode, pincode_message = validate_pincode(
-            pincode
-        )
+        # valid_pincode, pincode_message = validate_pincode(
+        #     pincode
+        # )
 
-        if not valid_pincode:
+        # if not valid_pincode:
 
-            return (
-                False,
-                pincode_message
-            )
+        #     return (
+        #         False,
+        #         pincode_message
+        #     )
 
         # ----------------------------------------------
         # VALIDATE MONTHLY SALARY
@@ -520,20 +523,20 @@ def create_guard(
         # CHECK DUPLICATE AADHAAR
         # ----------------------------------------------
 
-        existing_aadhaar = (
-            db.query(Guard)
-            .filter(
-                Guard.aadhaar_number == aadhaar_number
-            )
-            .first()
-        )
+        # existing_aadhaar = (
+        #     db.query(Guard)
+        #     .filter(
+        #         Guard.aadhaar_number == aadhaar_number
+        #     )
+        #     .first()
+        # )
 
-        if existing_aadhaar:
+        # if existing_aadhaar:
 
-            return (
-                False,
-                "This Aadhaar number is already registered."
-            )
+        #     return (
+        #         False,
+        #         "This Aadhaar number is already registered."
+        #     )
 
         # ----------------------------------------------
         # VALIDATE LINKED USER

@@ -234,6 +234,13 @@ class Guard(Base):
         cascade="all, delete-orphan"
     )
 
+    documents = relationship(
+        "GuardDocument",
+        back_populates="guard",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
 
 # ==================================================
 # SITE MODEL
@@ -585,3 +592,8 @@ from database.site_bill import SiteBill
 #GUARD SALARY SLIP
 #=================================================
 from database.guard_salary_slip import GuardSalarySlip
+
+#=================================================
+# GUARD DOCUMENTS
+#=================================================
+from database.guard_document import GuardDocument

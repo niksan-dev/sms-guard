@@ -508,7 +508,7 @@ def create_status_chart(
     chart_data,
     title
 ):
-
+    #return
     total = chart_data["Count"].sum()
 
 
@@ -781,82 +781,82 @@ def show_dashboard():
         )
 
 
-    # ==============================================
-    # SECURITY ANALYTICS
-    # ==============================================
-    sub_header("Security Analytics","","📊")
+    # # ==============================================
+    # # SECURITY ANALYTICS
+    # # ==============================================
+    # sub_header("Security Analytics","","📊")
 
 
-    guard_chart_data, site_chart_data = (
-        get_status_chart_data()
-    )
+    # guard_chart_data, site_chart_data = (
+    #     get_status_chart_data()
+    # )
 
 
-    chart_col1, chart_col2 = st.columns(2)
+    # chart_col1, chart_col2 = st.columns(2)
 
 
-    # ==============================================
-    # GUARD STATUS
-    # ==============================================
+    # # ==============================================
+    # # GUARD STATUS
+    # # ==============================================
 
-    with chart_col1:
+    # with chart_col1:
 
-        st.html(
-            """
-            <div class="dashboard-chart-card">
+    #     st.html(
+    #         """
+    #         <div class="dashboard-chart-card">
 
-                <div class="chart-title">
-                    👮 Guard Status Overview
-                </div>
+    #             <div class="chart-title">
+    #                 👮 Guard Status Overview
+    #             </div>
 
-            </div>
-            """
-        )
-
-
-        fig_guards = create_status_chart(
-            guard_chart_data,
-            "",
-        )
+    #         </div>
+    #         """
+    #     )
 
 
-        st.plotly_chart(
-            fig_guards,
-            width="stretch",
-            key="guard_status_chart",
-        )
+    #     fig_guards = create_status_chart(
+    #         guard_chart_data,
+    #         "",
+    #     )
 
 
-    # ==============================================
-    # SITE STATUS
-    # ==============================================
-
-    with chart_col2:
-
-        st.html(
-            """
-            <div class="dashboard-chart-card">
-
-                <div class="chart-title">
-                    🏢 Site Status Overview
-                </div>
-
-            </div>
-            """
-        )
+    #     st.plotly_chart(
+    #         fig_guards,
+    #         width="stretch",
+    #         key="guard_status_chart",
+    #     )
 
 
-        fig_sites = create_status_chart(
-            site_chart_data,
-            "",
-        )
+    # # ==============================================
+    # # SITE STATUS
+    # # ==============================================
+
+    # with chart_col2:
+
+    #     st.html(
+    #         """
+    #         <div class="dashboard-chart-card">
+
+    #             <div class="chart-title">
+    #                 🏢 Site Status Overview
+    #             </div>
+
+    #         </div>
+    #         """
+    #     )
 
 
-        st.plotly_chart(
-            fig_sites,
-            width="stretch",
-            key="site_status_chart",
-        )
+    #     fig_sites = create_status_chart(
+    #         site_chart_data,
+    #         "",
+    #     )
+
+
+    #     st.plotly_chart(
+    #         fig_sites,
+    #         width="stretch",
+    #         key="site_status_chart",
+    #     )
 
 
     # ==============================================
