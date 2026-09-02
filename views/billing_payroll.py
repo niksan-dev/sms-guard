@@ -32,8 +32,6 @@ from services.pdf_service import (
 )
 
 from services.site_invoice_template_service import (
-    list_site_invoice_templates,
-    get_default_site_invoice_template,
     generate_site_bill_pdf_from_template,
 )
 
@@ -247,45 +245,8 @@ def show_site_bills():
         selected_site_label
     ]
 
-    # --------------------------------------------------------
-    # INVOICE TEMPLATE
-    # --------------------------------------------------------
-    templates = list_site_invoice_templates()
-
-    if not templates:
-        st.error(
-            "No site invoice templates found. "
-            "Add an .xlsx template under templates/site_invoice/."
-        )
-        return
-
-    template_names = list(templates.keys())
-    default_path = get_default_site_invoice_template()
-    default_name = default_path.stem
-    default_index = (
-        template_names.index(default_name)
-        if default_name in template_names
-        else 0
-    )
-
-    selected_template_name = select_box(
-        "Invoice Template",
-        options=template_names,
-        index=default_index,
-        key="billing_site_invoice_template"
-    )
-
-    selected_template_path = templates[
-        selected_template_name
-    ]
-
-    st.caption(
-        f"Template: {selected_template_path.name}"
-    )
-
-    st.session_state[
-        "site_invoice_template_path"
-    ] = str(selected_template_path)
+    # ReportLab is the invoice renderer. The Excel template is reference-only.
+    st.caption("Invoice format: ReportLab PDF template")
 
     # --------------------------------------------------------
     # PREVIEW CALCULATION
@@ -377,7 +338,6 @@ def show_site_bills():
             f"GST Rates from Company Settings: "
             f"CGST {cgst_rate:.2f}% | "
             f"SGST {sgst_rate:.2f}%"
-            f" (These rates are not editable here. Change them in Company Settings.)",
         )
 
         # ----------------------------------------------------
@@ -492,25 +452,14 @@ def show_site_bills():
 
         return
 
-    show_site_bill_actions(
-        bill,
-        template_path=selected_template_path
-    )
+    show_site_bill_actions(bill)
 
 
 # ============================================================
 # SITE BILL ACTIONS
 # ============================================================
 
-def show_site_bill_actions(
-    bill,
-    template_path=None
-):
-
-    if template_path is None:
-        template_path = st.session_state.get(
-            "site_invoice_template_path"
-        )
+def show_site_bill_actions(bill):
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -523,10 +472,7 @@ def show_site_bill_actions(
             st.session_state["view_site_bill_id"] = bill.id
 
     with col2:
-        pdf_data = build_site_pdf_from_bill(
-            bill,
-            template_path=template_path
-        )
+        pdf_data = build_site_pdf_from_bill(bill)
         st.download_button(
             "📄 Export PDF",
             data=pdf_data,
@@ -567,10 +513,7 @@ def show_site_bill_actions(
             type="primary",
             key=f"send_site_bill_{bill.id}"
         ):
-            pdf_data = build_site_pdf_from_bill(
-                bill,
-                template_path=template_path
-            )
+            pdf_data = build_site_pdf_from_bill(bill)
 
             subject = (
                 f"Security Service Bill - {bill.site.site_code} - "
@@ -611,11 +554,7 @@ Security Management System
         show_site_bill_preview(bill)
 
     if st.session_state.get("print_site_bill_id") == bill.id:
-        show_print_button(
-            "site",
-            bill,
-            template_path=template_path
-        )
+        show_print_button("site", bill)
 
 
 # ============================================================
@@ -1063,15 +1002,15 @@ def show_salary_slip_preview(slip):
         },
         {
             "Description": "Shift 1",
-            "Amount": str(slip.shift_1_count)
+            "Amount": slip.shift_1_count
         },
         {
             "Description": "Shift 2",
-            "Amount": str(slip.shift_2_count)
+            "Amount": slip.shift_2_count
         },
         {
             "Description": "Total Shifts",
-            "Amount": str(slip.total_shifts)
+            "Amount": slip.total_shifts
         },
         {
             "Description": "Gross Salary",
@@ -1182,31 +1121,16 @@ def build_salary_pdf_from_slip(slip):
     )
 
 
-def build_site_pdf_from_bill(
-    bill,
-    template_path=None
-):
-
-    if template_path is None:
-        template_path = st.session_state.get(
-            "site_invoice_template_path"
-        )
-
-    return generate_site_bill_pdf_from_template(
-        bill,
-        template_path=template_path
-    )
+def build_site_pdf_from_bill(bill):
+    """Build a site invoice directly with the ReportLab template."""
+    return generate_site_bill_pdf_from_template(bill)
 
 
 # ============================================================
 # PRINT
 # ============================================================
 
-def show_print_button(
-    document_type,
-    document,
-    template_path=None
-):
+def show_print_button(document_type, document):
 
     if document_type == "salary":
 
@@ -1216,9 +1140,7 @@ def show_print_button(
 
     else:
 
-        pdf_data = build_site_pdf_from_bill(
-            document
-        )
+        pdf_data = build_site_pdf_from_bill(document)
 
     st.info(
         "Use your browser's print dialog "

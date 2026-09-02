@@ -150,8 +150,8 @@ def show_guards():
                     "Status":
                         guard.status or "",
 
-                    "Documents":
-                        len(get_guard_documents(guard.id)),
+                    # "Documents":
+                    #     len(get_guard_documents(guard.id)),
 
                     "Document Readiness":
                         (
