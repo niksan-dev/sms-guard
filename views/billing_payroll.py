@@ -377,6 +377,7 @@ def show_site_bills():
             f"GST Rates from Company Settings: "
             f"CGST {cgst_rate:.2f}% | "
             f"SGST {sgst_rate:.2f}%"
+            f" (These rates are not editable here. Change them in Company Settings.)",
         )
 
         # ----------------------------------------------------

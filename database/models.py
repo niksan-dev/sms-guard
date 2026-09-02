@@ -138,20 +138,8 @@ class Guard(Base):
 
     email = Column(String, nullable=True)
 
-    aadhaar_number = Column(
-        String,
-        unique=True,
-        nullable=True
-    )
-
     address = Column(
         Text,
-        nullable=True
-    )
-
-    # ADD THIS
-    pincode = Column(
-        String(6),
         nullable=True
     )
 

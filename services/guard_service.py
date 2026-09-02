@@ -210,45 +210,6 @@ def validate_phone(phone):
     return True, ""
 
 
-# ==================================================
-# VALIDATE AADHAAR
-# ==================================================
-
-def validate_aadhaar(aadhaar_number):
-
-
-    return True, ""
-
-    if not aadhaar_number:
-
-        return (
-            False,
-            "Aadhaar number is required."
-        )
-
-    # Remove spaces if entered
-    aadhaar_number = (
-        aadhaar_number
-        .strip()
-        .replace(" ", "")
-    )
-
-    if not aadhaar_number.isdigit():
-
-        return (
-            False,
-            "Aadhaar number must contain digits only."
-        )
-
-    if len(aadhaar_number) != 12:
-
-        return (
-            False,
-            "Aadhaar number must contain exactly 12 digits."
-        )
-
-    return True, ""
-
 
 # ==================================================
 # SAVE GUARD PHOTO
@@ -381,10 +342,8 @@ def create_guard(
     name,
     phone,
     email,
-    aadhaar_number,
     monthly_salary,
     address,
-    pincode,
     emergency_contact,
     joining_date,
     status="Active",
@@ -415,21 +374,7 @@ def create_guard(
             else None
         )
 
-        aadhaar_number = (
-            aadhaar_number
-            .strip()
-            .replace(" ", "")
-            if aadhaar_number
-            else ""
-        )
-
         monthly_salary = float(monthly_salary or 0)
-
-        pincode = (
-            pincode.strip()
-            if pincode
-            else ""
-        )
 
         address = (
             address.strip()
@@ -467,35 +412,6 @@ def create_guard(
                 phone_message
             )
 
-        # ----------------------------------------------
-        # VALIDATE AADHAAR
-        # ----------------------------------------------
-
-        # valid_aadhaar, aadhaar_message = validate_aadhaar(
-        #     aadhaar_number
-        # )
-
-        # if not valid_aadhaar:
-
-        #     return (
-        #         False,
-        #         aadhaar_message
-        #     )
-
-        # ----------------------------------------------
-        # VALIDATE PIN CODE
-        # ----------------------------------------------
-
-        # valid_pincode, pincode_message = validate_pincode(
-        #     pincode
-        # )
-
-        # if not valid_pincode:
-
-        #     return (
-        #         False,
-        #         pincode_message
-        #     )
 
         # ----------------------------------------------
         # VALIDATE MONTHLY SALARY
@@ -519,24 +435,6 @@ def create_guard(
                 "Joining date is required."
             )
 
-        # ----------------------------------------------
-        # CHECK DUPLICATE AADHAAR
-        # ----------------------------------------------
-
-        # existing_aadhaar = (
-        #     db.query(Guard)
-        #     .filter(
-        #         Guard.aadhaar_number == aadhaar_number
-        #     )
-        #     .first()
-        # )
-
-        # if existing_aadhaar:
-
-        #     return (
-        #         False,
-        #         "This Aadhaar number is already registered."
-        #     )
 
         # ----------------------------------------------
         # VALIDATE LINKED USER
@@ -624,14 +522,11 @@ def create_guard(
 
             email=email,
 
-            aadhaar_number=aadhaar_number,
-
             # NEW
             monthly_salary=monthly_salary,
 
             address=address,
 
-            pincode=pincode,
 
             emergency_contact=emergency_contact,
 
@@ -684,10 +579,8 @@ def update_guard(
     name,
     phone,
     email,
-    aadhaar_number,
     monthly_salary,
     address,
-    pincode,
     emergency_contact,
     joining_date,
     status,
@@ -739,26 +632,12 @@ def update_guard(
             else None
         )
 
-        aadhaar_number = (
-            aadhaar_number
-            .strip()
-            .replace(" ", "")
-            if aadhaar_number
-            else ""
-        )
-
         monthly_salary = float(monthly_salary or 0)
 
         address = (
             address.strip()
             if address
             else None
-        )
-
-        pincode = (
-            pincode.strip()
-            if pincode
-            else ""
         )
 
         emergency_contact = (
@@ -791,35 +670,6 @@ def update_guard(
                 phone_message
             )
 
-        # ----------------------------------------------
-        # VALIDATE AADHAAR
-        # ----------------------------------------------
-
-        valid_aadhaar, aadhaar_message = validate_aadhaar(
-            aadhaar_number
-        )
-
-        if not valid_aadhaar:
-
-            return (
-                False,
-                aadhaar_message
-            )
-
-        # ----------------------------------------------
-        # VALIDATE PIN CODE
-        # ----------------------------------------------
-
-        valid_pincode, pincode_message = validate_pincode(
-            pincode
-        )
-
-        if not valid_pincode:
-
-            return (
-                False,
-                pincode_message
-            )
 
         # ----------------------------------------------
         # VALIDATE MONTHLY SALARY
@@ -832,25 +682,6 @@ def update_guard(
                 "Monthly salary cannot be negative."
             )
 
-        # ----------------------------------------------
-        # CHECK DUPLICATE AADHAAR
-        # ----------------------------------------------
-
-        duplicate_aadhaar = (
-            db.query(Guard)
-            .filter(
-                Guard.aadhaar_number == aadhaar_number,
-                Guard.id != guard_id
-            )
-            .first()
-        )
-
-        if duplicate_aadhaar:
-
-            return (
-                False,
-                "This Aadhaar number is already registered."
-            )
 
         # ----------------------------------------------
         # VALIDATE LINKED USER
@@ -931,14 +762,11 @@ def update_guard(
 
         guard.email = email
 
-        guard.aadhaar_number = aadhaar_number
-
         # NEW
         guard.monthly_salary = monthly_salary
 
         guard.address = address
 
-        guard.pincode = pincode
 
         guard.emergency_contact = emergency_contact
 
@@ -1052,33 +880,3 @@ def update_guard_status(
 
         db.close()
 
-# ==================================================
-# VALIDATE PIN CODE
-# ==================================================
-
-def validate_pincode(pincode):
-
-    if not pincode:
-
-        return (
-            False,
-            "PIN code is required."
-        )
-
-    pincode = pincode.strip()
-
-    if not pincode.isdigit():
-
-        return (
-            False,
-            "PIN code must contain digits only."
-        )
-
-    if len(pincode) != 6:
-
-        return (
-            False,
-            "PIN code must contain exactly 6 digits."
-        )
-
-    return True, ""

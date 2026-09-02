@@ -128,7 +128,6 @@ def generate_guard_deployment_pdf(guard_id, site_id):
             ["Email", guard.email or "-"],
             ["Joining Date", str(guard.joining_date or "-")],
             ["Address", guard.address or "-"],
-            ["PIN Code", guard.pincode or "-"],
             ["Emergency Contact", guard.emergency_contact or "-"],
             ["Status", guard.status or "-"],
         ]
@@ -136,19 +135,12 @@ def generate_guard_deployment_pdf(guard_id, site_id):
 
         story.append(Paragraph("Documents Submitted", heading))
         if documents:
-            doc_rows = [["Document", "Document Number", "Expiry"]]
+            doc_rows = [["Document", "File Name", "Status"]]
             for item in documents:
-                number = item.document_number or "-"
-                if item.document_type == "Aadhaar Card" and len(number) == 12:
-                    number = f"XXXX XXXX {number[-4:]}"
-                elif item.document_type == "PAN Card" and len(number) == 10:
-                    number = f"XXXXX{number[-5:]}"
-                elif len(number) > 4:
-                    number = f"{'X' * (len(number) - 4)}{number[-4:]}"
                 doc_rows.append([
                     item.document_type,
-                    number,
-                    str(item.expiry_date or "-")
+                    item.original_filename or "-",
+                    item.status or "Active",
                 ])
             story.append(_table(doc_rows, header=True))
         else:

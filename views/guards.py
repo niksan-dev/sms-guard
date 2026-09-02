@@ -49,22 +49,6 @@ from services.guard_deployment_service import (
 )
 
 
-# ==================================================
-# MASK AADHAAR
-# ==================================================
-
-def mask_aadhaar(aadhaar_number):
-
-    if not aadhaar_number:
-        return ""
-
-    aadhaar_number = str(aadhaar_number).replace(" ", "")
-
-    if len(aadhaar_number) != 12:
-        return "****"
-
-    return f"XXXX XXXX {aadhaar_number[-4:]}"
-
 
 # ==================================================
 # VALIDATE PHONE
@@ -86,52 +70,6 @@ def validate_phone(phone):
     return True, ""
 
 
-# ==================================================
-# VALIDATE PIN CODE
-# ==================================================
-
-def validate_pincode(pincode):
-
-    pincode = pincode.strip()
-
-    return True, ""
-
-    if not pincode:
-        return False, "PIN code is required."
-
-    if not pincode.isdigit():
-        return False, "PIN code must contain digits only."
-
-    if len(pincode) != 6:
-        return False, "PIN code must contain exactly 6 digits."
-
-    return True, ""
-
-
-# ==================================================
-# VALIDATE AADHAAR
-# ==================================================
-
-def validate_aadhaar(aadhaar_number):
-
-    aadhaar_number = (
-        aadhaar_number
-        .strip()
-        .replace(" ", "")
-    )
-
-    return True, ""
-
-    if not aadhaar_number:
-        return False, "Aadhaar number is required."
-
-    if not aadhaar_number.isdigit():
-        return False, "Aadhaar number must contain digits only."
-
-    if len(aadhaar_number) != 12:
-        return False, "Aadhaar number must contain exactly 12 digits."
-
-    return True, ""
 
 
 # ==================================================
@@ -199,14 +137,12 @@ def show_guards():
                     "Phone":
                         guard.phone or "",
 
-                    "Email":
-                        guard.email or "",
+                    "Emergency Contact":
+                        guard.emergency_contact or "",
 
                     "Monthly Salary (₹)":
                         monthly_salary,
 
-                    "PIN Code":
-                        guard.pincode or "",
 
                     "Joining Date":
                         guard.joining_date,
@@ -266,12 +202,12 @@ def show_guards():
 
                     |
 
-                    df["Email"]
+                    df["Emergency Contact"]
                     .astype(str)
                     .str.lower()
                     .str.contains(search, na=False)
 
-                    |
+                     |
 
                     df["Status"]
                     .astype(str)
@@ -425,12 +361,6 @@ def show_guards():
                 #     placeholder="Enter email address"
                 # )
 
-                # aadhaar_number = text_input(
-                #     "Aadhaar Number *",
-                #     type="password",
-                #     max_chars=12,
-                #     placeholder="Enter 12 digit Aadhaar number"
-                # )
             with col3:
 
                 emergency_contact = text_input(
@@ -452,11 +382,6 @@ def show_guards():
                 placeholder="Enter complete residential address"
             )
 
-            # pincode = text_input(
-            #     "PIN Code *",
-            #     max_chars=6,
-            #     placeholder="Enter 6 digit PIN code"
-            # )
 
             # ==========================================
             # EMPLOYMENT INFORMATION
@@ -584,25 +509,6 @@ def show_guards():
 
                 return
 
-            # valid, message = validate_pincode(
-            #     pincode
-            # )
-
-            # if not valid:
-
-            #     st.error(message)
-
-            #     return
-
-            # valid, message = validate_aadhaar(
-            #     aadhaar_number
-            # )
-
-            # if not valid:
-
-            #     st.error(message)
-
-            #     return
 
             if monthly_salary < 0:
 
@@ -620,11 +526,9 @@ def show_guards():
 
                 email="",
 
-                aadhaar_number="",
 
                 address=address,
 
-                pincode="",
 
                 emergency_contact=emergency_contact,
 
@@ -753,11 +657,6 @@ def show_guards():
                         f"{guard.status}"
                     )
 
-                    st.write(
-                        f"**Aadhaar:** "
-                        f"{mask_aadhaar(guard.aadhaar_number)}"
-                    )
-
                 # ==========================================
                 # GUARD METRICS
                 # ==========================================
@@ -866,13 +765,7 @@ def show_guards():
                         #     value=guard.email or ""
                         # )
 
-                        # edit_aadhaar = text_input(
-                        #     "Aadhaar Number *",
-                        #     value=guard.aadhaar_number or "",
-                        #     type="password",
-                        #     max_chars=12
-                        # )
-                    with col2:
+                    with col3:
                         edit_emergency_contact = text_input(
                             "Emergency Contact",
                             value=(
@@ -893,12 +786,6 @@ def show_guards():
                     edit_address = text_area(
                         "Full Address",
                         value=guard.address or ""
-                    )
-
-                    edit_pincode = text_input(
-                        "PIN Code *",
-                        value=guard.pincode or "",
-                        max_chars=6
                     )
 
                     # --------------------------------------
@@ -1024,25 +911,6 @@ def show_guards():
 
                         return
 
-                    # valid, message = validate_pincode(
-                    #     edit_pincode
-                    # )
-
-                    # if not valid:
-
-                    #     st.error(message)
-
-                    #     return
-
-                    # valid, message = validate_aadhaar(
-                    #     edit_aadhaar
-                    # )
-
-                    # if not valid:
-
-                    #     st.error(message)
-
-                    #     return
 
                     if edit_monthly_salary < 0:
 
@@ -1060,13 +928,11 @@ def show_guards():
 
                         phone=edit_phone,
 
-                        email=edit_email,
+                        email="",
 
-                        aadhaar_number=edit_aadhaar,
 
                         address=edit_address,
 
-                        pincode=edit_pincode,
 
                         emergency_contact=edit_emergency_contact,
 
