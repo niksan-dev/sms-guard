@@ -158,6 +158,11 @@ class Guard(Base):
         nullable=False
     )
 
+    deactivation_date = Column(
+        Date,
+        nullable=True
+    )
+
     status = Column(
         String,
         default="Active",

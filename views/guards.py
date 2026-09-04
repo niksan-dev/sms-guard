@@ -17,6 +17,7 @@ from components.submit_button import submit_button
 
 from services.guard_service import (
     get_all_guards,
+    get_guards_active_during,
     get_available_guard_users,
     get_next_employee_id,
     get_guard_by_id,
@@ -103,6 +104,7 @@ def show_guards():
 
         sub_header("All Guards","","📋")
 
+        # Operational list: active guards only.
         guards = get_all_guards()
 
         if not guards:
@@ -534,6 +536,12 @@ def show_guards():
 
                 joining_date=joining_date,
 
+                deactivation_date=(
+                    date.today()
+                    if status == "Inactive"
+                    else None
+                ),
+
                 monthly_salary=monthly_salary,
 
                 status=status,
@@ -569,7 +577,7 @@ def show_guards():
                             """
                         )
 
-        guards = get_all_guards()
+        guards = get_all_guards(include_inactive=True)
 
         if not guards:
 
@@ -690,6 +698,12 @@ def show_guards():
                         )
                     )
 
+                    if getattr(guard, "deactivation_date", None):
+                        st.caption(
+                            f"Deactivated: "
+                            f"{guard.deactivation_date}"
+                        )
+
                 with metric_col3:
 
                     assignments = get_guard_sites(
@@ -796,7 +810,7 @@ def show_guards():
                         "#### 💼 Employment Information"
                     )
 
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
 
@@ -848,6 +862,26 @@ def show_guards():
                             "Status",
                             status_options,
                             index=status_index
+                        )
+
+                    with col4:
+
+                        default_deactivation_date = (
+                            guard.deactivation_date
+                            if getattr(guard, "deactivation_date", None)
+                            else date.today()
+                        )
+
+                        edit_deactivation_date = date_input(
+                            "Deactivation Date",
+                            value=default_deactivation_date,
+                            disabled=(edit_status == "Active"),
+                            help=(
+                                "Required when the guard is Inactive. "
+                                "Historical records remain available "
+                                "for dates on or before this date."
+                            ),
+                            key=f"edit_deactivation_date_{guard.id}"
                         )
 
                     # --------------------------------------
@@ -937,6 +971,12 @@ def show_guards():
                         emergency_contact=edit_emergency_contact,
 
                         joining_date=edit_joining_date,
+
+                        deactivation_date=(
+                            edit_deactivation_date
+                            if edit_status == "Inactive"
+                            else None
+                        ),
 
                         monthly_salary=edit_monthly_salary,
 
@@ -1136,35 +1176,6 @@ def show_guard_documents(guard):
                     st.rerun()
                 else:
                     st.error(message)
-
-
-def mask_document_number(document_number, document_type=""):
-
-    if not document_number:
-        return ""
-
-    value = str(document_number).replace(
-        " ",
-        ""
-    )
-
-    document_type = str(
-        document_type or ""
-    ).lower()
-
-    if "aadhaar" in document_type and len(value) == 12:
-        return f"XXXX XXXX {value[-4:]}"
-
-    if "pan" in document_type and len(value) == 10:
-        return f"XXXXX{value[-5:]}"
-
-    if len(value) <= 4:
-        return "X" * len(value)
-
-    return (
-        f"{'X' * (len(value) - 4)}"
-        f"{value[-4:]}"
-    )
 
 
 # ==================================================

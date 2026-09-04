@@ -29,14 +29,19 @@ GUARD_PHOTO_DIR.mkdir(
 # GET ALL GUARDS
 # ==================================================
 
-def get_all_guards():
+def get_all_guards(include_inactive=False):
 
     db = SessionLocal()
 
     try:
 
+        query = db.query(Guard)
+
+        if not include_inactive:
+            query = query.filter(Guard.status == "Active")
+
         return (
-            db.query(Guard)
+            query
             .order_by(Guard.id.desc())
             .all()
         )
@@ -347,6 +352,7 @@ def create_guard(
     emergency_contact,
     joining_date,
     status="Active",
+    deactivation_date=None,
     user_id=None,
     photo=None
 ):
@@ -435,6 +441,29 @@ def create_guard(
                 "Joining date is required."
             )
 
+
+        # ----------------------------------------------
+        # VALIDATE EMPLOYMENT STATUS / DEACTIVATION DATE
+        # ----------------------------------------------
+
+        if status not in ["Active", "Inactive"]:
+            return (
+                False,
+                "Invalid guard status."
+            )
+
+        if status == "Active":
+            deactivation_date = None
+
+        else:
+            if not deactivation_date:
+                deactivation_date = date.today()
+
+            if deactivation_date < joining_date:
+                return (
+                    False,
+                    "Deactivation date cannot be before joining date."
+                )
 
         # ----------------------------------------------
         # VALIDATE LINKED USER
@@ -584,6 +613,7 @@ def update_guard(
     emergency_contact,
     joining_date,
     status,
+    deactivation_date=None,
     user_id=None,
     photo=None
 ):
@@ -682,6 +712,29 @@ def update_guard(
                 "Monthly salary cannot be negative."
             )
 
+
+        # ----------------------------------------------
+        # VALIDATE EMPLOYMENT STATUS / DEACTIVATION DATE
+        # ----------------------------------------------
+
+        if status not in ["Active", "Inactive"]:
+            return (
+                False,
+                "Invalid guard status."
+            )
+
+        if status == "Active":
+            deactivation_date = None
+
+        else:
+            if not deactivation_date:
+                deactivation_date = date.today()
+
+            if deactivation_date < joining_date:
+                return (
+                    False,
+                    "Deactivation date cannot be before joining date."
+                )
 
         # ----------------------------------------------
         # VALIDATE LINKED USER
@@ -826,7 +879,8 @@ def update_guard(
 
 def update_guard_status(
     guard_id: int,
-    status: str
+    status: str,
+    deactivation_date=None
 ):
 
     db = SessionLocal()
@@ -858,7 +912,25 @@ def update_guard_status(
                 "Invalid guard status."
             )
 
-        guard.status = status
+        if status == "Active":
+            guard.status = "Active"
+            guard.deactivation_date = None
+
+        else:
+            if not deactivation_date:
+                deactivation_date = date.today()
+
+            if (
+                guard.joining_date
+                and deactivation_date < guard.joining_date
+            ):
+                return (
+                    False,
+                    "Deactivation date cannot be before joining date."
+                )
+
+            guard.status = "Inactive"
+            guard.deactivation_date = deactivation_date
 
         db.commit()
 
@@ -880,3 +952,64 @@ def update_guard_status(
 
         db.close()
 
+
+
+# ==================================================
+# HISTORICAL GUARD DATE FILTER
+# ==================================================
+
+def get_guards_active_during(start_date, end_date=None):
+    """
+    Return guards whose employment period overlaps the
+    requested date/date range.
+
+    Current status is intentionally NOT used as the primary
+    filter, so deactivated guards remain available for
+    historical reports.
+    """
+    if not start_date:
+        raise ValueError("Start date is required.")
+
+    if not end_date:
+        end_date = start_date
+
+    if end_date < start_date:
+        raise ValueError("End date cannot be before start date.")
+
+    db = SessionLocal()
+
+    try:
+        return (
+            db.query(Guard)
+            .filter(
+                Guard.joining_date <= end_date,
+                (
+                    (Guard.deactivation_date.is_(None))
+                    | (Guard.deactivation_date >= start_date)
+                )
+            )
+            .order_by(Guard.id.desc())
+            .all()
+        )
+    finally:
+        db.close()
+
+
+def guard_was_active_on(guard, target_date):
+    """
+    Check whether a guard was active on a specific date.
+    Useful for historical date-based screens.
+    """
+    if not guard or not target_date:
+        return False
+
+    if guard.joining_date and target_date < guard.joining_date:
+        return False
+
+    if (
+        guard.deactivation_date
+        and target_date > guard.deactivation_date
+    ):
+        return False
+
+    return True
