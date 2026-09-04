@@ -562,6 +562,7 @@ def create_guard(
             joining_date=joining_date,
 
             status=status,
+            deactivation_date=deactivation_date,
 
             photo_path=photo_path
         )
@@ -826,6 +827,7 @@ def update_guard(
         guard.joining_date = joining_date
 
         guard.status = status
+        guard.deactivation_date = deactivation_date
 
         if new_photo_path:
 

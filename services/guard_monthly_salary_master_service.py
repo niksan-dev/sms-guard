@@ -35,7 +35,7 @@ import calendar
 from datetime import date
 from typing import Any
 
-from sqlalchemy import extract
+from sqlalchemy import extract, and_, or_
 
 from database.connection import SessionLocal
 from database.models import (
@@ -190,14 +190,33 @@ def get_monthly_salary_master(
         # GET GUARDS
         # ====================================================
 
-        guard_query = (
-            db.query(Guard)
+        # Historical payroll must use employment dates, not the
+        # guard's CURRENT status. A guard who worked during the
+        # selected month must remain visible even after deactivation.
+        month_end = date(
+            year,
+            month,
+            calendar_days
         )
 
-        if not include_inactive:
+        guard_query = db.query(Guard)
 
+        if include_inactive:
+            # Explicitly requested: include every guard.
+            pass
+        else:
+            # Normal monthly payroll:
+            # joining_date <= month_end
+            # AND (deactivation_date IS NULL OR
+            #      deactivation_date >= month_start)
             guard_query = guard_query.filter(
-                Guard.status == "Active"
+                and_(
+                    Guard.joining_date <= month_end,
+                    or_(
+                        Guard.deactivation_date.is_(None),
+                        Guard.deactivation_date >= month_start
+                    )
+                )
             )
 
         guards = (

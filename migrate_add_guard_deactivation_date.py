@@ -1,57 +1,76 @@
-"""Add guard deactivation date.
+"""
+Add deactivation_date to guards.
 
-Run this once against the existing SQLite database after replacing
-the application files.
+Run once:
+    python migrate_add_guard_deactivation_date.py
 
-This migration is intentionally idempotent.
+Creates a timestamped SQLite backup before changing the database.
 """
 
 from pathlib import Path
-import sqlite3
 from datetime import datetime
+import shutil
+import sqlite3
 
-from database.connection import DATABASE_URL
+PROJECT_ROOT = Path(__file__).resolve().parent
+DB_PATH = PROJECT_ROOT / "database.db"
+
+# Adjust this only if your project uses a different SQLite file.
+# If database.db does not exist, the script will report the path.
+BACKUP_PATH = DB_PATH.with_name(
+    f"{DB_PATH.stem}_backup_"
+    f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    f"{DB_PATH.suffix}"
+)
 
 
-def get_sqlite_path():
-    url = str(DATABASE_URL)
-    if not url.startswith("sqlite:///"):
-        raise RuntimeError(
-            "This migration script currently supports SQLite only."
+def main():
+    if not DB_PATH.exists():
+        raise FileNotFoundError(
+            f"SQLite database not found: {DB_PATH}"
         )
-    return Path(url.replace("sqlite:///", "", 1))
 
+    shutil.copy2(DB_PATH, BACKUP_PATH)
+    print(f"Backup created: {BACKUP_PATH}")
 
-def migrate():
-    db_path = get_sqlite_path()
+    connection = sqlite3.connect(DB_PATH)
 
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    backup = db_path.with_name(
-        f"{db_path.stem}_before_deactivation_"
-        f"{datetime.now():%Y%m%d_%H%M%S}{db_path.suffix}"
-    )
-    backup.write_bytes(db_path.read_bytes())
-
-    conn = sqlite3.connect(str(db_path))
     try:
         columns = {
             row[1]
-            for row in conn.execute("PRAGMA table_info(guards)").fetchall()
+            for row in connection.execute(
+                "PRAGMA table_info(guards)"
+            ).fetchall()
         }
 
-        if "deactivation_date" not in columns:
-            conn.execute(
-                "ALTER TABLE guards ADD COLUMN deactivation_date DATE"
+        if "deactivation_date" in columns:
+            print(
+                "deactivation_date already exists. "
+                "Nothing to change."
             )
+            return
 
-        conn.commit()
-        print("Guard deactivation migration completed.")
-        print(f"Backup created: {backup}")
+        connection.execute(
+            "ALTER TABLE guards "
+            "ADD COLUMN deactivation_date DATE"
+        )
+
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS "
+            "ix_guards_deactivation_date "
+            "ON guards(deactivation_date)"
+        )
+
+        connection.commit()
+
+        print(
+            "Migration completed successfully. "
+            "deactivation_date added to guards."
+        )
+
+    except Exception:
+        connection.rollback()
+        raise
     finally:
-        conn.close()
+        connection.close()
 
-
-if __name__ == "__main__":
-    migrate()

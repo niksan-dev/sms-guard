@@ -487,8 +487,17 @@ def get_guard_monthly_attendance(year, month):
             total_days_in_month
         )
 
+        # Historical month: include guards who were active at any
+        # point during the selected month, even if currently inactive.
         guards = (
             db.query(Guard)
+            .filter(
+                Guard.joining_date <= end_date,
+                (
+                    Guard.deactivation_date.is_(None)
+                    | (Guard.deactivation_date >= start_date)
+                )
+            )
             .order_by(
                 Guard.employee_id
             )

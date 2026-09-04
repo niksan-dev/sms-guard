@@ -33,7 +33,10 @@ from services.guard_advance_service import (
     get_monthly_advance_totals,
 )
 
-from services.guard_service import get_all_guards
+from services.guard_service import (
+    get_all_guards,
+    get_guards_active_during,
+)
 from services.site_service import get_all_sites
 
 
@@ -1163,6 +1166,8 @@ def show_guard_attendance_tab():
                 key="guard_monthly_year"
             )
 
+        # Historical month records include guards who were active
+        # during this month, even if they are inactive today.
         attendance = get_guard_monthly_attendance(
             int(selected_year),
             int(selected_month)

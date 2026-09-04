@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
+from calendar import monthrange
 from pathlib import Path
 from services.email_service import (
     send_email_with_pdf,
@@ -21,7 +22,10 @@ from services.site_bill_service import (
 from services.guard_monthly_salary_master_pdf_service import (
     generate_monthly_salary_master_pdf,
 )
-from services.guard_service import get_all_guards
+from services.guard_service import (
+    get_all_guards,
+    get_guards_active_during,
+)
 from services.site_service import get_all_sites
 from services.company_settings_service import get_company_settings
 from services.guard_monthly_salary_master_service import (
@@ -674,7 +678,26 @@ def show_guard_salary():
             key="billing_guard_year"
         )
 
-    guards = get_active_guards()
+    # Historical salary selection: include guards who were active
+    # during the selected salary month, even if currently inactive.
+    month_start = date(
+        int(selected_year),
+        int(selected_month),
+        1
+    )
+    month_end = date(
+        int(selected_year),
+        int(selected_month),
+        monthrange(
+            int(selected_year),
+            int(selected_month)
+        )[1]
+    )
+
+    guards = get_guards_active_during(
+        month_start,
+        month_end
+    )
 
     if not guards:
 

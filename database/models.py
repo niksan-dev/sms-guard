@@ -158,9 +158,12 @@ class Guard(Base):
         nullable=False
     )
 
+    # Date on which the guard stopped being active.
+    # NULL means the guard is currently active.
     deactivation_date = Column(
         Date,
-        nullable=True
+        nullable=True,
+        index=True
     )
 
     status = Column(
