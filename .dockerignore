@@ -2,14 +2,14 @@
 .gitignore
 .github
 
-__pycache__
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-venv
-.venv
-env
+venv/
+.venv/
+env/
 
 .env
 .streamlit/secrets.toml
@@ -17,12 +17,17 @@ env
 *.sqlite
 *.sqlite3
 *.db
+data/*
 
-.pytest_cache
-.mypy_cache
+uploads/
+generated/
+output/
+
+*.pdf
+*.zip
+
+.pytest_cache/
+.mypy_cache/
 
 .DS_Store
 Thumbs.db
-
-generated/
-output/
