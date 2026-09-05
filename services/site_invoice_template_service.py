@@ -217,7 +217,7 @@ class CompanySettingsRequiredError(RuntimeError):
 def _resolve_logo_path(value: Any) -> Path | None:
     if not value:
         return None
-    path = Path(str(value))
+    path = Path(str(value).replace("\\", "/"))
     if not path.is_absolute():
         path = PROJECT_ROOT / path
     try:

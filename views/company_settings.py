@@ -64,7 +64,7 @@ def save_company_logo(uploaded_file):
             uploaded_file.getbuffer()
         )
     #print("666666",file_path)
-    return file_path
+    return file_path.replace(os.sep, "/")
 
 
 # ==================================================
@@ -607,7 +607,7 @@ def show_company_settings():
         # which cleared the database value whenever the
         # form was saved without selecting a logo.
         # ------------------------------------------
-        default_logo_path = 'uploads\\company\\company_logo.png'
+        default_logo_path = 'uploads/company/company_logo.png'
         logo_path = get_value(
             settings,
             "logo_path",
@@ -631,9 +631,7 @@ def show_company_settings():
 
             if saved_logo_path:
 
-                logo_path = os.path.normpath(
-                    saved_logo_path
-                )
+                logo_path = saved_logo_path.replace("\\", "/")
 
                 print(
                     "FINAL LOGO PATH =========>",

@@ -162,7 +162,7 @@ def _save_document_file(uploaded_file, employee_id, document_type):
     file_path.write_bytes(data)
 
     return (
-        str(file_path.relative_to(PROJECT_ROOT)),
+        file_path.relative_to(PROJECT_ROOT).as_posix(),
         original_name,
         getattr(uploaded_file, "type", None),
         size,

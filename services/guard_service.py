@@ -276,11 +276,7 @@ def save_guard_photo(
             )
 
         # Store relative path in database
-        return str(
-            file_path.relative_to(
-                PROJECT_ROOT
-            )
-        )
+        return file_path.relative_to(PROJECT_ROOT).as_posix()
 
     except Exception as e:
 
