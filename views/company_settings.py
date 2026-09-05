@@ -244,7 +244,7 @@ def show_company_settings():
                 "Alternate Contact Number",
                 value=get_value(
                     settings,
-                    "alternate_phone" or ""
+                    "alternate_phone"
                 ),
                 max_chars=10,
             )
@@ -346,9 +346,11 @@ def show_company_settings():
                 min_value=0.0,
                 max_value=100.0,
                 value=float(
-                    settings.cgst_rate
-                    if settings.cgst_rate is not None
-                    else 9.0
+                    get_value(
+                        settings,
+                        "cgst_rate",
+                        9.0
+                    )
                 ),
                 step=0.5,
                 format="%.2f",
@@ -360,9 +362,11 @@ def show_company_settings():
                 min_value=0.0,
                 max_value=100.0,
                 value=float(
-                    settings.sgst_rate
-                    if settings.sgst_rate is not None
-                    else 9.0
+                    get_value(
+                        settings,
+                        "sgst_rate",
+                        9.0
+                    )
                 ),
                 step=0.5,
                 format="%.2f",
@@ -571,7 +575,6 @@ def show_company_settings():
     # ----------------------------------------------
     # PAN VALIDATION
     # ----------------------------------------------
-    print(f"Validating PAN: {pan}")  # Debugging line
     if not validate_pan(pan):
 
         st.error(
