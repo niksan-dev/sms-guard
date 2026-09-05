@@ -12,6 +12,7 @@ venv
 env
 
 .env
+.streamlit/secrets.toml
 
 *.sqlite
 *.sqlite3

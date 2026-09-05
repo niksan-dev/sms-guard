@@ -64,7 +64,7 @@ def save_company_logo(uploaded_file):
             uploaded_file.getbuffer()
         )
     #print("666666",file_path)
-    return file_path
+    return file_path.replace(os.sep, "/")
 
 
 # ==================================================
@@ -244,7 +244,7 @@ def show_company_settings():
                 "Alternate Contact Number",
                 value=get_value(
                     settings,
-                    "alternate_phone" or ""
+                    "alternate_phone"
                 ),
                 max_chars=10,
             )
@@ -346,9 +346,11 @@ def show_company_settings():
                 min_value=0.0,
                 max_value=100.0,
                 value=float(
-                    settings.cgst_rate
-                    if settings.cgst_rate is not None
-                    else 9.0
+                    get_value(
+                        settings,
+                        "cgst_rate",
+                        9.0
+                    )
                 ),
                 step=0.5,
                 format="%.2f",
@@ -360,9 +362,11 @@ def show_company_settings():
                 min_value=0.0,
                 max_value=100.0,
                 value=float(
-                    settings.sgst_rate
-                    if settings.sgst_rate is not None
-                    else 9.0
+                    get_value(
+                        settings,
+                        "sgst_rate",
+                        9.0
+                    )
                 ),
                 step=0.5,
                 format="%.2f",
@@ -571,7 +575,6 @@ def show_company_settings():
     # ----------------------------------------------
     # PAN VALIDATION
     # ----------------------------------------------
-    print(f"Validating PAN: {pan}")  # Debugging line
     if not validate_pan(pan):
 
         st.error(
@@ -607,7 +610,7 @@ def show_company_settings():
         # which cleared the database value whenever the
         # form was saved without selecting a logo.
         # ------------------------------------------
-        default_logo_path = 'uploads\\company\\company_logo.png'
+        default_logo_path = 'uploads/company/company_logo.png'
         logo_path = get_value(
             settings,
             "logo_path",
@@ -631,9 +634,7 @@ def show_company_settings():
 
             if saved_logo_path:
 
-                logo_path = os.path.normpath(
-                    saved_logo_path
-                )
+                logo_path = saved_logo_path.replace("\\", "/")
 
                 print(
                     "FINAL LOGO PATH =========>",

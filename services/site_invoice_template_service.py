@@ -217,7 +217,7 @@ class CompanySettingsRequiredError(RuntimeError):
 def _resolve_logo_path(value: Any) -> Path | None:
     if not value:
         return None
-    path = Path(str(value))
+    path = Path(str(value).replace("\\", "/"))
     if not path.is_absolute():
         path = PROJECT_ROOT / path
     try:
@@ -263,7 +263,12 @@ def _load_bill_snapshot(bill: Any) -> dict[str, Any]:
             "sgst_amount": loaded_bill.sgst_amount,
             "total_amount": loaded_bill.total_amount,
             "site_code": getattr(site, "site_code", "") if site else "",
-            "site_name": getattr(site, "name", "") if site else "",
+            "site_name": (
+                (getattr(site, "name", None) if site else None)
+                or (getattr(site, "site_name", None) if site else None)
+                or (getattr(site, "site_code", None) if site else None)
+                or ""
+            ),
             "site_email": getattr(site, "email", "") if site else "",
             "site_address": _site_address(site) if site else "",
             "customer_name": _client_name(client),
@@ -393,87 +398,149 @@ def _draw_left_cell_text(
 # ---------------------------------------------------------------------------
 
 
-def _draw_invoice(snapshot: dict[str, Any], settings: dict[str, Any]) -> bytes:
-    """Render the reference Excel invoice geometry directly with ReportLab."""
 
+def _draw_invoice(snapshot: dict[str, Any], settings: dict[str, Any]) -> bytes:
+    """
+    Render the Site Bill in the exact visual structure of the supplied
+    template_1.xlsx / INV-202609-0002 reference.
+
+    The Excel workbook is used only as a geometry/design reference.
+    The final document is generated directly as a one-page A4 PDF.
+    """
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     page_w, page_h = A4
 
-    # Excel print area A1:H38 is reproduced inside a compact 7.5 mm margin.
+    # ------------------------------------------------------------------
+    # PAGE / GRID
+    # ------------------------------------------------------------------
     left = 21.5
     right = 21.5
     top = 18.0
-    bottom = 18.0
+    bottom = 42.0  # leaves room for the small footer below the invoice
+
     x0 = left
     y_top = page_h - top
     usable_w = page_w - left - right
 
-    # Column proportions based on the Excel template's A:H widths:
-    # 7, 27, 10, 14, 18, 18, 14, 14.
-    excel_widths = [7, 27, 10, 14, 18, 18, 14, 14]
+    # Exact column proportions from the supplied workbook:
+    # A:H = 7, 27, 10, 14, 18, 13, 14, 13
+    excel_widths = [7, 27, 10, 14, 18, 13, 14, 13]
     scale = usable_w / sum(excel_widths)
     col = [w * scale for w in excel_widths]
+
     xs = [x0]
     for width in col:
         xs.append(xs[-1] + width)
 
-    # Row heights based on the Excel template. Rows 1-10 are slightly taller;
-    # rows 11-38 follow the 25-point template rhythm.
+    # Exact row-height proportions from the supplied workbook.
     excel_heights = [
-        24, 48, 28, 28,
-        20, 20, 20, 20, 20, 32,
-        *([25] * 28),
+        24, 48, 27.75, 27.75,
+        19.5, 19.5, 19.5, 19.5, 19.5,
+        31.5,
+        *([24.75] * 13),  # rows 11-23
+        15.0, 12.75, 13.5, 12.75, 12.0, 12.0, 15.0,
+        12.0, 12.75, 8.25, 15.0, 12.75, 12.0, 9.0, 14.25,
     ]
-    row_scale = (page_h - top - bottom) / sum(excel_heights)
+
+    grid_h = sum(excel_heights)
+    available_h = page_h - top - bottom
+    row_scale = available_h / grid_h
+
     row_h = [h * row_scale for h in excel_heights]
     ys = [y_top]
     for height in row_h:
         ys.append(ys[-1] - height)
 
-    def rect(c1: int, r1: int, c2: int, r2: int, fill=None, stroke=True, width=0.55):
-        x = xs[c1]
-        y = ys[r2]
-        w = xs[c2 + 1] - x
-        h = ys[r1] - y
-        if fill is not None:
-            c.setFillColor(fill)
-            c.setStrokeColor(colors.black if stroke else fill)
-            c.setLineWidth(width)
-            c.rect(x, y, w, h, fill=1, stroke=1 if stroke else 0)
-        elif stroke:
-            c.setStrokeColor(colors.black)
-            c.setLineWidth(width)
-            c.rect(x, y, w, h, fill=0, stroke=1)
-        return x, y, w, h
+    # Reference header fill from the workbook.
+    header_fill = colors.HexColor("#D9D2E9")
+    border_color = colors.HexColor("#555555")
 
-    def cell(c1, r1, c2=None, r2=None):
+    def cell(c1: int, r1: int, c2: int | None = None,
+             r2: int | None = None):
         if c2 is None:
             c2 = c1
         if r2 is None:
             r2 = r1
-        return xs[c1], ys[r2 + 1], xs[c2 + 1] - xs[c1], ys[r1] - ys[r2 + 1]
+        return (
+            xs[c1],
+            ys[r2 + 1],
+            xs[c2 + 1] - xs[c1],
+            ys[r1] - ys[r2 + 1],
+        )
 
-    # Base borders for the complete printable area.
-    c.setStrokeColor(colors.black)
-    c.setLineWidth(0.55)
+    def box(c1: int, r1: int, c2: int, r2: int,
+            fill=None, line_width=0.55):
+        x = xs[c1]
+        y = ys[r2 + 1]
+        w = xs[c2 + 1] - xs[c1]
+        h = ys[r1] - ys[r2 + 1]
+
+        c.setLineWidth(line_width)
+        c.setStrokeColor(border_color)
+
+        if fill is not None:
+            c.setFillColor(fill)
+            c.rect(x, y, w, h, fill=1, stroke=1)
+            c.setFillColor(colors.black)
+        else:
+            c.rect(x, y, w, h, fill=0, stroke=1)
+
+    def vline(ci: int, r1: int, r2: int, width=0.55):
+        c.setStrokeColor(border_color)
+        c.setLineWidth(width)
+        c.line(xs[ci], ys[r1], xs[ci], ys[r2 + 1])
+
+    def hline(r: int, c1: int = 0, c2: int = 7, width=0.55):
+        c.setStrokeColor(border_color)
+        c.setLineWidth(width)
+        c.line(xs[c1], ys[r + 1], xs[c2 + 1], ys[r + 1])
+
+    def right_cell_text(text, x, y, width, height,
+                        font=_FONT_REGULAR, size=9.5, padding=5):
+        lines = _wrap_text(text, font, size, max(1, width - 2 * padding))
+        leading = size * 1.15
+        total = len(lines) * leading
+        baseline = y + (height + total) / 2 - leading
+        c.setFont(font, size)
+        for line in lines:
+            c.drawRightString(x + width - padding, baseline, line)
+            baseline -= leading
+
+    # ------------------------------------------------------------------
+    # Outer invoice border
+    # ------------------------------------------------------------------
+    c.setStrokeColor(border_color)
+    c.setLineWidth(0.65)
     c.rect(x0, ys[-1], usable_w, y_top - ys[-1], fill=0, stroke=1)
 
     # ------------------------------------------------------------------
-    # Header
+    # ROW 1 — TAX INVOICE
     # ------------------------------------------------------------------
+    box(0, 0, 7, 0)
     x, y, w, h = cell(0, 0, 7, 0)
     c.setFont(_FONT_BOLD, 13)
     c.drawCentredString(x + w / 2, y + h / 2 - 4, "TAX INVOICE")
 
-    # Logo A2:B4, company details C2:H4.
+    # ------------------------------------------------------------------
+    # ROWS 2-4 — LOGO + COMPANY HEADER
+    # ------------------------------------------------------------------
+    box(0, 1, 1, 3)
+    box(2, 1, 7, 1)
+    box(2, 2, 7, 2)
+    box(2, 3, 7, 3)
+
     logo_x, logo_y, logo_w, logo_h = cell(0, 1, 1, 3)
     logo_path = _resolve_logo_path(settings.get("logo_path"))
+
     if logo_path:
         try:
             image = ImageReader(str(logo_path))
             iw, ih = image.getSize()
-            ratio = min((logo_w - 8) / iw, (logo_h - 8) / ih)
+            ratio = min(
+                (logo_w - 8) / iw,
+                (logo_h - 8) / ih,
+            )
             dw, dh = iw * ratio, ih * ratio
             c.drawImage(
                 image,
@@ -488,241 +555,437 @@ def _draw_invoice(snapshot: dict[str, Any], settings: dict[str, Any]) -> bytes:
             pass
 
     company_name = _safe(settings.get("company_name"))
+
     company_address = ", ".join(
-        str(v).strip()
-        for v in [
+        str(value).strip()
+        for value in (
             settings.get("address"),
             settings.get("city"),
             settings.get("state"),
             settings.get("pincode"),
-        ]
-        if v and str(v).strip()
+        )
+        if value and str(value).strip()
     )
+
     contact = " / ".join(
-        str(v).strip()
-        for v in [settings.get("phone"), settings.get("email")]
-        if v and str(v).strip()
+        str(value).strip()
+        for value in (
+            settings.get("phone"),
+            settings.get("email"),
+        )
+        if value and str(value).strip()
     )
 
     cx, cy, cw, ch = cell(2, 1, 7, 1)
-    _draw_centered_cell_text(c, company_name, cx, cy, cw, ch, _FONT_BOLD, 17)
-    cx, cy, cw, ch = cell(2, 2, 7, 2)
-    _draw_centered_cell_text(c, company_address, cx, cy, cw, ch, _FONT_BOLD, 9.5)
-    cx, cy, cw, ch = cell(2, 3, 7, 3)
-    _draw_centered_cell_text(c, contact, cx, cy, cw, ch, _FONT_BOLD, 10.5)
+    _draw_centered_cell_text(
+        c, company_name, cx, cy, cw, ch,
+        _FONT_BOLD, 17
+    )
 
-    # Bill From / Bill To / Invoice metadata.
-    rect(0, 4, 2, 7)
-    rect(3, 4, 5, 7)
-    rect(6, 4, 6, 5)
-    rect(7, 4, 7, 5)
-    rect(6, 6, 6, 7)
-    rect(7, 6, 7, 7)
-
-    bx, by, bw, bh = cell(0, 4, 2, 7)
-    bill_from = f"Bill From,\n{company_name}"
-    _draw_left_cell_text(c, bill_from, bx, by, bw, bh, _FONT_BOLD, 9.5)
-
-    tx, ty, tw, th = cell(3, 4, 5, 7)
-    bill_to = f"Bill To,\n{_safe(snapshot.get('customer_name'))}"
-    site_name = _safe(snapshot.get("site_name"))
-    if site_name:
-        bill_to += f"\nSite: {site_name}"
-    _draw_left_cell_text(c, bill_to, tx, ty, tw, th, _FONT_BOLD, 9.5)
-
-    gx, gy, gw, gh = cell(6, 4, 6, 5)
-    _draw_left_cell_text(c, "Invoice\nNo.", gx, gy, gw, gh, _FONT_BOLD, 9.5)
-    hx, hy, hw, hh = cell(7, 4, 7, 5)
-    _draw_left_cell_text(c, snapshot.get("bill_number"), hx, hy, hw, hh, _FONT_REGULAR, 9.5)
-
-    gx, gy, gw, gh = cell(6, 6, 6, 7)
-    _draw_left_cell_text(c, "Invoice\nDate", gx, gy, gw, gh, _FONT_BOLD, 9.5)
-    hx, hy, hw, hh = cell(7, 6, 7, 7)
-    _draw_left_cell_text(c, _date_text(snapshot.get("bill_date") or date.today()), hx, hy, hw, hh, _FONT_REGULAR, 9.5)
-
-    # PAN row and project/site address.
-    rect(0, 8, 2, 8)
-    rect(3, 8, 5, 8)
-    rect(6, 8, 7, 8)
-    px, py, pw, ph = cell(0, 8, 2, 8)
-    pan = _safe(settings.get("pan_number"))
-    _draw_left_cell_text(c, f"PAN:- {pan}" if pan else "PAN:-", px, py, pw, ph, _FONT_REGULAR, 9.5)
-
-    if snapshot.get("customer_pan"):
-        cx, cy, cw, ch = cell(3, 8, 5, 8)
-        _draw_left_cell_text(c, f"PAN:- {snapshot['customer_pan']}", cx, cy, cw, ch, _FONT_REGULAR, 9.5)
-
-    ax, ay, aw, ah = cell(0, 9, 7, 9)
-    site_address = snapshot.get("site_address") or ""
-    _draw_left_cell_text(c, f"Project Add :- {site_address}", ax, ay, aw, ah, _FONT_REGULAR, 9.2)
-
-    # ------------------------------------------------------------------
-    # Particulars table rows 11-19
-    # ------------------------------------------------------------------
-    for r in range(10, 19):
-        rect(0, r, 7, r)
-    # Vertical grid lines A:H through rows 11-19.
-    for ci in range(1, 8):
-        c.line(xs[ci], ys[10], xs[ci], ys[19])
-
-    headers = ["Sr.\nNo.", "PARTICULARS", "UNIT", "QUANTITY", "No. Of Days", "AMOUNT"]
-    for idx, text in enumerate(headers):
-        cx = xs[idx]
-        cw = xs[idx + 1] - xs[idx]
-        # F:H is merged for amount.
-        if idx == 5:
-            cx, cw = xs[5], xs[8] - xs[5]
-        _draw_centered_cell_text(c, text, cx, ys[11], cw, row_h[10], _FONT_BOLD, 9.5)
-
-    # F11:H11 merged, remove internal lines within header amount area.
-    c.setFillColor(colors.white)
-    c.rect(xs[5], ys[11], xs[8] - xs[5], row_h[10], fill=1, stroke=0)
-    c.setStrokeColor(colors.black)
-    c.rect(xs[5], ys[11], xs[8] - xs[5], row_h[10], fill=0, stroke=1)
-    _draw_centered_cell_text(c, "AMOUNT", xs[5], ys[11], xs[8] - xs[5], row_h[10], _FONT_BOLD, 9.5)
-
-    # The white fill used above for the merged AMOUNT header must not carry
-    # into the remaining invoice content. Otherwise all subsequent dynamic
-    # values are drawn in white and appear to be missing from the PDF.
+    # Company name in the reference is blue.
+    c.setFillColor(colors.HexColor("#1155CC"))
+    _draw_centered_cell_text(
+        c, company_name, cx, cy, cw, ch,
+        _FONT_BOLD, 17
+    )
     c.setFillColor(colors.black)
 
-    # Row 12: section title (B12:H12 is merged in the reference workbook).
-    rect(0, 11, 0, 11)
-    rect(1, 11, 7, 11)
-    _draw_centered_cell_text(c, "A", xs[0], ys[12], col[0], row_h[11], _FONT_BOLD, 9.5)
-    _draw_left_cell_text(c, "Providing Security Guard", xs[1], ys[12], xs[8] - xs[1], row_h[11], _FONT_BOLD, 9.5)
+    cx, cy, cw, ch = cell(2, 2, 7, 2)
+    _draw_centered_cell_text(
+        c, company_address, cx, cy, cw, ch,
+        _FONT_REGULAR, 9.5
+    )
 
-    # Rows 13-14: A13:A14 and B13:B14 are merged in the reference workbook.
-    rect(0, 12, 0, 13)
-    rect(1, 12, 7, 13)
-    _draw_centered_cell_text(c, "1", xs[0], ys[14], col[0], row_h[12] + row_h[13], _FONT_REGULAR, 9.5)
-    month_text = f"For the month of\n{_month_text(snapshot['billing_year'], snapshot['billing_month'])}"
-    _draw_left_cell_text(c, month_text, xs[1], ys[14], xs[8] - xs[1], row_h[12] + row_h[13], _FONT_REGULAR, 9.5)
+    cx, cy, cw, ch = cell(2, 3, 7, 3)
+    _draw_centered_cell_text(
+        c, contact, cx, cy, cw, ch,
+        _FONT_BOLD, 10.5
+    )
 
-    # Rows 15-19: shift lines. The original template uses Day/Night and
-    # leaves unused rows blank. We render Shift 1 and Shift 2 explicitly.
+    # ------------------------------------------------------------------
+    # ROWS 5-8 — BILL FROM / BILL TO / INVOICE DETAILS
+    # ------------------------------------------------------------------
+    box(0, 4, 2, 7)
+    box(3, 4, 5, 7)
+    box(6, 4, 6, 5)
+    box(7, 4, 7, 5)
+    box(6, 6, 6, 7)
+    box(7, 6, 7, 7)
+
+    bx, by, bw, bh = cell(0, 4, 2, 7)
+    _draw_left_cell_text(
+        c,
+        f"Bill From,\n{company_name}",
+        bx, by, bw, bh,
+        _FONT_BOLD, 9.5,
+    )
+
+    tx, ty, tw, th = cell(3, 4, 5, 7)
+    # The reference invoice uses the SITE NAME in the Bill To section.
+    # Fall back to customer name only when a site name is unavailable.
+    bill_to_name = (
+        _safe(snapshot.get("site_name"))
+        or _safe(snapshot.get("customer_name"))
+    )
+    _draw_left_cell_text(
+        c,
+        f"Bill To,\n{bill_to_name}",
+        tx, ty, tw, th,
+        _FONT_BOLD, 9.5,
+    )
+
+    gx, gy, gw, gh = cell(6, 4, 6, 5)
+    _draw_left_cell_text(
+        c, "Invoice\nNo.",
+        gx, gy, gw, gh,
+        _FONT_BOLD, 9.5,
+    )
+
+    hx, hy, hw, hh = cell(7, 4, 7, 5)
+    _draw_centered_cell_text(
+        c, snapshot.get("bill_number"),
+        hx, hy, hw, hh,
+        _FONT_REGULAR, 9.2,
+    )
+
+    gx, gy, gw, gh = cell(6, 6, 6, 7)
+    _draw_left_cell_text(
+        c, "Invoice\nDate",
+        gx, gy, gw, gh,
+        _FONT_BOLD, 9.5,
+    )
+
+    hx, hy, hw, hh = cell(7, 6, 7, 7)
+    _draw_centered_cell_text(
+        c,
+        _date_text(snapshot.get("bill_date") or date.today()),
+        hx, hy, hw, hh,
+        _FONT_REGULAR, 9.2,
+    )
+
+    # ------------------------------------------------------------------
+    # ROW 9 — PAN
+    # ------------------------------------------------------------------
+    box(0, 8, 2, 8)
+    box(3, 8, 5, 8)
+    box(6, 8, 7, 8)
+
+    px, py, pw, ph = cell(0, 8, 2, 8)
+    company_pan = _safe(settings.get("pan_number"))
+    _draw_left_cell_text(
+        c,
+        f"PAN:- {company_pan}" if company_pan else "PAN:-",
+        px, py, pw, ph,
+        _FONT_REGULAR, 9.5,
+    )
+
+    cx, cy, cw, ch = cell(3, 8, 5, 8)
+    customer_pan = _safe(snapshot.get("customer_pan"))
+    _draw_left_cell_text(
+        c,
+        f"PAN:- {customer_pan}" if customer_pan else "PAN:-",
+        cx, cy, cw, ch,
+        _FONT_REGULAR, 9.5,
+    )
+
+    # ------------------------------------------------------------------
+    # ROW 10 — SITE ADDRESS
+    # ------------------------------------------------------------------
+    box(0, 9, 7, 9)
+    ax, ay, aw, ah = cell(0, 9, 7, 9)
+    _draw_left_cell_text(
+        c,
+        f"Site Address:- {_safe(snapshot.get('site_address'))}",
+        ax, ay, aw, ah,
+        _FONT_REGULAR, 9.2,
+    )
+
+    # ------------------------------------------------------------------
+    # ROW 11 — TABLE HEADER
+    # ------------------------------------------------------------------
+    box(0, 10, 4, 10, fill=header_fill)
+    box(5, 10, 7, 10, fill=header_fill)
+
+    # F11:H11 is merged; E is "No. Of Days".
+    # Draw the vertical separators A|B|C|D|E|F:H.
+    for ci in range(1, 6):
+        vline(ci, 10, 10)
+
+    headers = [
+        ("Sr.\nNo.", 0),
+        ("PARTICULARS", 1),
+        ("UNIT", 2),
+        ("QUANTITY", 3),
+        ("No. Of Days", 4),
+    ]
+
+    for label, ci in headers:
+        cx, cy, cw, ch = cell(ci, 10)
+        _draw_centered_cell_text(
+            c, label, cx, cy, cw, ch,
+            _FONT_BOLD, 9.5
+        )
+
+    cx, cy, cw, ch = cell(5, 10, 7, 10)
+    _draw_centered_cell_text(
+        c, "AMOUNT",
+        cx, cy, cw, ch,
+        _FONT_BOLD, 9.5
+    )
+
+    # ------------------------------------------------------------------
+    # ROW 12 — SECTION TITLE
+    # ------------------------------------------------------------------
+    box(0, 11, 0, 11)
+    box(1, 11, 7, 11)
+
+    cx, cy, cw, ch = cell(0, 11)
+    _draw_centered_cell_text(
+        c, "A", cx, cy, cw, ch,
+        _FONT_BOLD, 9.5
+    )
+
+    cx, cy, cw, ch = cell(1, 11, 7, 11)
+    _draw_left_cell_text(
+        c, "Providing Security Guard",
+        cx, cy, cw, ch,
+        _FONT_BOLD, 9.5,
+    )
+
+    # ------------------------------------------------------------------
+    # ROWS 13-14 — MONTH SECTION
+    # ------------------------------------------------------------------
+    # The reference template has A13:A14 and B13:B14 merged vertically.
+    # C/D/E remain separate columns, while F:H is the merged AMOUNT area.
+    # Do NOT draw the individual row boxes first: doing so creates a
+    # horizontal line through the merged month cell.
+
+    # Outer/merged cells.
+    box(0, 12, 0, 13)
+    box(1, 12, 1, 13)
+
+    # C, D and E are separate cells on both rows.
+    for r in (12, 13):
+        box(2, r, 2, r)
+        box(3, r, 3, r)
+        box(4, r, 4, r)
+        # F:H is one merged amount cell for each row.
+        box(5, r, 7, r)
+
+    # The merged cells above already provide their vertical boundaries.
+    # Explicitly reinforce only the column boundaries that continue through
+    # the two rows.  There must be NO G/H internal lines inside AMOUNT.
+    for ci in (2, 3, 4, 5):
+        vline(ci, 12, 13)
+
+    # Keep the month number and text vertically centred in their merged cells.
+    cx, cy, cw, ch = cell(0, 12, 0, 13)
+    _draw_centered_cell_text(
+        c, "1", cx, cy, cw, ch,
+        _FONT_REGULAR, 9.5
+    )
+
+    month_text = (
+        f"For the month of\n"
+        f"{_month_text(snapshot['billing_year'], snapshot['billing_month'])}"
+    )
+
+    cx, cy, cw, ch = cell(1, 12, 1, 13)
+    _draw_left_cell_text(
+        c, month_text, cx, cy, cw, ch,
+        _FONT_REGULAR, 9.0, padding=5
+    )
+
+    # ------------------------------------------------------------------
+    # ROWS 15-19 — SHIFT LINES
+    # ------------------------------------------------------------------
     shift_rows = [
         (14, "Day/Night", snapshot.get("shift_1_count", 0)),
         (15, "Day/Night", snapshot.get("shift_2_count", 0)),
     ]
+
     shift_rate = _number(snapshot.get("shift_rate"))
     total_days = int(snapshot.get("total_days") or 0)
 
+    # Draw each row as A|B|C|D|E|F:H.  F:H must stay merged.
     for r in range(14, 19):
-        # Clear / draw row borders.
-        rect(0, r, 7, r)
-        for ci in range(1, 7):
-            c.line(xs[ci], ys[r], xs[ci], ys[r + 1])
+        box(0, r, 0, r)
+        box(1, r, 1, r)
+        box(2, r, 2, r)
+        box(3, r, 3, r)
+        box(4, r, 4, r)
+        box(5, r, 7, r)
 
     for r, unit, quantity in shift_rows:
-        values = [
-            "",
-            unit,
-            "01",
-            f"{int(quantity or 0):02d}",
-            str(total_days),
-            f"₹ {shift_rate * int(quantity or 0):,.2f}",
-        ]
-        _draw_centered_cell_text(c, values[0], xs[0], ys[r + 1], col[0], row_h[r], _FONT_REGULAR, 9.5)
-        _draw_centered_cell_text(c, values[1], xs[1], ys[r + 1], col[1], row_h[r], _FONT_REGULAR, 9.5)
-        _draw_centered_cell_text(c, values[2], xs[2], ys[r + 1], col[2], row_h[r], _FONT_REGULAR, 9.5)
-        _draw_centered_cell_text(c, values[3], xs[3], ys[r + 1], col[3], row_h[r], _FONT_REGULAR, 9.5)
-        _draw_centered_cell_text(c, values[4], xs[4], ys[r + 1], col[4], row_h[r], _FONT_REGULAR, 9.5)
-        _draw_left_cell_text(c, values[5], xs[5], ys[r + 1], xs[8] - xs[5], row_h[r], _FONT_REGULAR, 9.5, padding=5)
+        quantity = int(quantity or 0)
+
+        values = {
+            0: "",
+            1: unit,
+            2: "01",
+            3: f"{quantity:02d}",
+            4: str(total_days),
+        }
+
+        for ci, value in values.items():
+            cx, cy, cw, ch = cell(ci, r)
+            _draw_centered_cell_text(
+                c, value, cx, cy, cw, ch,
+                _FONT_REGULAR, 9.5
+            )
+
+        amount = shift_rate * quantity
+        cx, cy, cw, ch = cell(5, r, 7, r)
+        right_cell_text(
+            f"₹ {amount:,.2f}",
+            cx, cy, cw, ch,
+            _FONT_REGULAR, 9.5, padding=5
+        )
 
     # ------------------------------------------------------------------
-    # Totals rows 20-22
+    # ROWS 20-22 — TOTALS
     # ------------------------------------------------------------------
-    for r in (19, 20, 21):
-        rect(0, r, 4, r)
-        rect(5, r, 7, r)
-        c.setStrokeColor(colors.black)
-        c.line(xs[5], ys[r], xs[5], ys[r + 1])
-
     gross = _number(snapshot.get("gross_amount"))
     cgst = _number(snapshot.get("cgst_amount"))
     sgst = _number(snapshot.get("sgst_amount"))
 
     cgst_rate = _number(settings.get("cgst_rate", 9.0))
     sgst_rate = _number(settings.get("sgst_rate", 9.0))
-    labels = [
-        "Gross Bill Amt.",
-        f"Add : CGST @ {cgst_rate:g} % Of Gross",
-        f"Add : SGST @ {sgst_rate:g} % Of Gross",
+
+    total_rows = [
+        (19, "Gross Bill Amt.", gross, True),
+        (20, f"Add : CGST @ {cgst_rate:.1f} % Of Gross", cgst, False),
+        (21, f"Add : SGST @ {sgst_rate:.1f} % Of Gross", sgst, False),
     ]
-    amounts = [gross, cgst, sgst]
-    for i, (label, amount) in enumerate(zip(labels, amounts), start=19):
-        lx, ly, lw, lh = cell(0, i, 4, i)
-        _draw_left_cell_text(c, label, lx, ly, lw, lh, _FONT_BOLD if i == 19 else _FONT_REGULAR, 9.5, padding=5)
-        ax, ay, aw, ah = cell(5, i, 7, i)
-        _draw_left_cell_text(c, f"₹ {amount:,.2f}" if amount else "-", ax, ay, aw, ah, _FONT_REGULAR if i != 19 else _FONT_BOLD, 9.5, padding=5)
+
+    for r, label, amount, bold in total_rows:
+        box(0, r, 4, r)
+        box(5, r, 7, r)
+
+        lx, ly, lw, lh = cell(0, r, 4, r)
+        right_cell_text(
+            label,
+            lx, ly, lw, lh,
+            _FONT_BOLD if bold else _FONT_REGULAR,
+            9.5,
+            padding=5,
+        )
+
+        ax, ay, aw, ah = cell(5, r, 7, r)
+        right_cell_text(
+            f"₹ {amount:,.2f}" if amount else "0",
+            ax, ay, aw, ah,
+            _FONT_BOLD if bold else _FONT_REGULAR,
+            9.5,
+            padding=5,
+        )
 
     # ------------------------------------------------------------------
-    # Amount in words
+    # ROW 23 — AMOUNT IN WORDS + GRAND TOTAL
     # ------------------------------------------------------------------
-    # Row 23: amount in words on the left and Grand Total on the right,
-    # matching the generated invoice layout used by Billing & Payroll.
-    rect(0, 22, 4, 22)
-    rect(5, 22, 7, 22)
-    c.setStrokeColor(colors.black)
-    c.line(xs[5], ys[22], xs[5], ys[23])
+    box(0, 22, 4, 22)
+    box(5, 22, 5, 22)
+    box(6, 22, 7, 22)
+
     words = _amount_words(_number(snapshot.get("total_amount")))
+
+    wx, wy, ww, wh = cell(0, 22, 4, 22)
     _draw_left_cell_text(
         c,
         f"Total Amt In Word :- {words} Only.",
-        xs[0], ys[23], xs[5] - xs[0], row_h[22], _FONT_BOLD, 8.5,
+        wx, wy, ww, wh,
+        _FONT_BOLD, 8.5, padding=5
     )
+
+    gx, gy, gw, gh = cell(5, 22, 5, 22)
     _draw_left_cell_text(
         c,
-        "Grand Total",
-        xs[5], ys[23], xs[7] - xs[5], row_h[22], _FONT_BOLD, 8.5,
-        padding=4,
+        "Grand Total.",
+        gx, gy, gw, gh,
+        _FONT_BOLD, 8.5, padding=4
     )
-    _draw_left_cell_text(
-        c,
+
+    ax, ay, aw, ah = cell(6, 22, 7, 22)
+    right_cell_text(
         f"₹ {_number(snapshot.get('total_amount')):,.2f}",
-        xs[7], ys[23], xs[8] - xs[7], row_h[22], _FONT_BOLD, 8.5,
-        padding=3,
+        ax, ay, aw, ah,
+        _FONT_BOLD, 8.5, padding=4
     )
 
     # ------------------------------------------------------------------
-    # Bank details / signature, rows 24-30
+    # ROWS 24-30 — BANK DETAILS
+    # ROWS 24-38 — SIGNATURE
+    # ROWS 31-38 — DECLARATION
     # ------------------------------------------------------------------
-    rect(0, 23, 3, 29)
-    rect(4, 23, 7, 37)
+    box(0, 23, 3, 29)
+    box(4, 23, 7, 37)
+    box(0, 30, 3, 37)
+
     bank_lines = [
         "BANK DETAILS:-",
         f"Bank name :- {_safe(settings.get('bank_name'))}",
-        f"A/C HOLDER :- {_safe(settings.get('account_holder_name') or company_name)}",
+        (
+            "A/C HOLDER :- "
+            f"{_safe(settings.get('account_holder_name') or company_name)}"
+        ),
         f"ACC NO :- {_safe(settings.get('account_number'))}",
         f"IFSC CODE:- {_safe(settings.get('ifsc_code'))}",
         f"BRANCH:- {_safe(settings.get('branch_name'))}",
     ]
-    bank_text = "\n".join(bank_lines)
+
     bx, by, bw, bh = cell(0, 23, 3, 29)
-    _draw_left_cell_text(c, bank_text, bx, by, bw, bh, _FONT_REGULAR, 8.7)
+    # Draw bank details as explicit lines to match the compact reference.
+    c.setFont(_FONT_REGULAR, 8.7)
+    line_y = by + bh - 12
+    for line in bank_lines:
+        c.drawString(bx + 5, line_y, line)
+        line_y -= 11.5
 
     sx, sy, sw, sh = cell(4, 23, 7, 37)
-    signature_text = f"For {company_name}.\n\n\n{_safe(settings.get('owner_name') or 'Proprietor')}"
-    _draw_centered_cell_text(c, signature_text, sx, sy, sw, sh, _FONT_REGULAR, 9.5)
+    signature_text = (
+        f"For {company_name}.\n\n\n"
+        f"{_safe(settings.get('owner_name') or 'Proprietor')}"
+    )
+    _draw_centered_cell_text(
+        c,
+        signature_text,
+        sx, sy, sw, sh,
+        _FONT_REGULAR, 9.5
+    )
 
-    # Declaration rows 31-38.
-    rect(0, 30, 3, 37)
     declaration = (
         "‘I/We hereby certify that my/our registration certificate under the "
-        "Maharashtra Value Added Tax Act. 2002 is in force on the date on which "
-        "the sale of the goods specified in this tax invoice is made by me/us "
-        "and that the transaction of sale covered by this tax invoice has been "
-        "effected by me/us and it shall be accounted for in the turDECer of sale "
-        "while filling of return and the due if any payable on the sale has been paid’."
+        "Maharashtra Value Added Tax Act. 2002 is in force on the date on "
+        "which the sale of the goods specified in this tax invoice is made "
+        "by me/us and that the transaction of sale covered by this tax "
+        "invoice has been effected by me/us and it shall be accounted for "
+        "in the turDECer of sale while filling of return and the due if any "
+        "payable on the sale has been paid’."
     )
+
     dx, dy, dw, dh = cell(0, 30, 3, 37)
-    _draw_left_cell_text(c, declaration, dx, dy, dw, dh, _FONT_REGULAR, 7.5, padding=5)
+    _draw_left_cell_text(
+        c,
+        declaration,
+        dx, dy, dw, dh,
+        _FONT_REGULAR, 7.5, padding=5
+    )
+
+    # ------------------------------------------------------------------
+    # FOOTER — matches the supplied reference PDF
+    # ------------------------------------------------------------------
+    c.setFont(_FONT_REGULAR, 7.5)
+    c.setFillColor(colors.HexColor("#444444"))
+    c.drawCentredString(
+        page_w / 2,
+        17,
+        company_name,
+    )
+    c.setFillColor(colors.black)
 
     c.showPage()
     c.save()
     return buffer.getvalue()
-
 
 # ---------------------------------------------------------------------------
 # Amount in words
