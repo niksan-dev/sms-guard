@@ -11,7 +11,7 @@ secrets.
 """
 
 from __future__ import annotations
-
+from dotenv import load_dotenv
 import os
 from pathlib import Path
 from typing import Generator
@@ -27,7 +27,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 
-
+# Load local .env when running locally.
+# Render uses actual environment variables, so this has no effect there.
+load_dotenv(BASE_DIR / ".env")
 # ==================================================
 # STREAMLIT SECRETS
 # ==================================================
