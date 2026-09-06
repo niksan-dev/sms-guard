@@ -1,10 +1,14 @@
 import os
-import uuid
 import streamlit as st
 
 from services.company_settings_service import (
     get_company_settings,
     save_company_settings
+)
+
+from services.supabase_storage_service import (
+    upload_file,
+    get_company_logo_url
 )
 
 from utils.validators import (
@@ -21,11 +25,6 @@ from components.number_input import number_input
 from components.select_box import select_box
 from components.text_area import text_area
 from components.submit_button import submit_button
-# ==================================================
-# UPLOAD DIRECTORY
-# ==================================================
-
-LOGO_UPLOAD_DIR = "uploads/company"
 
 
 # ==================================================
@@ -34,37 +33,29 @@ LOGO_UPLOAD_DIR = "uploads/company"
 
 def save_company_logo(uploaded_file):
 
-    #print("111111111111111",LOGO_UPLOAD_DIR)
     if uploaded_file is None:
         return None
-    #print("2222222222222")
-    os.makedirs(
-        LOGO_UPLOAD_DIR,
-        exist_ok=True
-    )
 
     file_extension = os.path.splitext(
         uploaded_file.name
     )[1].lower()
-    #print("33333333333",file_extension)
-    # Use one fixed filename for the company logo
-    file_name = f"company_logo{file_extension}"
-    #print("44444444444",file_name)
-    file_path = os.path.join(
-        LOGO_UPLOAD_DIR,
-        file_name
-    )
-    #print("55555555",file_path)
-    with open(
-        file_path,
-        "wb"
-    ) as file:
 
-        file.write(
-            uploaded_file.getbuffer()
-        )
-    #print("666666",file_path)
-    return file_path.replace(os.sep, "/")
+    # Supabase Storage object path
+    file_path = (
+        f"company/company_logo{file_extension}"
+    )
+
+    upload_file(
+        bucket="company-assets",
+        path=file_path,
+        file_data=uploaded_file.getvalue(),
+        content_type=uploaded_file.type,
+        upsert=True
+    )
+
+    # Store only the Storage object path
+    # in company_settings.logo_path
+    return file_path
 
 
 # ==================================================
@@ -107,7 +98,6 @@ def show_company_settings():
 
     role = user.get("role")
 
-    # Change this list if only one role should access it
     if role not in ["Super Admin", "Admin"]:
 
         st.error(
@@ -121,18 +111,11 @@ def show_company_settings():
     # PAGE HEADER
     # ==============================================
 
-    # st.title("🏢 Company Settings")
-
-    page_header("Company Settings",
-                "Manage company information, GST details,\nbank details and invoice settings.",
-                "🏢")
-
-    
-
-    # st.caption(
-    #     "Manage company information, GST details, "
-    #     "bank details and invoice settings."
-    # )
+    page_header(
+        "Company Settings",
+        "Manage company information, GST details,\nbank details and invoice settings.",
+        "🏢"
+    )
 
 
     # ==============================================
@@ -161,27 +144,39 @@ def show_company_settings():
         "logo_path"
     )
 
-    if (
-        current_logo
-        and os.path.exists(current_logo)
-    ):
+    if current_logo:
 
-        logo_col1, logo_col2 = st.columns(
-            [1, 5],
-            vertical_alignment="center"
-        )
+        try:
 
-        with logo_col1:
-
-            st.image(
-                current_logo,
-                width=120
+            # Generate temporary signed URL
+            logo_url = get_company_logo_url(
+                current_logo
             )
 
-        with logo_col2:
+            if logo_url:
 
-            st.success(
-                "Company logo configured."
+                logo_col1, logo_col2 = st.columns(
+                    [1, 5],
+                    vertical_alignment="center"
+                )
+
+                with logo_col1:
+
+                    st.image(
+                        logo_url,
+                        width=120
+                    )
+
+                with logo_col2:
+
+                    st.success(
+                        "Company logo configured."
+                    )
+
+        except Exception as error:
+
+            st.warning(
+                f"Unable to display company logo: {error}"
             )
 
 
@@ -197,11 +192,16 @@ def show_company_settings():
         # COMPANY INFORMATION
         # ------------------------------------------
 
-        sub_header(" Company Information","","🏢")
+        sub_header(
+            " Company Information",
+            "",
+            "🏢"
+        )
 
         col1, col2 = st.columns(2)
 
         with col1:
+
             company_name = text_input(
                 "Company Name *",
                 value=get_value(
@@ -225,9 +225,13 @@ def show_company_settings():
         # CONTACT INFORMATION
         # ------------------------------------------
 
-        sub_header("Contact Information","","📞")
+        sub_header(
+            "Contact Information",
+            "",
+            "📞"
+        )
 
-        col1, col2,col3 = st.columns(3)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
 
@@ -239,14 +243,16 @@ def show_company_settings():
                 ),
                 max_chars=10
             )
+
         with col2:
+
             alternate_phone = text_input(
                 "Alternate Contact Number",
                 value=get_value(
                     settings,
                     "alternate_phone"
                 ),
-                max_chars=10,
+                max_chars=10
             )
 
         with col3:
@@ -264,7 +270,11 @@ def show_company_settings():
         # ADDRESS
         # ------------------------------------------
 
-        sub_header("Company Address","","📍")
+        sub_header(
+            "Company Address",
+            "",
+            "📍"
+        )
 
         address = text_area(
             "Address",
@@ -313,10 +323,13 @@ def show_company_settings():
         # TAX INFORMATION
         # ------------------------------------------
 
+        sub_header(
+            "Tax Information",
+            "",
+            "🧾"
+        )
 
-        sub_header("Tax Information","","🧾")
-
-        col1, col2,col3,col4 = st.columns(4)
+        col1, col2, col3, col4 = st.columns(4)
 
         with col1:
 
@@ -341,6 +354,7 @@ def show_company_settings():
             )
 
         with col3:
+
             cgst_rate = number_input(
                 "CGST Rate (%)",
                 min_value=0.0,
@@ -353,10 +367,11 @@ def show_company_settings():
                     )
                 ),
                 step=0.5,
-                format="%.2f",
+                format="%.2f"
             )
 
         with col4:
+
             sgst_rate = number_input(
                 "SGST Rate (%)",
                 min_value=0.0,
@@ -369,7 +384,7 @@ def show_company_settings():
                     )
                 ),
                 step=0.5,
-                format="%.2f",
+                format="%.2f"
             )
 
 
@@ -377,7 +392,11 @@ def show_company_settings():
         # INVOICE SETTINGS
         # ------------------------------------------
 
-        sub_header("Invoice Settings","","📄")
+        sub_header(
+            "Invoice Settings",
+            "",
+            "📄"
+        )
 
         invoice_prefix = text_input(
             "Invoice Prefix",
@@ -397,7 +416,11 @@ def show_company_settings():
         # BANK DETAILS
         # ------------------------------------------
 
-        sub_header("Bank Details","","🏦")
+        sub_header(
+            "Bank Details",
+            "",
+            "🏦"
+        )
 
         col1, col2 = st.columns(2)
 
@@ -420,6 +443,7 @@ def show_company_settings():
                     "account_holder_name"
                 )
             )
+
 
         col1, col2 = st.columns(2)
 
@@ -444,6 +468,7 @@ def show_company_settings():
                 )
             )
 
+
         branch_name = text_input(
             "Branch Name",
             value=get_value(
@@ -457,8 +482,11 @@ def show_company_settings():
         # COMPANY LOGO
         # ------------------------------------------
 
-
-        sub_header("Company Logo","","🖼️")
+        sub_header(
+            "Company Logo",
+            "",
+            "🖼️"
+        )
 
         uploaded_logo = st.file_uploader(
             "Upload Company Logo",
@@ -575,6 +603,7 @@ def show_company_settings():
     # ----------------------------------------------
     # PAN VALIDATION
     # ----------------------------------------------
+
     if not validate_pan(pan):
 
         st.error(
@@ -597,29 +626,26 @@ def show_company_settings():
         return
 
 
+    # ==============================================
+    # SAVE
+    # ==============================================
+
     try:
 
         # ------------------------------------------
-        # SAVE NEW LOGO
+        # PRESERVE EXISTING LOGO
         # ------------------------------------------
-        #
-        # IMPORTANT:
-        # If the user does not upload a new logo, preserve
-        # the existing logo_path from CompanySettings.
-        # Previously this was set to None on every save,
-        # which cleared the database value whenever the
-        # form was saved without selecting a logo.
-        # ------------------------------------------
-        default_logo_path = 'uploads/company/company_logo.png'
+
         logo_path = get_value(
             settings,
             "logo_path",
-            default_logo_path
+            None
         )
 
-        print("uploaded_logo---->>>",uploaded_logo)
 
-        
+        # ------------------------------------------
+        # UPLOAD NEW LOGO
+        # ------------------------------------------
 
         if uploaded_logo is not None:
 
@@ -627,26 +653,16 @@ def show_company_settings():
                 uploaded_logo
             )
 
-            print(
-                "SAVED LOGO PATH =========>",
-                repr(saved_logo_path)
-            )
-
             if saved_logo_path:
 
-                logo_path = saved_logo_path.replace("\\", "/")
-
-                print(
-                    "FINAL LOGO PATH =========>",
-                    repr(logo_path)
-                )
+                logo_path = saved_logo_path
 
 
         # ------------------------------------------
         # SAVE COMPANY SETTINGS
         # ------------------------------------------
 
-        final_settins = save_company_settings(
+        final_settings = save_company_settings(
 
             company_name=company_name,
 
@@ -663,7 +679,7 @@ def show_company_settings():
             phone=phone,
 
             alternate_phone=alternate_phone,
-           
+
             cgst_rate=cgst_rate,
 
             sgst_rate=sgst_rate,
@@ -691,7 +707,7 @@ def show_company_settings():
             logo_path=logo_path
         )
 
-        print("final_settins------->>>",final_settins.logo_path)
+
         st.success(
             "✅ Company settings saved successfully."
         )
