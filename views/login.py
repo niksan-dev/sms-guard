@@ -35,12 +35,38 @@ BASE_DIR = os.path.dirname(
 # COMPANY LOGO
 # =========================================================
 
-logo_path = os.path.join(
-    BASE_DIR,
-    "uploads",
-    "company",
-    "company_logo.png"
+from services.company_settings_service import (
+    get_company_settings,
 )
+
+from services.supabase_storage_service import (
+    get_company_logo_url,
+)
+
+
+def get_company_logo():
+
+    try:
+        settings = get_company_settings()
+
+        if not settings:
+            return None
+
+        logo_path = getattr(
+            settings,
+            "logo_path",
+            None,
+        )
+
+        if not logo_path:
+            return None
+
+        return get_company_logo_url(
+            logo_path
+        )
+
+    except Exception:
+        return None
 
 
 # =========================================================
@@ -107,10 +133,12 @@ def show_login_page():
 
         with logo_container:
 
-            if os.path.exists(logo_path):
+            logo_url = get_company_logo()
+
+            if logo_url:
 
                 st.image(
-                    logo_path,
+                    logo_url,
                     width=120
                 )
 

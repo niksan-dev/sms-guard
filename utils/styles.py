@@ -78,7 +78,7 @@ def load_custom_css():
 
             background: transparent !important;
 
-            padding-top: 2rem !important;
+            padding-top: 0.5rem !important;
 
             padding-bottom: 3rem !important;
 
@@ -90,7 +90,7 @@ def load_custom_css():
 
             background: transparent !important;
 
-            padding-top: 2rem !important;
+            padding-top: 0.5rem !important;
 
             padding-left: 2.5rem !important;
 
@@ -1368,6 +1368,12 @@ def load_custom_css():
 
             border-bottom:
                 1px solid var(--border) !important;
+
+            height: 0 !important;
+
+            min-height: 0 !important;
+
+            overflow: hidden !important;
         }
 
 
@@ -2282,13 +2288,6 @@ def load_custom_css():
         [data-testid="stAppViewContainer"] {
             background: var(--page-bg) !important;
         }
-
-        .main .block-container {
-            max-width: 1400px !important;
-            padding-top: 25px !important;
-            padding-bottom: 40px !important;
-        }
-
 
         /* =========================================================
         PAGE TITLE
@@ -3689,6 +3688,11 @@ def load_custom_css():
             div[data-testid="stMetricValue"] {
                 font-size: 21px !important;
             }
+        }
+
+
+        .block-container {
+            padding-top: 0.5rem !important;
         }
 
         </style>
