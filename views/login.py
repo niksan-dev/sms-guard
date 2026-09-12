@@ -2,7 +2,7 @@ import streamlit as st
 import os
 
 from utils.auth import (
-    authenticate_user,
+    authenticate_supabase_user,
     create_user
 )
 
@@ -47,6 +47,7 @@ from services.supabase_storage_service import (
 def get_company_logo():
 
     try:
+
         settings = get_company_settings()
 
         if not settings:
@@ -66,6 +67,7 @@ def get_company_logo():
         )
 
     except Exception:
+
         return None
 
 
@@ -203,9 +205,9 @@ def show_login_page():
 
             with st.form("login_form"):
 
-                username = text_input(
-                    "Username",
-                    placeholder="Enter your username"
+                email = text_input(
+                    "Email",
+                    placeholder="Enter your email"
                 )
 
 
@@ -229,16 +231,20 @@ def show_login_page():
 
             if login_clicked:
 
-                if not username or not password:
+                if not email or not password:
 
                     st.warning(
-                        "Please enter username and password."
+                        "Please enter email and password."
                     )
 
                 else:
 
-                    user = authenticate_user(
-                        username=username.strip(),
+                    # -----------------------------------------
+                    # SUPABASE AUTHENTICATION
+                    # -----------------------------------------
+
+                    user = authenticate_supabase_user(
+                        email=email.strip(),
                         password=password
                     )
 
@@ -246,7 +252,7 @@ def show_login_page():
                     if not user:
 
                         st.error(
-                            "Invalid username or password."
+                            "Invalid email or password."
                         )
 
                     else:
@@ -263,7 +269,7 @@ def show_login_page():
 
 
                         # -------------------------------------
-                        # CREATE LOGIN SESSION
+                        # CREATE APPLICATION LOGIN SESSION
                         # -------------------------------------
 
                         token, expires_at = (

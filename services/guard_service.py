@@ -5,6 +5,12 @@ from datetime import date
 from database.connection import SessionLocal
 from database.models import Guard, User
 from utils.constants import UserRole
+from services.supabase_storage_service import (
+    GUARD_PHOTOS_BUCKET,
+    upload_file,
+    delete_file,
+    create_signed_url,
+)
 
 
 # ==================================================
@@ -222,38 +228,35 @@ def validate_phone(phone):
 
 def save_guard_photo(
     uploaded_file,
-    employee_id: str
+    employee_id: str,
 ):
+    """Upload a guard photo to Supabase Storage."""
 
     if not uploaded_file:
-
         return None
 
     try:
+        original_name = Path(
+            uploaded_file.name or "guard_photo"
+        ).name
 
-        original_name = uploaded_file.name
-
-        extension = (
-            Path(original_name)
-            .suffix
-            .lower()
-        )
+        extension = Path(
+            original_name
+        ).suffix.lower()
 
         allowed_extensions = {
             ".jpg",
             ".jpeg",
             ".png",
-            ".webp"
+            ".webp",
         }
 
         if extension not in allowed_extensions:
-
             raise ValueError(
                 "Only JPG, JPEG, PNG and WEBP images are allowed."
             )
 
-        # Example:
-        # SG-0001_a1b2c3d4.jpg
+        data = bytes(uploaded_file.getbuffer())
 
         filename = (
             f"{employee_id}_"
@@ -261,83 +264,82 @@ def save_guard_photo(
             f"{extension}"
         )
 
-        file_path = (
-            GUARD_PHOTO_DIR
-            / filename
+        storage_path = filename
+
+        upload_file(
+            bucket=GUARD_PHOTOS_BUCKET,
+            path=storage_path,
+            file_data=data,
+            content_type=getattr(
+                uploaded_file,
+                "type",
+                None,
+            ) or "application/octet-stream",
+            upsert=False,
         )
 
-        with open(
-            file_path,
-            "wb"
-        ) as file:
-
-            file.write(
-                uploaded_file.getbuffer()
-            )
-
-        # Store relative path in database
-        return file_path.relative_to(PROJECT_ROOT).as_posix()
+        return storage_path
 
     except Exception as e:
-
         raise ValueError(
             f"Failed to save guard photo: {str(e)}"
         )
 
 
-# ==================================================
-# DELETE GUARD PHOTO
-# ==================================================
-
 def delete_guard_photo(photo_path: str):
+    """Delete a guard photo from Supabase Storage.
+
+    Legacy local uploads are still supported for old records.
+    """
 
     if not photo_path:
+        return
 
+    if photo_path.startswith("uploads/"):
+        try:
+            full_path = PROJECT_ROOT / photo_path
+            if full_path.exists() and full_path.is_file():
+                full_path.unlink()
+        except Exception as e:
+            print(f"Failed to delete legacy guard photo: {e}")
         return
 
     try:
-
-        full_path = (
-            PROJECT_ROOT
-            / photo_path
+        delete_file(
+            GUARD_PHOTOS_BUCKET,
+            photo_path,
         )
-
-        if full_path.exists():
-
-            full_path.unlink()
-
     except Exception as e:
+        print(f"Failed to delete guard photo from Storage: {e}")
 
-        print(
-            f"Failed to delete guard photo: {e}"
-        )
-
-
-# ==================================================
-# GET GUARD PHOTO PATH
-# ==================================================
 
 def get_guard_photo_path(photo_path: str):
+    """Return a temporary signed URL for a guard photo.
+
+    Legacy local uploads are still supported for old records.
+    """
 
     if not photo_path:
+        return None
+
+    if photo_path.startswith("uploads/"):
+        full_path = PROJECT_ROOT / photo_path
+
+        if full_path.exists():
+            return str(full_path)
 
         return None
 
-    full_path = (
-        PROJECT_ROOT
-        / photo_path
-    )
+    try:
+        return create_signed_url(
+            GUARD_PHOTOS_BUCKET,
+            photo_path,
+            expires_in=3600,
+        )
+    except Exception as e:
+        print(f"Failed to create guard photo URL: {e}")
+        return None
 
-    if full_path.exists():
-
-        return str(full_path)
-
-    return None
-
-
-# ==================================================
-# CREATE GUARD
-# ==================================================
 
 def create_guard(
     name,

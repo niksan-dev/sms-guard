@@ -3,7 +3,6 @@ import pandas as pd
 
 from services.site_service import (
     get_all_sites,
-    get_site_by_id,
     get_client_users,
     create_site,
     update_site,
@@ -32,16 +31,12 @@ from components.submit_button import submit_button
 # HELPER FUNCTIONS
 # ==================================================
 
-def get_client_name(client_id, clients):
-
+def get_client_name(client_id, client_names):
+    """Return a client name without repeatedly scanning the client list."""
     if not client_id:
         return "No Client Assigned"
 
-    for client in clients:
-        if client.id == client_id:
-            return client.username
-
-    return "Unknown Client"
+    return client_names.get(client_id, "Unknown Client")
 
 
 def validate_phone_input(phone):
@@ -85,6 +80,52 @@ def get_site_monthly_amount(site):
 
 
 # ==================================================
+# PERFORMANCE CACHE
+# ==================================================
+
+SITE_CACHE_TTL = 15
+
+
+@st.cache_data(ttl=SITE_CACHE_TTL, max_entries=4, show_spinner=False)
+def _get_guard_options():
+    """Return primitive active-guard data for assignment UI."""
+    guards = get_all_guards()
+    return [
+        {
+            "id": guard.id,
+            "employee_id": guard.employee_id,
+            "name": guard.name,
+            "phone": guard.phone,
+        }
+        for guard in guards
+        if guard.status == "Active"
+    ]
+
+
+def _clear_site_caches():
+    _get_guard_options.clear()
+
+
+def _preview_next_site_code(sites):
+    """Display-only next-code preview using the already-loaded site list."""
+    numbers = []
+
+    for site in sites:
+        code = str(getattr(site, "site_code", "") or "").strip()
+        if code.upper().startswith("SITE-"):
+            try:
+                numbers.append(int(code.split("-", 1)[1]))
+            except (ValueError, IndexError):
+                pass
+
+    if not numbers:
+        return "SITE-0001"
+
+    return f"SITE-{max(numbers) + 1:04d}"
+
+
+
+# ==================================================
 # MAIN SITE MANAGEMENT PAGE
 # ==================================================
 
@@ -108,6 +149,21 @@ def show_sites():
         "⚙️ Manage Site"
     ])
 
+    # --------------------------------------------------
+    # LOAD SHARED DATA ONCE PER PAGE RERUN
+    #
+    # Streamlit executes every tab body on each rerun. The
+    # previous implementation queried sites and clients again
+    # inside both All Sites and Manage Site. Reusing these
+    # objects removes duplicate database round-trips.
+    # --------------------------------------------------
+    sites = get_all_sites()
+    clients = get_client_users()
+
+    site_by_id = {site.id: site for site in sites}
+    client_names = {client.id: client.username for client in clients}
+    available_guards = _get_guard_options()
+
     # ==================================================
     # TAB 1 - ALL SITES
     # ==================================================
@@ -116,9 +172,6 @@ def show_sites():
 
         
         sub_header("All Sites","","📋")
-
-        sites = get_all_sites()
-        clients = get_client_users()
 
         if not sites:
 
@@ -146,7 +199,7 @@ def show_sites():
 
                 client_name = get_client_name(
                     current_site.client_id,
-                    clients
+                    client_names
                 )
 
                 monthly_amount = get_site_monthly_amount(
@@ -319,9 +372,7 @@ def show_sites():
                 # GET SELECTED SITE
                 # --------------------------------------
 
-                selected_site = get_site_by_id(
-                    selected_site_id
-                )
+                selected_site = site_by_id.get(selected_site_id)
 
                 # --------------------------------------
                 # SUMMARY METRICS
@@ -403,10 +454,8 @@ def show_sites():
         sub_header("Add New Site","","➕")
 
         st.info(
-            f"Next Site Code: {get_next_site_code()}"
+            f"Next Site Code: {_preview_next_site_code(sites)}"
         )
-
-        clients = get_client_users()
 
         if not clients:
 
@@ -624,6 +673,7 @@ def show_sites():
 
                 if success:
 
+                    _clear_site_caches()
                     st.success(message)
                     st.rerun()
 
@@ -639,9 +689,6 @@ def show_sites():
 
 
         sub_header("Manage Site","","⚙️")
-
-        sites = get_all_sites()
-        clients = get_client_users()
 
         if not sites:
 
@@ -675,9 +722,7 @@ def show_sites():
                 selected_site_label
             )
 
-            site = get_site_by_id(
-                selected_site_id
-            )
+            site = site_by_id.get(selected_site_id)
 
             if site:
 
@@ -733,7 +778,10 @@ def show_sites():
                 # ASSIGNED GUARDS
                 # --------------------------------------
 
-                show_site_guard_assignment(site)
+                show_site_guard_assignment(
+                    site,
+                    available_guards=available_guards,
+                )
 
                 st.divider()
 
@@ -1054,7 +1102,7 @@ def show_sites():
 # SITE GUARD ASSIGNMENT
 # ==================================================
 
-def show_site_guard_assignment(site):
+def show_site_guard_assignment(site, available_guards=None):
 
     st.divider()
 
@@ -1084,29 +1132,22 @@ def show_site_guard_assignment(site):
 
     if assigned_count < required_count:
 
-        guards = get_all_guards()
+        if available_guards is None:
+            available_guards = _get_guard_options()
 
         # Active and not already assigned
-        available_guards = [
-
+        filtered_guards = [
             guard
-
-            for guard in guards
-
-            if (
-                guard.status == "Active"
-                and guard.id not in assigned_guard_ids
-            )
+            for guard in available_guards
+            if guard["id"] not in assigned_guard_ids
         ]
 
-        if available_guards:
+        if filtered_guards:
 
             guard_options = {
-
-                f"{guard.employee_id} - {guard.name}":
-                guard.id
-
-                for guard in available_guards
+                f"{guard['employee_id']} - {guard['name']}":
+                guard["id"]
+                for guard in filtered_guards
             }
 
             selected_guard_label = select_box(
@@ -1133,6 +1174,7 @@ def show_site_guard_assignment(site):
                         site_id=site.id
                     )
 
+                    _clear_site_caches()
                     st.success(
                         "Guard assigned successfully."
                     )
@@ -1212,6 +1254,7 @@ def show_site_guard_assignment(site):
                         assignment.id
                     )
 
+                    _clear_site_caches()
                     st.success(
                         "Guard unassigned successfully."
                     )

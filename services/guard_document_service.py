@@ -8,11 +8,16 @@ from sqlalchemy import or_
 from database.connection import SessionLocal
 from database.models import Guard
 from database.guard_document import GuardDocument
+from services.supabase_storage_service import (
+    GUARD_DOCUMENTS_BUCKET,
+    upload_file,
+    download_file,
+    delete_file,
+    create_signed_url,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-GUARD_DOCUMENT_DIR = PROJECT_ROOT / "uploads" / "guard_documents"
-GUARD_DOCUMENT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 DOCUMENT_TYPES = [
@@ -123,6 +128,8 @@ def get_guard_document(guard_id, document_type):
 
 
 def _save_document_file(uploaded_file, employee_id, document_type):
+    """Upload a guard document to Supabase Storage."""
+
     if not uploaded_file:
         return None
 
@@ -134,12 +141,8 @@ def _save_document_file(uploaded_file, employee_id, document_type):
             "Only PDF, JPG, JPEG, PNG and WEBP documents are allowed."
         )
 
-    size = int(getattr(uploaded_file, "size", 0) or 0)
-    if size <= 0:
-        data = uploaded_file.getbuffer()
-        size = len(data)
-    else:
-        data = uploaded_file.getbuffer()
+    data = bytes(uploaded_file.getbuffer())
+    size = len(data)
 
     if size > MAX_FILE_SIZE:
         raise ValueError("Each document must be 10 MB or smaller.")
@@ -149,34 +152,59 @@ def _save_document_file(uploaded_file, employee_id, document_type):
         for c in document_type.lower()
     ).strip("_")
 
-    guard_dir = GUARD_DOCUMENT_DIR / str(employee_id)
-    guard_dir.mkdir(parents=True, exist_ok=True)
-
     filename = (
         f"{safe_type}_"
         f"{uuid4().hex[:12]}"
         f"{extension}"
     )
 
-    file_path = guard_dir / filename
-    file_path.write_bytes(data)
+    storage_path = (
+        f"{employee_id}/{filename}"
+    )
+
+    upload_file(
+        bucket=GUARD_DOCUMENTS_BUCKET,
+        path=storage_path,
+        file_data=data,
+        content_type=getattr(
+            uploaded_file,
+            "type",
+            None,
+        ) or "application/octet-stream",
+        upsert=False,
+    )
 
     return (
-        file_path.relative_to(PROJECT_ROOT).as_posix(),
+        storage_path,
         original_name,
         getattr(uploaded_file, "type", None),
         size,
     )
 
 
-def _delete_file(relative_path):
-    if not relative_path:
+def _delete_file(storage_path):
+    """Delete a guard document from Supabase Storage.
+
+    Legacy local uploads are still supported for old records.
+    """
+
+    if not storage_path:
+        return
+
+    if storage_path.startswith("uploads/"):
+        try:
+            path = PROJECT_ROOT / storage_path
+            if path.exists() and path.is_file():
+                path.unlink()
+        except Exception:
+            pass
         return
 
     try:
-        path = PROJECT_ROOT / relative_path
-        if path.exists() and path.is_file():
-            path.unlink()
+        delete_file(
+            GUARD_DOCUMENTS_BUCKET,
+            storage_path,
+        )
     except Exception:
         pass
 
@@ -307,6 +335,11 @@ def delete_guard_document(document_id):
 
 
 def get_guard_document_file(document_id):
+    """Return a signed URL and document metadata.
+
+    Legacy local files are returned as local paths for compatibility.
+    """
+
     db = SessionLocal()
     try:
         document = (
@@ -317,14 +350,31 @@ def get_guard_document_file(document_id):
             )
             .first()
         )
+
         if not document:
             return None, None
 
-        path = PROJECT_ROOT / document.file_path
-        if not path.exists():
+        storage_path = document.file_path
+
+        if not storage_path:
             return None, document
 
-        return path, document
+        if storage_path.startswith("uploads/"):
+            path = PROJECT_ROOT / storage_path
+            if not path.exists():
+                return None, document
+            return path, document
+
+        try:
+            signed_url = create_signed_url(
+                GUARD_DOCUMENTS_BUCKET,
+                storage_path,
+                expires_in=3600,
+            )
+            return signed_url, document
+        except Exception:
+            return None, document
+
     finally:
         db.close()
 
@@ -348,7 +398,12 @@ def get_document_readiness(guard_id):
 
 
 def create_guard_documents_zip(guard_id):
-    """Create a temporary ZIP containing all active guard documents."""
+    """Create a temporary ZIP containing all active guard documents.
+
+    Documents are downloaded from Supabase Storage before being added
+    to the temporary ZIP.
+    """
+
     db = SessionLocal()
     try:
         guard = (
@@ -356,6 +411,7 @@ def create_guard_documents_zip(guard_id):
             .filter(Guard.id == guard_id)
             .first()
         )
+
         if not guard:
             raise ValueError("Guard not found.")
 
@@ -380,21 +436,52 @@ def create_guard_documents_zip(guard_id):
             f"{uuid4().hex[:10]}.zip"
         )
 
+        files_added = 0
+
         with ZipFile(zip_path, "w", ZIP_DEFLATED) as archive:
             for document in documents:
-                source = PROJECT_ROOT / document.file_path
-                if not source.exists():
-                    continue
-                archive.write(
-                    source,
-                    arcname=(
-                        f"{document.document_type}/"
-                        f"{document.original_filename}"
-                    ),
-                )
+                storage_path = document.file_path
 
-        if zip_path.stat().st_size == 0:
-            raise ValueError("Uploaded document files could not be found.")
+                if not storage_path:
+                    continue
+
+                try:
+                    if storage_path.startswith("uploads/"):
+                        source = PROJECT_ROOT / storage_path
+                        if not source.exists():
+                            continue
+                        data = source.read_bytes()
+                    else:
+                        data = download_file(
+                            GUARD_DOCUMENTS_BUCKET,
+                            storage_path,
+                        )
+
+                    archive.writestr(
+                        (
+                            f"{document.document_type}/"
+                            f"{document.original_filename}"
+                        ),
+                        data,
+                    )
+                    files_added += 1
+
+                except Exception as exc:
+                    print(
+                        "Failed to download guard document "
+                        f"{storage_path}: {exc}"
+                    )
+                    continue
+
+        if files_added == 0 or not zip_path.exists() or zip_path.stat().st_size == 0:
+            try:
+                zip_path.unlink()
+            except Exception:
+                pass
+
+            raise ValueError(
+                "Uploaded document files could not be found."
+            )
 
         return zip_path
 

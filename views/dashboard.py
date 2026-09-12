@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import date
-from sqlalchemy import or_, func
+import calendar
+from sqlalchemy import or_, func, case
+from sqlalchemy.orm import joinedload
 
 import plotly.express as px
 import pandas as pd
@@ -12,10 +14,7 @@ from database.models import User
 from database.models import Guard
 from database.models import Site
 from database.payment import Payment
-from services.guard_daily_work_service import (
-    get_guard_daily_attendance,
-    get_site_daily_attendance,
-)
+from database.guard_daily_work import GuardDailyWork
 
 from components.page_header import page_header
 from components.sub_header import sub_header
@@ -23,12 +22,6 @@ from components.button import button
 # ==================================================
 # OPTIONAL MODELS
 # ==================================================
-
-try:
-    from database.models import Shift
-except ImportError:
-    Shift = None
-
 
 try:
     from database.models import Incident
@@ -89,81 +82,95 @@ def dashboard_card(
 
 
 # ==================================================
+# DASHBOARD DATA CACHE
+# ==================================================
+
+# Dashboard values are operational summaries. A short cache avoids
+# repeating the same Supabase queries on every Streamlit rerun while
+# keeping the dashboard effectively near-real-time.
+DASHBOARD_CACHE_TTL = 15
+
+
+# ==================================================
 # GET DASHBOARD DATA
 # ==================================================
 
+@st.cache_data(
+    ttl=DASHBOARD_CACHE_TTL,
+    max_entries=8,
+    show_spinner=False,
+)
 def get_dashboard_data():
 
     db = SessionLocal()
 
     try:
 
-        # ==========================================
-        # GUARDS
-        # ==========================================
-
-        total_guards = db.query(Guard).count()
-
-        active_guards = (
-            db.query(Guard)
-            .filter(Guard.status == "Active")
-            .count()
-        )
+        today = date.today()
 
         # ==========================================
-        # TOTAL MONTHLY GUARD SALARY
+        # GUARDS + MONTHLY SALARY
         # ==========================================
+        #
+        # Previously these were 3 separate database
+        # round-trips. One aggregate query is enough.
 
-        total_guard_salary = (
+        guard_stats = (
             db.query(
+                func.count(Guard.id),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (Guard.status == "Active", 1),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ),
                 func.coalesce(
                     func.sum(Guard.monthly_salary),
-                    0
-                )
+                    0,
+                ),
             )
-            .scalar()
-            or 0
+            .first()
         )
 
-        total_guard_salary = float(
-            total_guard_salary
-        )
+        total_guards = int(guard_stats[0] or 0)
+        active_guards = int(guard_stats[1] or 0)
+        total_guard_salary = float(guard_stats[2] or 0)
 
         # ==========================================
         # SITES
         # ==========================================
-
-        total_sites = db.query(Site).count()
-
-        active_sites = (
-            db.query(Site)
-            .filter(Site.status == "Active")
-            .count()
-        )
-
-        # ==========================================
-        # TOTAL EXPECTED SITE COLLECTION
         #
-        # guards_required × guard_rate
-        # ==========================================
+        # Total sites, active sites and expected
+        # collection are obtained in one query.
 
-        total_site_collection = (
+        site_stats = (
             db.query(
+                func.count(Site.id),
                 func.coalesce(
                     func.sum(
-                        Site.guards_required
-                        * Site.guard_rate
+                        case(
+                            (Site.status == "Active", 1),
+                            else_=0,
+                        )
                     ),
-                    0
-                )
+                    0,
+                ),
+                func.coalesce(
+                    func.sum(
+                        Site.guards_required * Site.guard_rate
+                    ),
+                    0,
+                ),
             )
-            .scalar()
-            or 0
+            .first()
         )
 
-        total_site_collection = float(
-            total_site_collection
-        )
+        total_sites = int(site_stats[0] or 0)
+        active_sites = int(site_stats[1] or 0)
+        total_site_collection = float(site_stats[2] or 0)
 
         # ==========================================
         # PAYMENT COLLECTION
@@ -171,13 +178,10 @@ def get_dashboard_data():
 
         total_collected = 0.0
 
-        # Try common Payment model structures
         if hasattr(Payment, "amount"):
 
             payment_query = db.query(Payment)
 
-            # If payment status exists, count
-            # only completed / paid collections
             if hasattr(Payment, "status"):
 
                 payment_query = payment_query.filter(
@@ -185,7 +189,7 @@ def get_dashboard_data():
                         [
                             "Paid",
                             "Completed",
-                            "Collected"
+                            "Collected",
                         ]
                     )
                 )
@@ -195,16 +199,14 @@ def get_dashboard_data():
                 .with_entities(
                     func.coalesce(
                         func.sum(Payment.amount),
-                        0
+                        0,
                     )
                 )
                 .scalar()
                 or 0
             )
 
-        total_collected = float(
-            total_collected
-        )
+        total_collected = float(total_collected)
 
         # ==========================================
         # PENDING COLLECTION
@@ -212,42 +214,76 @@ def get_dashboard_data():
 
         total_pending = max(
             0,
-            total_site_collection - total_collected
+            total_site_collection - total_collected,
         )
 
         # ==========================================
         # USERS
         # ==========================================
 
-        total_users = db.query(User).count()
+        total_users = int(
+            db.query(func.count(User.id)).scalar() or 0
+        )
 
         # ==========================================
-        # SHIFTS TODAY
+        # SHIFTS / TODAY'S GUARD WORK
         # ==========================================
+        #
+        # GuardDailyWork already represents today's guard-shift records.
+        # Load it once and derive both today's shift count and financials
+        # instead of making a separate Shift query plus two more attendance
+        # queries.
 
+        daily_guard_salary = 0.0
+        daily_site_revenue = 0.0
         shifts_today = 0
 
-        if Shift:
+        try:
+            total_days_in_month = calendar.monthrange(
+                today.year,
+                today.month,
+            )[1]
 
-            if hasattr(Shift, "date"):
-
-                shifts_today = (
-                    db.query(Shift)
-                    .filter(
-                        Shift.date == date.today()
-                    )
-                    .count()
+            daily_records = (
+                db.query(GuardDailyWork)
+                .options(
+                    joinedload(GuardDailyWork.guard),
+                    joinedload(GuardDailyWork.site),
                 )
+                .filter(GuardDailyWork.work_date == today)
+                .all()
+            )
 
-            elif hasattr(Shift, "shift_date"):
+            shifts_today = len(daily_records)
 
-                shifts_today = (
-                    db.query(Shift)
-                    .filter(
-                        Shift.shift_date == date.today()
+            for record in daily_records:
+                if record.status != "Present":
+                    continue
+
+                guard = record.guard
+                site = record.site
+
+                if guard:
+                    monthly_salary = float(guard.monthly_salary or 0)
+                    daily_guard_salary += (
+                        monthly_salary / total_days_in_month
+                        if total_days_in_month > 0
+                        else 0.0
                     )
-                    .count()
-                )
+
+                if site:
+                    guard_rate = float(site.guard_rate or 0)
+                    daily_site_revenue += (
+                        guard_rate / total_days_in_month
+                        if total_days_in_month > 0
+                        else 0.0
+                    )
+
+        except Exception:
+            # Preserve the dashboard's previous safe-fallback behavior.
+            daily_guard_salary = 0.0
+            daily_site_revenue = 0.0
+            shifts_today = 0
 
         # ==========================================
         # OPEN INCIDENTS
@@ -260,17 +296,18 @@ def get_dashboard_data():
             and hasattr(Incident, "status")
         ):
 
-            open_incidents = (
-                db.query(Incident)
+            open_incidents = int(
+                db.query(func.count(Incident.id))
                 .filter(
                     Incident.status.in_(
                         [
                             "Open",
-                            "In Progress"
+                            "In Progress",
                         ]
                     )
                 )
-                .count()
+                .scalar()
+                or 0
             )
 
         # ==========================================
@@ -283,101 +320,30 @@ def get_dashboard_data():
 
             if hasattr(Attendance, "check_in"):
 
-                attendance_today = (
-                    db.query(Attendance)
+                attendance_today = int(
+                    db.query(func.count(Attendance.id))
                     .filter(
-                        Attendance.check_in >= date.today()
+                        Attendance.check_in >= today
                     )
-                    .count()
+                    .scalar()
+                    or 0
                 )
-
-        # ==========================================
-        # TODAY'S GUARD SALARY
-        # ==========================================
-
-        daily_guard_salary = 0.0
-
-        
-
-        try:
-
-            daily_guard_records = get_guard_daily_attendance(date.today())
-            shifts_today = len(daily_guard_records)
-           # print("================================================",daily_guard_records)
-
-            daily_guard_salary = 0.0
-
-            for record in daily_guard_records or []:
-
-                guard_id = record.get("employee_id")
-
-                total_shifts = float(
-                    record.get("shift_number", 0) or 0
-                )
-
-                guard_shift_rate = float(
-                    record.get(
-                        "salary_per_shift"
-                    ) or 0
-                )
-
-                #print("Shift Details--->>>",guard_id," || ",guard_shift_rate," ||  ",total_shifts)
-
-                daily_guard_salary += (
-                     guard_shift_rate
-                )
-               # print("daily_guard_salary--->>>",daily_guard_salary)
-               
-
-        except Exception:
-
-            daily_guard_salary = 0.0
-
-        # ==========================================
-        # TODAY'S SITE REVENUE
-        # ==========================================
-
-        daily_site_revenue = 0.0
-
-        try:
-
-            daily_site_records = get_site_daily_attendance(date.today())
-
-           # print("daily_site_records  ------->>",daily_site_records)
-
-            daily_site_revenue = 0.0
-
-            for record in daily_site_records or []:
-
-                
-                site_shift_rate = float(
-                    record.get(
-                        "revenue_per_shift"
-                    ) or 0
-                )
-
-                daily_site_revenue += (
-                    site_shift_rate
-                )
-
-        except Exception:
-
-            daily_site_revenue = 0.0
 
         # ==========================================
         # RETURN DATA
         # ==========================================
 
-        total_profit_today = daily_site_revenue - daily_guard_salary
+        total_profit_today = (
+            daily_site_revenue - daily_guard_salary
+        )
 
         return {
-
             # Guards
             "total_guards": total_guards,
             "active_guards": active_guards,
             "total_guard_salary": total_guard_salary,
 
-            "total_profit_today":total_profit_today,
+            "total_profit_today": total_profit_today,
 
             # Sites
             "total_sites": total_sites,
@@ -401,8 +367,8 @@ def get_dashboard_data():
             "daily_site_revenue": daily_site_revenue,
         }
 
+        
     finally:
-
         db.close()
 
 

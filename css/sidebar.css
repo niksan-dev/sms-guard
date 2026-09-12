@@ -74,45 +74,40 @@ section[data-testid="stSidebar"] .sidebar-navigation-title {
 
 
 /* =========================================================
-   BUTTON CONTAINER
+   SIDEBAR BUTTON CONTAINER
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"] {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"],
+section[data-testid="stSidebar"] div.stButton {
     width: 100% !important;
-
     margin: 0 !important;
-
     padding: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 
 /* =========================================================
-   ALL SIDEBAR BUTTONS
+   ALL SIDEBAR NAVIGATION BUTTONS
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button,
+section[data-testid="stSidebar"] div.stButton>button {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     width: 100% !important;
-
     min-height: 42px !important;
-
     box-sizing: border-box !important;
-
     margin: 4px 0 !important;
-
     padding: 8px 12px !important;
-
     border-radius: 8px !important;
-
     font-size: 14px !important;
-
     font-weight: 600 !important;
-
     text-align: left !important;
-
     justify-content: flex-start !important;
-
+    align-items: center !important;
+    cursor: pointer !important;
     transition:
         background-color 0.15s ease,
         border-color 0.15s ease,
@@ -125,20 +120,14 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button {
    NORMAL NAVIGATION BUTTON
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"],
+section[data-testid="stSidebar"] div.stButton>button[kind="secondary"] {
     background: #F3F6F8 !important;
-
     border: 1px solid #DCE4E9 !important;
-
     border-radius: 8px !important;
-
     color: #063552 !important;
-
     -webkit-text-fill-color: #063552 !important;
-
-    box-shadow:
-        0 1px 3px rgba(6, 53, 82, 0.05) !important;
+    box-shadow: 0 1px 3px rgba(6, 53, 82, 0.05) !important;
 }
 
 
@@ -146,10 +135,9 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="second
    NORMAL BUTTON - ALL CHILDREN
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] * {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] *,
+section[data-testid="stSidebar"] div.stButton>button[kind="secondary"] * {
     color: #063552 !important;
-
     -webkit-text-fill-color: #063552 !important;
 }
 
@@ -158,25 +146,18 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="second
    NORMAL HOVER
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"]:hover {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"]:hover,
+section[data-testid="stSidebar"] div.stButton>button[kind="secondary"]:hover {
     background: #E8EEF2 !important;
-
     border-color: #B8C7D1 !important;
-
     color: #063552 !important;
-
     -webkit-text-fill-color: #063552 !important;
-
-    box-shadow:
-        0 2px 6px rgba(6, 53, 82, 0.10) !important;
+    box-shadow: 0 2px 6px rgba(6, 53, 82, 0.10) !important;
 }
 
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"]:hover * {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"]:hover *,
+section[data-testid="stSidebar"] div.stButton>button[kind="secondary"]:hover * {
     color: #063552 !important;
-
     -webkit-text-fill-color: #063552 !important;
 }
 
@@ -185,30 +166,19 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="second
    SELECTED NAVIGATION BUTTON
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"],
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"] {
     width: 100% !important;
-
     min-height: 42px !important;
-
     background: #063552 !important;
-
     border: 1px solid #063552 !important;
-
     border-left: 4px solid #56D21F !important;
-
     border-radius: 8px !important;
-
     color: #FFFFFF !important;
-
     -webkit-text-fill-color: #FFFFFF !important;
-
     font-size: 14px !important;
-
     font-weight: 700 !important;
-
-    box-shadow:
-        0 3px 8px rgba(6, 53, 82, 0.18) !important;
+    box-shadow: 0 3px 8px rgba(6, 53, 82, 0.18) !important;
 }
 
 
@@ -216,63 +186,10 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primar
    SELECTED BUTTON - FORCE EVERY CHILD
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] * {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] *,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"] * {
     color: #FFFFFF !important;
-
     -webkit-text-fill-color: #FFFFFF !important;
-}
-
-
-/* =========================================================
-   SELECTED BUTTON - DIV
-   ========================================================= */
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] div {
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-
-
-/* =========================================================
-   SELECTED BUTTON - SPAN
-   ========================================================= */
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] span {
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-
-
-/* =========================================================
-   SELECTED BUTTON - P
-   ========================================================= */
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] p {
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
-
-    font-weight: 700 !important;
-}
-
-
-/* =========================================================
-   SELECTED BUTTON - SVG
-   ========================================================= */
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] svg {
-
-    color: #FFFFFF !important;
-
-    fill: #FFFFFF !important;
-
-    stroke: #FFFFFF !important;
 }
 
 
@@ -280,27 +197,19 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primar
    SELECTED HOVER
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover {
     background: #08496E !important;
-
     border-color: #08496E !important;
-
     border-left-color: #56D21F !important;
-
     color: #FFFFFF !important;
-
     -webkit-text-fill-color: #FFFFFF !important;
-
-    box-shadow:
-        0 4px 9px rgba(6, 53, 82, 0.20) !important;
+    box-shadow: 0 4px 9px rgba(6, 53, 82, 0.20) !important;
 }
 
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover * {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover *,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover * {
     color: #FFFFFF !important;
-
     -webkit-text-fill-color: #FFFFFF !important;
 }
 
@@ -309,23 +218,12 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primar
    SELECTED ACTIVE
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:active {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:active,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:active {
     background: #052C44 !important;
-
     color: #FFFFFF !important;
-
     -webkit-text-fill-color: #FFFFFF !important;
-
     transform: translateY(1px) !important;
-}
-
-
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:active * {
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
 }
 
 
@@ -334,8 +232,9 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primar
    ========================================================= */
 
 section[data-testid="stSidebar"] div[data-testid="stButton"]>button:focus,
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button:focus-visible {
-
+section[data-testid="stSidebar"] div[data-testid="stButton"]>button:focus-visible,
+section[data-testid="stSidebar"] div.stButton>button:focus,
+section[data-testid="stSidebar"] div.stButton>button:focus-visible {
     outline: none !important;
 }
 
@@ -344,7 +243,7 @@ section[data-testid="stSidebar"] div[data-testid="stButton"]>button:focus-visibl
    USER PROFILE
    ========================================================= */
 
-section[data-testid="stSidebar"] .sidebar-user-icon {
+*/ section[data-testid="stSidebar"] .sidebar-user-icon {
 
     color: #063552 !important;
 
@@ -430,73 +329,4 @@ section[data-testid="stSidebar"] button[key="sidebar_logout"] {
 
         font-size: 14px !important;
     }
-}
-
-
-/* =========================================================
-   SIDEBAR NAVIGATION - FINAL OVERRIDE
-   ========================================================= */
-
-/* SELECTED */
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] {
-
-    background: #063552 !important;
-
-    border: 1px solid #063552 !important;
-
-    border-left: 4px solid #56D21F !important;
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
-
-    font-weight: 700 !important;
-}
-
-
-/* SELECTED - EVERY CHILD */
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"] * {
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-
-
-/* SELECTED HOVER */
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="primary"]:hover {
-
-    background: #08496E !important;
-
-    border-color: #08496E !important;
-
-    border-left-color: #56D21F !important;
-
-    color: #FFFFFF !important;
-
-    -webkit-text-fill-color: #FFFFFF !important;
-}
-
-
-/* UNSELECTED */
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] {
-
-    background: #F3F6F8 !important;
-
-    border: 1px solid #DCE4E9 !important;
-
-    color: #063552 !important;
-
-    -webkit-text-fill-color: #063552 !important;
-
-    font-weight: 600 !important;
-}
-
-
-/* UNSELECTED - EVERY CHILD */
-section[data-testid="stSidebar"] div[data-testid="stButton"]>button[kind="secondary"] * {
-
-    color: #063552 !important;
-
-    -webkit-text-fill-color: #063552 !important;
 }

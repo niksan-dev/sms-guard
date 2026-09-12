@@ -29,6 +29,13 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    supabase_user_id = Column(
+        String,
+        unique=True,
+        nullable=True,
+        index=True
+    )
+
     username = Column(
         String,
         unique=True,

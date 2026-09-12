@@ -125,6 +125,10 @@ def get_supabase_client() -> Client:
 # UPLOAD
 # ============================================================
 
+# ============================================================
+# UPLOAD
+# ============================================================
+
 def upload_file(
     bucket: str,
     path: str,
@@ -135,15 +139,39 @@ def upload_file(
 ) -> str:
     """Upload a file to Supabase Storage.
 
+    Accepts bytes, memoryview, or file-like objects.
     Returns the Storage object path.
     """
 
+    if not bucket:
+        raise ValueError("Storage bucket is required.")
+
+    if not path:
+        raise ValueError("Storage path is required.")
+
+    if file_data is None:
+        raise ValueError("File data is required.")
+
+    # Streamlit UploadedFile.getbuffer()
+    # returns a memoryview. Supabase expects bytes.
+    if isinstance(file_data, memoryview):
+        file_data = file_data.tobytes()
+
+    elif isinstance(file_data, bytearray):
+        file_data = bytes(file_data)
+
     supabase = get_supabase_client()
 
-    print(f"Uploading file to Supabase Storage: {bucket}/{path}")
+    print(
+        f"Uploading file to Supabase Storage: "
+        f"{bucket}/{path}"
+    )
 
     options = {
-        "content-type": content_type,
+        "content-type": (
+            content_type
+            or "application/octet-stream"
+        ),
         "cache-control": "3600",
         "upsert": str(upsert).lower(),
     }
@@ -176,6 +204,37 @@ def delete_file(
         [path]
     )
 
+# ============================================================
+# DOWNLOAD
+# ============================================================
+
+def download_file(
+    bucket: str,
+    path: str,
+) -> bytes:
+    """Download a private file from Supabase Storage."""
+
+    if not path:
+        raise ValueError(
+            "Storage path is required."
+        )
+
+    supabase = get_supabase_client()
+
+    response = (
+        supabase.storage
+        .from_(bucket)
+        .download(path)
+    )
+
+    if response is None:
+        raise RuntimeError(
+            f"Unable to download file from "
+            f"Supabase Storage: {bucket}/{path}"
+        )
+
+    return response
+
 
 # ============================================================
 # SIGNED URL
@@ -204,10 +263,10 @@ def create_signed_url(
         )
     )
 
-    print(
-        "Supabase signed URL response:",
-        response
-    )
+    # print(
+    #     "Supabase signed URL response:",
+    #     response
+    # )
 
     # Current supabase-py returns a dictionary.
     if isinstance(response, dict):

@@ -4,6 +4,9 @@ from pathlib import Path
 
 from datetime import date
 
+from database.connection import SessionLocal
+from database.guard_document import GuardDocument
+
 from components.page_header import page_header
 from components.sub_header import sub_header
 from components.text_input import text_input
@@ -19,8 +22,6 @@ from services.guard_service import (
     get_all_guards,
     get_guards_active_during,
     get_available_guard_users,
-    get_next_employee_id,
-    get_guard_by_id,
     get_guard_photo_path,
     create_guard,
     update_guard,
@@ -40,8 +41,6 @@ from services.guard_document_service import (
     get_guard_document,
     save_guard_document,
     delete_guard_document,
-    get_guard_document_file,
-    get_document_readiness,
     create_guard_documents_zip,
 )
 
@@ -74,6 +73,77 @@ def validate_phone(phone):
 
 
 # ==================================================
+# PERFORMANCE HELPERS
+# ==================================================
+
+REQUIRED_DOCUMENT_TYPES = {
+    "Aadhaar Card",
+    "PAN Card",
+    "Voter ID",
+    "Police Verification",
+    "Address Proof",
+    "Medical Certificate",
+    "Training Certificate",
+}
+
+
+def get_document_readiness_map(guard_ids):
+    """Load active document types for all guards in one query."""
+    if not guard_ids:
+        return {}
+
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(
+                GuardDocument.guard_id,
+                GuardDocument.document_type,
+            )
+            .filter(
+                GuardDocument.guard_id.in_(guard_ids),
+                GuardDocument.status == "Active",
+            )
+            .all()
+        )
+
+        uploaded = {}
+        for guard_id, document_type in rows:
+            uploaded.setdefault(guard_id, set()).add(document_type)
+
+        return {
+            guard_id: (
+                sum(
+                    1
+                    for document_type in uploaded.get(guard_id, set())
+                    if document_type in REQUIRED_DOCUMENT_TYPES
+                ),
+                len(REQUIRED_DOCUMENT_TYPES),
+            )
+            for guard_id in guard_ids
+        }
+    finally:
+        db.close()
+
+
+def get_preview_employee_id(guards):
+    """Calculate the next employee ID from already-loaded guards."""
+    highest_number = 0
+
+    for guard in guards:
+        employee_id = getattr(guard, "employee_id", None)
+        if not employee_id or not str(employee_id).startswith("SG-"):
+            continue
+
+        try:
+            number = int(str(employee_id)[3:])
+            highest_number = max(highest_number, number)
+        except (ValueError, TypeError):
+            continue
+
+    return f"SG-{highest_number + 1:04d}"
+
+
+# ==================================================
 # SHOW GUARDS
 # ==================================================
 
@@ -97,6 +167,22 @@ def show_guards():
     ])
 
     # ==================================================
+    # SHARED PAGE DATA
+    # ==================================================
+    # Streamlit executes all tab bodies during a rerun. Load the
+    # guard list once and reuse it across All Guards and Manage Guard.
+    all_guards = get_all_guards(include_inactive=True)
+    active_guards = [
+        guard for guard in all_guards
+        if guard.status == "Active"
+    ]
+    document_readiness = get_document_readiness_map(
+        [guard.id for guard in all_guards]
+    )
+    preview_employee_id = get_preview_employee_id(all_guards)
+    available_users = get_available_guard_users()
+
+    # ==================================================
     # TAB 1 - ALL GUARDS
     # ==================================================
 
@@ -105,7 +191,7 @@ def show_guards():
         sub_header("All Guards","","📋")
 
         # Operational list: active guards only.
-        guards = get_all_guards()
+        guards = active_guards
 
         if not guards:
 
@@ -157,8 +243,8 @@ def show_guards():
 
                     "Document Readiness":
                         (
-                            f"{get_document_readiness(guard.id)[0]}/"
-                            f"{get_document_readiness(guard.id)[1]}"
+                            f"{document_readiness.get(guard.id, (0, 7))[0]}/"
+                            f"{document_readiness.get(guard.id, (0, 7))[1]}"
                         ),
                 })
 
@@ -294,7 +380,7 @@ def show_guards():
     with tab2:
         sub_header("Add New Guard","","➕")
 
-        next_employee_id = get_next_employee_id()
+        next_employee_id = preview_employee_id
 
         st.info(
             f"Next Employee ID: **{next_employee_id}**"
@@ -303,8 +389,6 @@ def show_guards():
         # ----------------------------------------------
         # AVAILABLE SECURITY GUARD USERS
         # ----------------------------------------------
-
-        available_users = get_available_guard_users()
 
         user_options = {
             "No User Account": None
@@ -577,7 +661,7 @@ def show_guards():
                             """
                         )
 
-        guards = get_all_guards(include_inactive=True)
+        guards = all_guards
 
         if not guards:
 
@@ -609,8 +693,13 @@ def show_guards():
                 selected_guard_label
             ]
 
-            guard = get_guard_by_id(
-                selected_guard_id
+            guard = next(
+                (
+                    item
+                    for item in guards
+                    if item.id == selected_guard_id
+                ),
+                None,
             )
 
             if guard:
@@ -725,7 +814,10 @@ def show_guards():
                 # SITE ASSIGNMENT
                 # ==========================================
 
-                show_guard_site_assignment(guard)
+                show_guard_site_assignment(
+                    guard,
+                    assignments=assignments,
+                )
 
                 st.divider()
 
@@ -1005,19 +1097,25 @@ def show_guards():
 def show_guard_documents(guard):
 
     st.divider()
-
     st.subheader("📄 Guard Documents")
 
-    completed, total_required, uploaded_types = (
-        get_document_readiness(guard.id)
+    # One document query is reused for readiness, current selection,
+    # document count, and the uploaded-document list.
+    documents = get_guard_documents(guard.id)
+    uploaded_types = {doc.document_type for doc in documents}
+    completed = sum(
+        1
+        for document_type in REQUIRED_DOCUMENT_TYPES
+        if document_type in uploaded_types
     )
+    total_required = len(REQUIRED_DOCUMENT_TYPES)
 
     metric_col1, metric_col2, metric_col3 = st.columns(3)
 
     with metric_col1:
         st.metric(
             "📄 Documents Uploaded",
-            len(get_guard_documents(guard.id))
+            len(documents)
         )
 
     with metric_col2:
@@ -1051,9 +1149,14 @@ def show_guard_documents(guard):
         key=f"guard_document_type_{guard.id}"
     )
 
-    existing = get_guard_document(
-        guard.id,
-        doc_type
+    # Reuse the already-loaded document list instead of querying again.
+    existing = next(
+        (
+            document
+            for document in documents
+            if document.document_type == doc_type
+        ),
+        None,
     )
 
     # Document number and expiry date are intentionally not collected.
@@ -1105,8 +1208,6 @@ def show_guard_documents(guard):
     # CURRENT DOCUMENTS
     # ----------------------------------------------
 
-    documents = get_guard_documents(guard.id)
-
     if not documents:
         st.info(
             "No documents uploaded for this guard yet."
@@ -1114,6 +1215,8 @@ def show_guard_documents(guard):
         return
 
     st.markdown("#### 📋 Uploaded Documents")
+
+    project_root = Path(__file__).resolve().parent.parent
 
     for document in documents:
 
@@ -1140,9 +1243,16 @@ def show_guard_documents(guard):
             )
 
         with col4:
-            file_path, file_record = (
-                get_guard_document_file(document.id)
-            )
+            # The document record already contains its relative file path,
+            # so avoid another DB lookup for every document.
+            file_path = None
+            if document.file_path:
+                candidate = Path(document.file_path)
+                file_path = (
+                    candidate
+                    if candidate.is_absolute()
+                    else project_root / candidate
+                )
 
             if file_path and file_path.exists():
                 try:
@@ -1182,13 +1292,14 @@ def show_guard_documents(guard):
 # GUARD SITE ASSIGNMENT
 # ==================================================
 
-def show_guard_site_assignment(guard):
+def show_guard_site_assignment(guard, assignments=None):
 
     st.divider()
 
     st.subheader("🏢 Assigned Sites")
 
-    assignments = get_guard_sites(guard.id)
+    if assignments is None:
+        assignments = get_guard_sites(guard.id)
 
     # ==============================================
     # GET ACTIVE SITES

@@ -78,7 +78,7 @@ def load_custom_css():
 
             background: transparent !important;
 
-            padding-top: 0.5rem !important;
+            padding-top: 0.25rem !important;
 
             padding-bottom: 3rem !important;
 
@@ -1361,19 +1361,27 @@ def load_custom_css():
            STREAMLIT HEADER
         ========================================================= */
 
+        /* =========================================================
+           STREAMLIT HEADER — KEEP SIDEBAR TOGGLE ACCESSIBLE
+        ========================================================= */
+
         header[data-testid="stHeader"] {
+            background: transparent !important;
+            border-bottom: none !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            overflow: visible !important;
+        }
 
-            background:
-                #FFFFFF !important;
+        /* Keep Streamlit's sidebar expand/collapse control visible. */
+        header[data-testid="stHeader"] button {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
 
-            border-bottom:
-                1px solid var(--border) !important;
-
-            height: 0 !important;
-
-            min-height: 0 !important;
-
-            overflow: hidden !important;
+        header[data-testid="stHeader"] [data-testid="stToolbar"] {
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
 

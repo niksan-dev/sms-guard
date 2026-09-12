@@ -67,28 +67,68 @@ def month_name(month):
     ).strftime("%B")
 
 
-def get_active_guards():
+# ============================================================
+# PERFORMANCE CACHE
+# ============================================================
 
-    guards = get_all_guards()
+BILLING_CACHE_TTL = 15
 
+
+@st.cache_data(ttl=BILLING_CACHE_TTL, max_entries=4, show_spinner=False)
+def _get_active_site_options():
+    sites = get_all_sites()
     return [
-        guard
-        for guard in guards
-        if (guard.status or "").lower()
-        == "active"
+        {"id": site.id, "label": f"{site.site_code} - {site.name}"}
+        for site in sites
+        if (site.status or "").lower() == "active"
     ]
+
+
+@st.cache_data(ttl=BILLING_CACHE_TTL, max_entries=4, show_spinner=False)
+def _get_active_guard_options(month_start, month_end):
+    guards = get_guards_active_during(month_start, month_end)
+    return [
+        {"id": guard.id, "label": f"{guard.employee_id} - {guard.name}"}
+        for guard in guards
+    ]
+
+
+@st.cache_data(ttl=BILLING_CACHE_TTL, max_entries=8, show_spinner=False)
+def _get_company_tax_settings():
+    settings = get_company_settings()
+    if settings is None:
+        return None
+
+    return {
+        "cgst_rate": float(settings.cgst_rate if settings.cgst_rate is not None else 9.0),
+        "sgst_rate": float(settings.sgst_rate if settings.sgst_rate is not None else 9.0),
+    }
+
+
+@st.cache_data(ttl=BILLING_CACHE_TTL, max_entries=32, show_spinner=False)
+def _get_cached_site_bill_data(site_id, year, month):
+    return get_site_bill_data(site_id, year, month)
+
+
+@st.cache_data(ttl=BILLING_CACHE_TTL, max_entries=32, show_spinner=False)
+def _get_cached_guard_salary_data(guard_id, year, month):
+    return get_guard_salary_data(guard_id, year, month)
+
+
+def _clear_billing_caches():
+    _get_active_site_options.clear()
+    _get_active_guard_options.clear()
+    _get_company_tax_settings.clear()
+    _get_cached_site_bill_data.clear()
+    _get_cached_guard_salary_data.clear()
+
+
+def get_active_guards():
+    return get_all_guards()
 
 
 def get_active_sites():
-
-    sites = get_all_sites()
-
-    return [
-        site
-        for site in sites
-        if (site.status or "").lower()
-        == "active"
-    ]
+    return get_all_sites()
 
 
 # ============================================================
@@ -129,7 +169,7 @@ def _require_company_settings_for_invoice() -> bool:
     """Stop site billing generation until company settings exist."""
 
     try:
-        settings = get_company_settings()
+        settings = _get_company_tax_settings()
     except Exception as error:
         st.error(
             f"Unable to load company settings: {error}"
@@ -222,9 +262,9 @@ def show_site_bills():
             key="billing_site_year"
         )
 
-    sites = get_active_sites()
+    site_options = _get_active_site_options()
 
-    if not sites:
+    if not site_options:
 
         st.warning(
             "No active sites available."
@@ -233,8 +273,8 @@ def show_site_bills():
         return
 
     site_map = {
-        f"{site.site_code} - {site.name}": site
-        for site in sites
+        item["label"]: item["id"]
+        for item in site_options
     }
 
     sub_header("Generate Site Bill","","📄")
@@ -245,7 +285,7 @@ def show_site_bills():
         key="billing_site_selection"
     )
 
-    selected_site = site_map[
+    selected_site_id = site_map[
         selected_site_label
     ]
 
@@ -256,8 +296,8 @@ def show_site_bills():
     # PREVIEW CALCULATION
     # --------------------------------------------------------
 
-    data = get_site_bill_data(
-        selected_site.id,
+    data = _get_cached_site_bill_data(
+        selected_site_id,
         int(selected_year),
         int(selected_month)
     )
@@ -316,9 +356,9 @@ def show_site_bills():
         # GST rates are controlled centrally from Company Settings.
         # They are NOT editable from the Site Bill page.
 
-        company_settings = get_company_settings()
+        tax_settings = _get_company_tax_settings()
 
-        if company_settings is None:
+        if tax_settings is None:
 
             st.warning(
                 "Company Settings are not configured."
@@ -326,17 +366,8 @@ def show_site_bills():
 
             return
 
-        cgst_rate = float(
-            company_settings.cgst_rate
-            if company_settings.cgst_rate is not None
-            else 9.0
-        )
-
-        sgst_rate = float(
-            company_settings.sgst_rate
-            if company_settings.sgst_rate is not None
-            else 9.0
-        )
+        cgst_rate = tax_settings["cgst_rate"]
+        sgst_rate = tax_settings["sgst_rate"]
 
         st.info(
             f"GST Rates from Company Settings: "
@@ -419,13 +450,14 @@ def show_site_bills():
         ):
 
             success, message, bill = create_site_bill(
-                site_id=selected_site.id,
+                site_id=selected_site_id,
                 year=int(selected_year),
                 month=int(selected_month)
             )
 
             if success:
 
+                _clear_billing_caches()
                 st.success(message)
 
                 st.rerun()
@@ -443,7 +475,7 @@ def show_site_bills():
     sub_header("Saved Bill","","📋")
 
     bill = get_site_bill(
-        selected_site.id,
+        selected_site_id,
         int(selected_year),
         int(selected_month)
     )
@@ -476,15 +508,26 @@ def show_site_bill_actions(bill):
             st.session_state["view_site_bill_id"] = bill.id
 
     with col2:
-        pdf_data = build_site_pdf_from_bill(bill)
-        st.download_button(
-            "📄 Export PDF",
-            data=pdf_data,
-            file_name=f"{bill.bill_number}.pdf",
-            mime="application/pdf",
-            width="stretch",
-            key=f"export_bill_{bill.id}"
-        )
+        cache_key = f"site_bill_pdf_{bill.id}"
+        pdf_data = st.session_state.get(cache_key)
+
+        if pdf_data is None:
+            if button(
+                "📄 Prepare PDF",
+                width="stretch",
+                key=f"prepare_bill_pdf_{bill.id}",
+            ):
+                st.session_state[cache_key] = build_site_pdf_from_bill(bill)
+                st.rerun()
+        else:
+            st.download_button(
+                "📄 Export PDF",
+                data=pdf_data,
+                file_name=f"{bill.bill_number}.pdf",
+                mime="application/pdf",
+                width="stretch",
+                key=f"export_bill_{bill.id}"
+            )
 
     with col3:
         if button(
@@ -694,12 +737,12 @@ def show_guard_salary():
         )[1]
     )
 
-    guards = get_guards_active_during(
+    guard_options = _get_active_guard_options(
         month_start,
         month_end
     )
 
-    if not guards:
+    if not guard_options:
 
         st.warning(
             "No active guards available."
@@ -708,8 +751,8 @@ def show_guard_salary():
         return
 
     guard_map = {
-        f"{guard.employee_id} - {guard.name}": guard
-        for guard in guards
+        item["label"]: item["id"]
+        for item in guard_options
     }
 
     st.markdown("### Generate Salary Slip")
@@ -720,12 +763,12 @@ def show_guard_salary():
         key="billing_guard_selection"
     )
 
-    selected_guard = guard_map[
+    selected_guard_id = guard_map[
         selected_guard_label
     ]
 
-    data = get_guard_salary_data(
-        selected_guard.id,
+    data = _get_cached_guard_salary_data(
+        selected_guard_id,
         int(selected_year),
         int(selected_month)
     )
@@ -861,7 +904,7 @@ def show_guard_salary():
 
             success, message, slip = (
                 create_guard_salary_slip(
-                    guard_id=selected_guard.id,
+                    guard_id=selected_guard_id,
                     year=int(selected_year),
                     month=int(selected_month)
                 )
@@ -869,6 +912,7 @@ def show_guard_salary():
 
             if success:
 
+                _clear_billing_caches()
                 st.success(message)
 
                 st.rerun()
@@ -886,7 +930,7 @@ def show_guard_salary():
     sub_header("Saved Salary Slip","","📋")
 
     slip = get_guard_salary_slip(
-        selected_guard.id,
+        selected_guard_id,
         int(selected_year),
         int(selected_month)
     )
@@ -927,20 +971,28 @@ def show_salary_slip_actions(slip):
 
     with col2:
 
-        pdf_data = build_salary_pdf_from_slip(
-            slip
-        )
+        cache_key = f"salary_slip_pdf_{slip.id}"
+        pdf_data = st.session_state.get(cache_key)
 
-        st.download_button(
-            "📄 Export PDF",
-            data=pdf_data,
-            file_name=(
-                f"{slip.slip_number}.pdf"
-            ),
-            mime="application/pdf",
-            width="stretch",
-            key=f"export_slip_{slip.id}"
-        )
+        if pdf_data is None:
+            if button(
+                "📄 Prepare PDF",
+                width="stretch",
+                key=f"prepare_slip_pdf_{slip.id}",
+            ):
+                st.session_state[cache_key] = build_salary_pdf_from_slip(slip)
+                st.rerun()
+        else:
+            st.download_button(
+                "📄 Export PDF",
+                data=pdf_data,
+                file_name=(
+                    f"{slip.slip_number}.pdf"
+                ),
+                mime="application/pdf",
+                width="stretch",
+                key=f"export_slip_{slip.id}"
+            )
 
     with col3:
 
@@ -1054,7 +1106,7 @@ def show_salary_slip_preview(slip):
 
     sub_header("Advances","","💰")
 
-    data = get_guard_salary_data(
+    data = _get_cached_guard_salary_data(
         slip.guard_id,
         slip.salary_year,
         slip.salary_month
@@ -1126,7 +1178,7 @@ def show_salary_slip_preview(slip):
 
 def build_salary_pdf_from_slip(slip):
 
-    data = get_guard_salary_data(
+    data = _get_cached_guard_salary_data(
         slip.guard_id,
         slip.salary_year,
         slip.salary_month
@@ -1155,15 +1207,33 @@ def build_site_pdf_from_bill(bill):
 
 def show_print_button(document_type, document):
 
-    if document_type == "salary":
+    cache_key = (
+        f"salary_slip_pdf_{document.id}"
+        if document_type == "salary"
+        else f"site_bill_pdf_{document.id}"
+    )
 
-        pdf_data = build_salary_pdf_from_slip(
-            document
+    pdf_data = st.session_state.get(cache_key)
+
+    if pdf_data is None:
+        if button(
+            "🖨 Prepare PDF for Printing",
+            type="primary",
+            width="stretch",
+            key=f"prepare_print_pdf_{document_type}_{document.id}",
+        ):
+            if document_type == "salary":
+                pdf_data = build_salary_pdf_from_slip(document)
+            else:
+                pdf_data = build_site_pdf_from_bill(document)
+
+            st.session_state[cache_key] = pdf_data
+            st.rerun()
+
+        st.info(
+            "Generate the PDF above first to open it for printing."
         )
-
-    else:
-
-        pdf_data = build_site_pdf_from_bill(document)
+        return
 
     st.info(
         "Use your browser's print dialog "
@@ -1185,6 +1255,7 @@ def show_print_button(document_type, document):
             f"{document.id}"
         )
     )
+
 
 def show_monthly_salary_master():
 

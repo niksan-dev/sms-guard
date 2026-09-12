@@ -8,7 +8,11 @@ from services.company_settings_service import (
 
 from services.supabase_storage_service import (
     upload_file,
-    get_company_logo_url
+)
+
+from services.cached_media_service import (
+    get_cached_company_logo_url,
+    clear_media_cache,
 )
 
 from utils.validators import (
@@ -48,7 +52,7 @@ def save_company_logo(uploaded_file):
     upload_file(
         bucket="company-assets",
         path=file_path,
-        file_data=uploaded_file.getvalue(),
+        file_data=uploaded_file.getbuffer(),
         content_type=uploaded_file.type,
         upsert=True
     )
@@ -149,9 +153,7 @@ def show_company_settings():
         try:
 
             # Generate temporary signed URL
-            logo_url = get_company_logo_url(
-                current_logo
-            )
+            logo_url = get_cached_company_logo_url()
 
             if logo_url:
 
@@ -707,6 +709,8 @@ def show_company_settings():
             logo_path=logo_path
         )
 
+
+        clear_media_cache()
 
         st.success(
             "✅ Company settings saved successfully."

@@ -5,7 +5,7 @@ import streamlit as st
 
 from services.auth_session_service import delete_login_session
 from services.company_settings_service import get_company_settings
-from services.supabase_storage_service import get_company_logo_url
+from services.cached_media_service import get_cached_company_logo_url
 from utils.cookies import get_cookie_manager
 from utils import constants
 from components.button import button
@@ -70,27 +70,7 @@ BASE_DIR = os.path.dirname(
 
 def get_company_logo():
 
-    try:
-        settings = get_company_settings()
-
-        if not settings:
-            return None
-
-        logo_path = getattr(
-            settings,
-            "logo_path",
-            None,
-        )
-
-        if not logo_path:
-            return None
-
-        return get_company_logo_url(
-            logo_path
-        )
-
-    except Exception:
-        return None
+    return get_cached_company_logo_url()
 
 
 # =========================================================
